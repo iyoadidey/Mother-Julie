@@ -1,0 +1,141 @@
+.desktop1-terms-list {
+  list-style-type: disc; /* Adds bullet points */
+  padding-left: 20px; /* Adds padding to the left for indentation */
+  color: var(--dl-color-theme-neutral-dark); /* Optional: You can change the text color */
+}
+/* Page layout */
+.desktop1-container1{ 
+    width:100%; 
+    min-height:100vh; 
+    display:flex; 
+    align-items:center; 
+    flex-direction:column; 
+}
+
+.desktop1-desktop1{ 
+    position:relative; 
+    width:100%; 
+    height:1024px; 
+    background:#faacc9; 
+}
+
+/* Logo */
+.desktop1, 
+.motherjulielogo { 
+    position:absolute; 
+    top:115px;               
+    left:50%; 
+    transform:translateX(-50%); 
+    width:189px; 
+    height:auto; 
+    mix-blend-mode: overlay; 
+    opacity: 1; 
+}
+
+/* Card rectangle */
+.desktop1-rectangle1{ 
+    position:absolute; 
+    top:268px; 
+    left:50%; 
+    transform:translateX(-50%); 
+    width:692px; 
+    height:452px; 
+    background:#f99dbf; 
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+}
+
+/* Labels */
+.desktop1-text1{ 
+    position:absolute; 
+    top:351px; 
+    left:calc(50% - 198px); 
+    color:#fff; 
+    font:700 16px SansSerif; 
+    text-align:left; 
+}
+
+.desktop1-text2{ 
+    position:absolute; 
+    top:434px; 
+    left:calc(50% - 198px); 
+    color:#fff; 
+    font:700 16px SansSerif; 
+    text-align:left; 
+}
+
+/* Inputs */
+.desktop1-input{ 
+    position:absolute; 
+    left:calc(50% - 198px); 
+    width:395px; 
+    height:35px; 
+    padding:6px 10px; 
+    border:1px solid #fff; 
+    border-radius:0; 
+    background:transparent; 
+    color:#fff; 
+    outline:none; 
+}
+
+.desktop1-input::placeholder{ color:#ffe0ea; }
+.desktop1-input1{ top:371px; }
+.desktop1-input2{ top:454px; }
+
+/* Title */
+.desktop1-text3{ 
+    position:absolute; 
+    top:290px; 
+    left:50%; 
+    transform:translateX(-50%); 
+    color:#fff; 
+    font:800 32px SansSerif; 
+    letter-spacing:1px; 
+    text-align:center; 
+}
+
+/* Helper text */
+.desktop1-text4{ 
+    position:absolute; 
+    top:506px; 
+    left:calc(50% - 198px); 
+    color:#fff; 
+    font:700 16px SansSerif; 
+    text-align:left; 
+}
+
+.desktop1-text5{ color:#fff; }
+
+.desktop1-create{ 
+    background:none; 
+    border:none; 
+    padding:0; 
+    margin-left:1px; 
+    color:#ff5ea0; 
+    font:700 16px SansSerif; 
+    text-decoration:underline; 
+    cursor:pointer; 
+}
+
+/* Button */
+.desktop1-button{ 
+    position:absolute; 
+    top:629px; 
+    left:calc(50% + 197px); 
+    width:110px; 
+    height:37px; 
+    display:flex; 
+    align-items:center; 
+    justify-content:center; 
+    background:#fff; 
+    color:#ff5ea0; 
+    border:1px solid rgba(255,255,255,.75); 
+    border-radius:999px; 
+    cursor:pointer; 
+    box-shadow:0 10px 28px rgba(0,0,0,0.35); /* slightly stronger shadow only */
+}
+
+.desktop1-text7{ 
+    color:#ff5ea0; 
+    font:700 16px SansSerif; 
+    text-decoration:underline; 
+}
