@@ -59,7 +59,9 @@
         <div class="desktop1-rectangle1" aria-hidden="true"></div>
 
         <!-- Labels -->
-        <span class="desktop1-text1">Mobile Number or Email</span>
+        <span class="desktop1-text-first">First Name</span>
+        <span class="desktop1-text-last">Last Name</span>
+        <span class="desktop1-text1">Email</span>
         <span class="desktop1-text2">Password</span>
         <span class="desktop1-text3">WELCOME! SIGN UP</span>
         <span class="desktop1-text4">Confirm Password</span>
@@ -68,6 +70,8 @@
         <!-- Signup form -->
         <form method="post" action="{% url 'signup' %}">
         {% csrf_token %}
+        <input name="first_name" type="text" class="desktop1-input desktop1-input-first" required />
+        <input name="last_name" type="text" class="desktop1-input desktop1-input-last" required />
         <input name="email" type="email" class="desktop1-input desktop1-input1" required />
         <input name="password" type="password" class="desktop1-input desktop1-input2" required />
         <input name="confirm_password" type="password" class="desktop1-input desktop1-input3" required />

@@ -54,7 +54,7 @@
 /* Labels */
 .desktop1-text1 { 
     position: absolute; 
-    top: 351px; 
+    top: 424px; 
     left: calc(50% - 198px); 
     color: #fff; 
     font: 700 16px SansSerif; 
@@ -63,7 +63,7 @@
 
 .desktop1-text2 { 
     position: absolute; 
-    top: 434px; 
+    top: 487px; 
     left: calc(50% - 198px); 
     color: #fff; 
     font: 700 16px SansSerif; 
@@ -72,14 +72,14 @@
 
 .desktop1-text4 { 
     position: absolute; 
-    top: 517px; 
+    top: 550px; 
     left: calc(50% - 198px); 
     color: #fff; 
     font: 700 16px SansSerif; 
     text-align: left; 
 }
 
-/* Location label removed */
+
 
 /* Inputs */
 .desktop1-input { 
@@ -99,21 +99,65 @@
     color: #ffe0ea; 
 }
 
-.desktop1-input1 { top: 371px; }
-.desktop1-input2 { top: 454px; }
-.desktop1-input3 { top: 537px; }
-/* .desktop1-input4 no longer used */
+.desktop1-input1 { top: 444px; }
+.desktop1-input2 { top: 507px; }
+.desktop1-input3 { top: 570px; }
+
+/* First/Last name labels and inputs */
+.desktop1-text-first {
+    position: absolute;
+    top: 350px; /* slightly below the header */
+    left: calc(50% - 198px);
+    color: #fff;
+    font: 700 16px SansSerif;
+  }
+  
+  .desktop1-input-first {
+    position: absolute;
+    top: 370px;
+    left: calc(50% - 198px);
+    width: 180px;
+    height: 35px;
+    padding: 6px 10px;
+    border: 1px solid #fff;
+    border-radius: 7px;
+    background: transparent;
+    color: #fff;
+    outline: none;
+  }
+  
+  .desktop1-text-last {
+    position: absolute;
+    top: 350px;
+    left: calc(50% + 17px); /* positions it beside First Name */
+    color: #fff;
+    font: 700 16px SansSerif;
+  }
+  
+  .desktop1-input-last {
+    position: absolute;
+    top: 370px;
+    left: calc(50% + 17px);
+    width: 180px;
+    height: 35px;
+    padding: 6px 10px;
+    border: 1px solid #fff;
+    border-radius: 7px;
+    background: transparent;
+    color: #fff;
+    outline: none;
+  }
 
 /* Agreement text */
 .desktop1-agreement {
     position: absolute;
-    top: 585px; /* align just below confirm password */
-    left: calc(50% - 198px);
-    width: 400px;
+    top: 615px !important; /* directly below Confirm Password input */
+    left: calc(50% - 198px); /* align with inputs */
+    width: 395px; /* match input width */
     color: #fff;
     font: 700 14px 'SansSerif';
     text-align: left;
-    line-height: 1.5; /* gives space between the two lines */
+    line-height: 1.35; /* slightly tighter */
     align-items: center;
 }
 
@@ -145,8 +189,8 @@
 /* Sign Up button */
 .desktop1-button[aria-label="Sign Up"] { 
     position: absolute; 
-    top: 585px; /* align with agreement baseline */
-    left: calc(50% + 197px); 
+    top: 665px !important; /* below the agreement block */
+    left: calc(50% + 106px) !important; /* move to the right end of card */ 
     width: 110px; 
     height: 37px; 
     display: flex; 
@@ -176,4 +220,19 @@
 }
 
 /* Removed location input/icon styles */
+
+/* Agreement content layout */
+.desktop1-agreement-container {
+    display: flex;
+    align-items: flex-start; /* align checkbox with first line of text */
+    gap: 8px;
+}
+
+.desktop1-agreement-container input[type="checkbox"] {
+    margin: 2px 0 0 0; /* nudge down to visually center with bold text */
+}
+
+.desktop1-agreement-container label {
+    line-height: 1.3;
+}
   
