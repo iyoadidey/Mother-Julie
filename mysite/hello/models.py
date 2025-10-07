@@ -15,6 +15,8 @@ class SignupEvent(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='signup_events')
     email = models.EmailField()
     location = models.CharField(max_length=255, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:

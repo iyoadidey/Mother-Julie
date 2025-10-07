@@ -71,7 +71,16 @@
         <input name="email" type="text" class="desktop1-input desktop1-input1" />
         <input name="password" type="password" class="desktop1-input desktop1-input2" />
         <input name="confirm_password" type="password" class="desktop1-input desktop1-input3" />
-        <input name="location" type="text" class="desktop1-input desktop1-input4" />
+        <div style="position:relative;display:block;">
+          <input name="location" id="location" type="text" class="desktop1-input desktop1-input4 location-input" placeholder="Location" style="padding-right:36px;" />
+          <span id="use-my-location" class="icon" title="Use my location" aria-label="Use my location" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:18px;line-height:1;cursor:pointer">📍</span>
+        </div>
+
+        <label for="latitude">Latitude:</label>
+        <input type="text" id="latitude" name="latitude" readonly>
+        <label for="longitude">Longitude:</label>
+        <input type="text" id="longitude" name="longitude" readonly>
+        <button type="button" onclick="getLocation()">Get Current Location</button>
 
         <span class="desktop1-agreement">
     <div class="desktop1-agreement-container">
@@ -97,6 +106,8 @@
   {% endfor %}
 </div>
 {% endif %}
+<div id="gmaps-config" data-api-key="{{ google_maps_api_key|default:'' }}"></div>
+<script src="{% static 'js/signup-location.js' %}"></script>
 </body>
 </html>
 
