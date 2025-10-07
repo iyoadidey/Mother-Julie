@@ -3,5 +3,5 @@ from django.urls import path, include  # include allows linking app URLs
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('hello/', include('hello.urls')),  # connects to hello/urls.py
+    path('', include('hello.urls')),  # root goes to hello app
 ]
