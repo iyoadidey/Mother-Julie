@@ -10,7 +10,7 @@ class ItemAdmin(admin.ModelAdmin):
 
 @admin.register(SignupEvent)
 class SignupEventAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "email", "location", "created_at")
+    list_display = ("id", "user", "email", "location", "latitude", "longitude", "created_at")
     search_fields = ("user__username", "email", "location")
     list_filter = ("created_at",)
 

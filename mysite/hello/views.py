@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from .models import Item, SignupEvent
 
@@ -20,14 +21,16 @@ def signup_view(request):
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
         location = request.POST.get('location', '')
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
 
         if not email_or_mobile or not password:
             messages.error(request, 'Email/Mobile and password are required.')
-            return render(request, 'signup.htm')
+            return render(request, 'signup.htm', { 'google_maps_api_key': getattr(settings, 'GOOGLE_MAPS_API_KEY', '') })
 
         if password != confirm_password:
             messages.error(request, 'Passwords do not match.')
-            return render(request, 'signup.htm')
+            return render(request, 'signup.htm', { 'google_maps_api_key': getattr(settings, 'GOOGLE_MAPS_API_KEY', '') })
 
         User = get_user_model()
         username = (email_or_mobile or '').split('@')[0] if '@' in (email_or_mobile or '') else (email_or_mobile or '')
@@ -41,11 +44,23 @@ def signup_view(request):
         username = candidate
 
         user = User.objects.create_user(username=username, email=email_or_mobile, password=password)
-        SignupEvent.objects.create(user=user, email=email_or_mobile or '', location=location)
+        try:
+            lat_value = float(latitude) if latitude not in (None, '') else None
+            lon_value = float(longitude) if longitude not in (None, '') else None
+        except ValueError:
+            lat_value = None
+            lon_value = None
+        SignupEvent.objects.create(
+            user=user,
+            email=email_or_mobile or '',
+            location=location,
+            latitude=lat_value,
+            longitude=lon_value,
+        )
         messages.success(request, 'Account created successfully. You can now sign in.')
         return redirect('signin')
 
-    return render(request, 'signup.htm')
+    return render(request, 'signup.htm', { 'google_maps_api_key': getattr(settings, 'GOOGLE_MAPS_API_KEY', '') })
 
 
 def terms_view(request):
