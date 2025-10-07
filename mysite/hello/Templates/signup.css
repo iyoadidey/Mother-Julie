@@ -34,7 +34,7 @@
     left: 50%; 
     transform: translateX(-50%); 
     width: 692px; 
-    height: 520px; 
+    height: 480px; 
     background: #f99dbf; 
     box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); 
 }
@@ -79,14 +79,7 @@
     text-align: left; 
 }
 
-.desktop1-text6 { 
-    position: absolute; 
-    top: 600px; 
-    left: calc(50% - 198px); 
-    color: #fff; 
-    font: 700 16px SansSerif; 
-    text-align: left; 
-}
+/* Location label removed */
 
 /* Inputs */
 .desktop1-input { 
@@ -109,12 +102,12 @@
 .desktop1-input1 { top: 371px; }
 .desktop1-input2 { top: 454px; }
 .desktop1-input3 { top: 537px; }
-.desktop1-input4 { top: 620px; }
+/* .desktop1-input4 no longer used */
 
 /* Agreement text */
 .desktop1-agreement {
     position: absolute;
-    top: 670px; /* adjust to fit right above the button */
+    top: 620px; /* pulled up since location field was removed */
     left: calc(50% - 198px);
     width: 400px;
     color: #fff;
@@ -152,7 +145,7 @@
 /* Sign Up button */
 .desktop1-button[aria-label="Sign Up"] { 
     position: absolute; 
-    top: 720px; 
+    top: 670px; 
     left: calc(50% + 197px); 
     width: 110px; 
     height: 37px; 
@@ -182,29 +175,5 @@
     text-transform: none !important;
 }
 
-.location-wrapper {
-    position: relative;
-    width: 100%;
-  }
-  
-  .location-input {
-    width: 100%;
-    padding-right: 40px; /* space for the icon */
-    box-sizing: border-box;
-  }
-  
-  .location-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    font-size: 18px;
-    color: #ff69b4; /* theme color */
-    transition: color 0.3s ease;
-  }
-  
-  .location-icon:hover {
-    color: #e44ea5;
-  }
+/* Removed location input/icon styles */
   
