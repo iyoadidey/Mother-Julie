@@ -107,7 +107,7 @@
 /* Agreement text */
 .desktop1-agreement {
     position: absolute;
-    top: 620px; /* pulled up since location field was removed */
+    top: 585px; /* align just below confirm password */
     left: calc(50% - 198px);
     width: 400px;
     color: #fff;
@@ -145,7 +145,7 @@
 /* Sign Up button */
 .desktop1-button[aria-label="Sign Up"] { 
     position: absolute; 
-    top: 670px; 
+    top: 585px; /* align with agreement baseline */
     left: calc(50% + 197px); 
     width: 110px; 
     height: 37px; 
