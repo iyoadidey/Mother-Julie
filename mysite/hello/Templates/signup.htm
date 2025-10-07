@@ -65,11 +65,13 @@
         <span class="desktop1-text4">Confirm Password</span>
         <span class="desktop1-text6">Location</span>
 
-        <!-- Input fields -->
-        <input type="text" class="desktop1-input desktop1-input1" />
-        <input type="password" class="desktop1-input desktop1-input2" />
-        <input type="password" class="desktop1-input desktop1-input3" />
-        <input type="text" class="desktop1-input desktop1-input4" />
+        <!-- Signup form -->
+        <form method="post" action="{% url 'signup' %}">
+        {% csrf_token %}
+        <input name="email" type="text" class="desktop1-input desktop1-input1" />
+        <input name="password" type="password" class="desktop1-input desktop1-input2" />
+        <input name="confirm_password" type="password" class="desktop1-input desktop1-input3" />
+        <input name="location" type="text" class="desktop1-input desktop1-input4" />
 
         <span class="desktop1-agreement">
     <div class="desktop1-agreement-container">
@@ -81,14 +83,20 @@
         </label>
     </div>
 </span>
-
-
-        <a href="{% url 'signin' %}">
-        <button type="button" class="desktop1-button" aria-label="Sign Up">
+        <button type="submit" class="desktop1-button" aria-label="Sign Up">
         <span class="desktop1-text7">Sign Up</span>
         </button>
+        </form>
     </div>
     </div>
 </div>
+{% if messages %}
+<div style="max-width:732px;margin:16px auto;color:#b00020;">
+  {% for message in messages %}
+    <div>{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
 </body>
 </html>
+
