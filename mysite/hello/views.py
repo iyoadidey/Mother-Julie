@@ -24,6 +24,8 @@ def signup_view(request):
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
         agreement = request.POST.get('agreement')
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
 
         if not email_or_mobile or not password:
             messages.error(request, 'Email/Mobile and password are required.')
@@ -48,7 +50,14 @@ def signup_view(request):
             candidate = f"{base_username}{suffix}"
         username = candidate
 
-        user = User.objects.create_user(username=username, email=email_or_mobile, password=password)
+        # If value looks like an email, store it in email field; otherwise leave email empty
+        email_value = email_or_mobile if '@' in (email_or_mobile or '') else ''
+        user = User.objects.create_user(username=username, email=email_value, password=password)
+        if first_name:
+            user.first_name = first_name
+        if last_name:
+            user.last_name = last_name
+        user.save()
         try:
             lat_value = float(latitude) if latitude not in (None, '') else None
             lon_value = float(longitude) if longitude not in (None, '') else None
