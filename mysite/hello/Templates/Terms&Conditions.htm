@@ -159,9 +159,10 @@
     </style>
 </head>
 <body>
+    {% load static %}
     <div class="terms-page-container">
         <img
-            src="motherjulie.png"
+            src="{% static 'motherjulie.png' %}"
             alt="motherjulielogo"
             class="logo"
         />
@@ -188,7 +189,7 @@
             </div>
 
             <div class="button-wrapper">
-                <a href="signup.htm" class="go-back-button" aria-label="Go Back">
+                <a href="{% url 'signup' %}" class="go-back-button" aria-label="Go Back">
                     Go back
                 </a>
             </div>

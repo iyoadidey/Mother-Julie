@@ -37,8 +37,8 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
       data-tag="font"
     />
-    <link rel="stylesheet" href="./style.css" />
-    <link href="./signin.css" rel="stylesheet" />
+    {% load static %}
+    <link href="{% static 'signin.css' %}" rel="stylesheet" />
   </head>
   <body>
     <div>
@@ -46,7 +46,7 @@
       <div class="desktop1-container1">
         <div class="desktop1-desktop1">
           <img
-            src="motherjulie.png"
+            src="{% static 'motherjulie.png' %}"
             alt="motherjulielogo"
             class="motherjulielogo"
           />
@@ -58,7 +58,7 @@
           <span class="desktop1-text3">WELCOME! SIGN IN</span>
           <span class="desktop1-text4">
           <span class="desktop1-text5">Don’t have an account?</span>
-        <a href="signup.htm">
+        <a href="{% url 'signup' %}">
         <button type="button" class="desktop1-create">Create Account</button>
       </a>
       </span>
