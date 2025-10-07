@@ -182,3 +182,29 @@
     text-transform: none !important;
 }
 
+.location-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  .location-input {
+    width: 100%;
+    padding-right: 40px; /* space for the icon */
+    box-sizing: border-box;
+  }
+  
+  .location-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: #ff69b4; /* theme color */
+    transition: color 0.3s ease;
+  }
+  
+  .location-icon:hover {
+    color: #e44ea5;
+  }
+  
