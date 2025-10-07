@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const icon = document.getElementById('use-my-location');
-  if (!icon) return;
+  const button = document.getElementById('btnAction');
+  const mapLayer = document.getElementById('map-layer');
 
   const configEl = document.getElementById('gmaps-config');
   const apiKey = configEl ? (configEl.getAttribute('data-api-key') || '') : '';
@@ -43,7 +44,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  icon.addEventListener('click', handleUseMyLocation);
+  if (icon) icon.addEventListener('click', handleUseMyLocation);
+  if (button) button.addEventListener('click', locate);
+
+  function locate() {
+    handleUseMyLocation();
+    // Optionally show a static map preview using Google Maps Static API if key exists
+    if (!mapLayer) return;
+    if (latEl && lonEl && latEl.value && lonEl.value && apiKey) {
+      const src = `https://maps.googleapis.com/maps/api/staticmap?center=${latEl.value},${lonEl.value}&markers=color:red|${latEl.value},${lonEl.value}&zoom=15&size=600x220&key=${apiKey}`;
+      mapLayer.style.display = 'block';
+      mapLayer.innerHTML = `<img alt="Map preview" src="${src}" style="width:100%;height:220px;object-fit:cover;"/>`;
+    }
+  }
 });
 
 

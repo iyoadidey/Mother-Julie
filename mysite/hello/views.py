@@ -23,6 +23,7 @@ def signup_view(request):
         location = request.POST.get('location', '')
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
+        agreement = request.POST.get('agreement')
 
         if not email_or_mobile or not password:
             messages.error(request, 'Email/Mobile and password are required.')
@@ -30,6 +31,10 @@ def signup_view(request):
 
         if password != confirm_password:
             messages.error(request, 'Passwords do not match.')
+            return render(request, 'signup.htm', { 'google_maps_api_key': getattr(settings, 'GOOGLE_MAPS_API_KEY', '') })
+
+        if agreement is None:
+            messages.error(request, 'You must agree to the Terms & Conditions.')
             return render(request, 'signup.htm', { 'google_maps_api_key': getattr(settings, 'GOOGLE_MAPS_API_KEY', '') })
 
         User = get_user_model()

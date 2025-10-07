@@ -68,23 +68,24 @@
         <!-- Signup form -->
         <form method="post" action="{% url 'signup' %}">
         {% csrf_token %}
-        <input name="email" type="text" class="desktop1-input desktop1-input1" />
-        <input name="password" type="password" class="desktop1-input desktop1-input2" />
-        <input name="confirm_password" type="password" class="desktop1-input desktop1-input3" />
+        <input name="email" type="email" class="desktop1-input desktop1-input1" required />
+        <input name="password" type="password" class="desktop1-input desktop1-input2" required />
+        <input name="confirm_password" type="password" class="desktop1-input desktop1-input3" required />
         <div style="position:relative;display:block;">
-          <input name="location" id="location" type="text" class="desktop1-input desktop1-input4 location-input" placeholder="Location" style="padding-right:36px;" />
-          <span id="use-my-location" class="icon" title="Use my location" aria-label="Use my location" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:18px;line-height:1;cursor:pointer">📍</span>
+          <input name="location" id="location" type="text" class="desktop1-input desktop1-input4 location-input" placeholder="Location" style="padding-right:120px;" />
+          <div id="button-layer" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;">
+            <button id="btnAction" type="button" onClick="locate()" style="cursor:pointer;border:1px solid #ff5ea0;border-radius:999px;padding:6px 10px;background:#ffffff;color:#ff5ea0;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.12);">My Current Location</button>
+          </div>
         </div>
+        <div id="map-layer" style="display:none;margin-top:8px;border:1px solid #eee;border-radius:8px;overflow:hidden;height:220px;"></div>
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
 
-        <label for="latitude">Latitude:</label>
-        <input type="text" id="latitude" name="latitude" readonly>
-        <label for="longitude">Longitude:</label>
-        <input type="text" id="longitude" name="longitude" readonly>
-        <button type="button" onclick="getLocation()">Get Current Location</button>
+        
 
         <span class="desktop1-agreement">
     <div class="desktop1-agreement-container">
-        <input type="checkbox" class="desktop1-checkbox" id="agreement" aria-label="I agree to the terms and conditions" />
+        <input type="checkbox" class="desktop1-checkbox" id="agreement" name="agreement" aria-label="I agree to the terms and conditions" required />
         <label for="agreement">
             By continuing, you agree to our <br>
             <a href="{% url 'terms' %}" class="desktop1-link">Terms & Conditions</a> and 
