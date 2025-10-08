@@ -1,0 +1,293 @@
+/* General Layout */
+.desktop1-container1 {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+html, body {
+    font-family: 'Source Sans 3', sans-serif !important;
+}
+* {
+    font-family: inherit !important;
+}
+.desktop1-desktop1 {
+    position: relative;
+    width: 100%;
+    height: 1024px;
+    background: #faacc9;
+    }
+
+/* Logo */
+.motherjulielogo {
+    position: absolute;
+    top: 115px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 189px;
+    height: auto;
+    opacity: 5;
+}
+
+/* Card */
+.desktop1-rectangle1 {
+    position: absolute;
+    top: 268px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 692px;
+    height: 480px;
+    border-radius: 35px;
+    background: #faacc9;
+    box-shadow:  29px -29px 58px #c6889f,
+        -29px 29px 58px #ffd0f3;
+}
+
+/* Title */
+.desktop1-text3 {
+    position: absolute;
+    top: 290px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #000000;
+    font: 800 32px SansSerif;
+    text-align: center;
+}
+
+/* Labels */
+.desktop1-text-first,
+.desktop1-text-last,
+.desktop1-text1,
+.desktop1-text2,
+.desktop1-text4 {
+    position: absolute;
+    color: #000000;
+    font: 700 16px SansSerif;
+    text-align: left;
+}
+
+.desktop1-text-first { top: 350px; left: calc(50% - 198px); }
+.desktop1-text-last { top: 350px; left: calc(50% + 17px); }
+.desktop1-text1 { top: 424px; left: calc(50% - 198px); }
+.desktop1-text2 { top: 487px; left: calc(50% - 198px); }
+.desktop1-text4 { top: 550px; left: calc(50% - 198px); }
+
+/* Inputs */
+.desktop1-input {
+    position: absolute;
+    left: calc(50% - 198px);
+    width: 395px;
+    height: 35px;
+    padding: 6px 10px;
+    border: 2px solid #fff;
+    border-radius: 7px;
+    background: transparent;
+    color: #000000;
+    outline: none;
+}
+
+.desktop1-input::placeholder { color: #B43A66; }
+
+.desktop1-input:focus {
+    background-color: #f99dbf;
+    color: #ff5ea0;
+    box-shadow: 5px 5px #B43A66;
+}
+
+.desktop1-input1 { top: 444px; }
+.desktop1-input2 { top: 507px; }
+.desktop1-input3 { top: 570px; }
+
+.desktop1-input-first {
+    top: 370px;
+    width: 180px;
+    height: 35px;
+}
+
+.desktop1-input-last {
+    top: 370px;
+    left: calc(50% + 17px);
+    width: 180px;
+}
+
+/* Agreement Section */
+.desktop1-agreement {
+    position: absolute;
+    top: 615px !important;
+    left: calc(50% - 198px);
+    width: 395px;
+    color: #fff;
+    font: 700 14px 'SansSerif';
+    text-align: left;
+    line-height: 1.35;
+}
+
+.desktop1-link {
+    color: #ff5ea0;
+    text-decoration: underline;
+    font-weight: 700;
+}
+
+/* Heart Checkbox (Interactive) */
+/* Heart Checkbox Animation */
+/* Interactive Heart Checkbox */
+.heart-container {
+    --heart-color: #B43A66;
+    position: relative;
+    width: 24px;
+    height: 24px;
+    transition: 0.3s;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+    overflow: visible;
+}
+
+.heart-container .checkbox {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    z-index: 20;
+    cursor: pointer;
+}
+
+.heart-container .svg-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Default: hollow heart */
+.heart-container .svg-outline {
+    stroke: var(--heart-color);
+    stroke-width: 2px;
+    fill: none;
+    transition: 0.3s;
+}
+
+/* Hidden by default */
+.heart-container .svg-filled {
+  fill: var(--heart-color);
+  display: none;
+  transition: 0.3s;
+}
+
+/* Confetti animation */
+.heart-container .svg-celebrate {
+  position: absolute;
+  animation: keyframes-svg-celebrate 0.5s;
+  animation-fill-mode: forwards;
+  display: none;
+  stroke: var(--heart-color);
+  fill: var(--heart-color);
+  stroke-width: 2px;
+}
+
+/* When checked: show filled heart, hide outline */
+.heart-container .checkbox:checked ~ .svg-container .svg-outline {
+  display: none;
+}
+
+.heart-container .checkbox:checked ~ .svg-container .svg-filled {
+  display: block;
+  animation: keyframes-svg-filled 0.6s ease-in-out;
+}
+
+.heart-container .checkbox:checked ~ .svg-container .svg-celebrate {
+  display: block;
+}
+
+/* Animations */
+@keyframes keyframes-svg-filled {
+  0% {
+    transform: scale(0);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1);
+    filter: brightness(1.5);
+  }
+}
+
+@keyframes keyframes-svg-celebrate {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+    display: none;
+  }
+}
+
+/* Text beside heart */
+.desktop1-text-agreement {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1.4;
+  color: #333;
+}
+
+
+/* Agreement text styling */
+.desktop1-text-agreement {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1.4;
+    color: #333;
+}
+
+
+/* Sign Up Button */
+.desktop1-button[aria-label="Sign Up"] {
+    position: absolute;
+    top: 665px !important;
+    left: calc(50% + 106px) !important;
+    width: 110px;
+    height: 37px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    color: #ff5ea0;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    
+
+}
+
+.desktop1-text7 {
+color: #ff5ea0;
+font: 700 16px SansSerif;
+text-decoration: none;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% { 
+        background-position: 0% 50%;
+    }
+}
+
+.gradient-anim {
+background: linear-gradient(90deg,rgba(241, 95, 157, 1) 36%, rgba(246, 139, 180, 1) 75%);    background-size: 200% 200%;
+    animation: gradient 10s ease infinite;
+}
+

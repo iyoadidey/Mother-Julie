@@ -12,7 +12,10 @@
     width:100%; 
     height:1024px; 
     background:#faacc9; 
+    background: radial-gradient(circle, rgba(250, 172, 201, 1) 45%, rgba(255, 255, 255, 1) 78%);
+    
 }
+
 
 /* Logo */
 .desktop1, 
@@ -28,15 +31,17 @@
 }
 
 /* Card rectangle */
-.desktop1-rectangle1{ 
-    position:absolute; 
-    top:268px; 
-    left:50%; 
-    transform:translateX(-50%); 
-    width:692px; 
-    height:452px; 
-    background:#f99dbf; 
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+.desktop1-rectangle1 {
+    position: absolute;
+    top: 268px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 692px;
+    height: 480px;
+    border-radius: 35px;
+    background: #faacc9;
+    box-shadow:  29px -29px 58px #c6889f,
+        -29px 29px 58px #ffd0f3;
 }
 
 /* Labels */
@@ -132,5 +137,6 @@
 .desktop1-text7{ 
     color:#ff5ea0; 
     font:700 16px SansSerif; 
-    text-decoration:underline; 
+    text-decoration:none; 
 }
+

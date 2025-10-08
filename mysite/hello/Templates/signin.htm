@@ -28,40 +28,41 @@
         fill: var(--dl-color-theme-neutral-dark);
       }
     </style>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/animate.css@4.1.1/animate.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
-      data-tag="font"
-    />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital@0;1&display=swap" rel="stylesheet">
     {% load static %}
-    <link href="{% static 'signin.css' %}" rel="stylesheet" />
+    <link href="{% static 'signup.css' %}" rel="stylesheet" />
+
+  </head>
   </head>
   <body>
     <div>
 
       <div class="desktop1-container1">
-        <div class="desktop1-desktop1">
+    <div class="desktop1-desktop1 gradient-anim"></div>
           <img
             src="{% static 'motherjulie.png' %}"
             alt="motherjulielogo"
             class="motherjulielogo"
           />
           <div class="desktop1-rectangle1" aria-hidden="true"></div>
+
           <span class="desktop1-text1">Email</span>
           <span class="desktop1-text2">Password</span>
-          <input type="text" class="desktop1-input desktop1-input1" />
-          <input type="password" class="desktop1-input desktop1-input2" />
+
+          <input type="text" class="desktop1-input desktop1-input1" placeholder="Enter your email" required />
+          <input type="password" class="desktop1-input desktop1-input2" placeholder="Enter your password" required />
+
           <span class="desktop1-text3">WELCOME!</span>
-          <span class="desktop1-text4">
-          <span class="desktop1-text5">Don’t have an account?</span>
-        <a href="{% url 'signup' %}">
-        <button type="button" class="desktop1-create">Create Account</button>
-      </a>
-      </span>
+
+<span class="desktop1-text4">
+  <span class="desktop1-text5">Don’t have an account?</span>
+  <a href="{% url 'signup' %}" class="desktop1-create">Create Account</a>
+</span>>
+
+
 
           <button type="button" class="desktop1-button" aria-label="Sign in">
             <span class="desktop1-text7">Sign in</span>
