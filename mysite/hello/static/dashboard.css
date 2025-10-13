@@ -1,0 +1,277 @@
+/* ======================= GENERAL STYLES & VARIABLES ======================= */
+:root {
+    --brand-pink: #F8C8DC;
+    --brand-hot-pink: #EE7BA4;
+    --text-dark: #333;
+    --text-light: #fff;
+    --bg-light: #fff;
+    --avocado-green: #E1EAD5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-dark);
+    background-color: var(--bg-light);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ======================= HEADER ======================= */
+header {
+    background-color: var(--brand-pink);
+    padding: 15px 0;
+}
+
+header nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo img {
+    height: 80px; /* Adjust based on your logo's size */
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.username {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.user-icon {
+    height: 30px;
+}
+
+
+/* ======================= HERO SECTION ======================= */
+.hero {
+    padding: 60px 0;
+}
+
+.hero-content {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+}
+
+.hero-illustration {
+    flex: 0 0 150px; /* Does not grow or shrink, base width 150px */
+}
+
+.hero-illustration img {
+    width: 100%;
+}
+
+.hero-text {
+    flex: 1;
+}
+
+.hero-text h1 {
+    font-family: 'Pacifico', cursive;
+    color: var(--brand-hot-pink);
+    font-size: 3rem;
+    font-weight: 400;
+    margin-bottom: 15px;
+}
+
+.hero-text p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 500px;
+    margin-bottom: 30px;
+}
+
+.btn-primary {
+    background-image: linear-gradient(to right, #FF8AAE, var(--brand-hot-pink));
+    color: var(--text-light);
+    border: none;
+    border-radius: 50px;
+    padding: 15px 40px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(238, 123, 164, 0.4);
+    transition: transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+}
+
+/* ======================= FEATURED ITEMS ======================= */
+.featured {
+    padding: 40px 0 80px 0;
+    border-top: 1px solid #eee;
+}
+
+.featured h2 {
+    color: var(--brand-hot-pink);
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    margin-bottom: 25px;
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.item-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.item-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Specific Card Overlays */
+.card-overlay-text {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-light);
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+}
+
+
+
+
+/* Tags on Cards */
+.tag {
+    position: absolute;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-light);
+}
+.new {
+    top: 15px;
+    right: 15px;
+    background-color: #E63946;
+}
+.best-seller {
+    bottom: 15px;
+    left: 15px;
+    background-color: #1D3557;
+    border: 2px solid #457B9D;
+}
+.limited {
+    display: inline-block;
+    position: static;
+    background-color: #555;
+    margin-top: 10px;
+}
+
+/* Special info box for Avocado card */
+.card-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--avocado-green);
+    padding: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* ======================= FOOTER ======================= */
+footer {
+    background-color: var(--brand-pink);
+    color: rgb(0, 0, 0);
+    padding: 40px 0;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer-logo img {
+    margin-bottom: 20px;
+}
+
+.footer-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.footer-nav ul li {
+    display: inline-block;
+}
+
+.footer-nav ul li a {
+    color: rgb(0, 0, 0);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.footer-social {
+    margin-top: 20px;
+}
+
+.footer-social span {
+    color: rgb(0, 0, 0);
+    font-weight: 500;
+    margin: 0 10px;
+    font-size: 1rem;
+    display: inline-block;
+}
+
+/* Social Media Links */
+.footer-social .social-icon {
+    color: rgb(0, 0, 0);
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none; /* Remove underline */
+    display: inline-block;
+    margin: 0 10px;
+    transition: color 0.3s ease;
+}
+
+.footer-social .social-icon:hover {
+    color: #ff5ea0; /* Highlight color for hover */
+}

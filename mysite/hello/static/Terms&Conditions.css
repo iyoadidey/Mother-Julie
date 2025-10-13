@@ -1,141 +1,129 @@
-.desktop1-terms-list {
-  list-style-type: disc; /* Adds bullet points */
-  padding-left: 20px; /* Adds padding to the left for indentation */
-  color: var(--dl-color-theme-neutral-dark); /* Optional: You can change the text color */
-}
-/* Page layout */
-.desktop1-container1{ 
-    width:100%; 
-    min-height:100vh; 
-    display:flex; 
-    align-items:center; 
-    flex-direction:column; 
+/* Global styles for all pages (Signup, Signin, Terms) */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(120deg, #ffb6c1, #ff6f91, #ff4081);
+    background-attachment: fixed; /* Add this line */  display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow-y: auto;
 }
 
-.desktop1-desktop1{ 
-    position:relative; 
-    width:100%; 
-    height:1024px; 
-    background:#faacc9; 
+/* Container setup */
+.desktop1-container1 {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
+
+
 
 /* Logo */
-.desktop1, 
-.motherjulielogo { 
-    position:absolute; 
-    top:115px;               
-    left:50%; 
-    transform:translateX(-50%); 
-    width:189px; 
-    height:auto; 
-    mix-blend-mode: overlay; 
-    opacity: 1; 
+.motherjulielogo {
+  width: 200px;
+  margin: 0 auto 20px;
+  display: block;
 }
 
-/* Card rectangle */
-.desktop1-rectangle1{ 
-    position:absolute; 
-    top:268px; 
-    left:50%; 
-    transform:translateX(-50%); 
-    width:692px; 
-    height:452px; 
-    background:#f99dbf; 
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+/* Card Design for Terms & Conditions */
+.terms-card {
+    width: 100%;
+    width:fit-content;
+    padding: 50px;
+    background: #fff;
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15)
+    text-align justify;
 }
-
-/* Labels */
-.desktop1-text1{ 
-    position:absolute; 
-    top:351px; 
-    left:calc(50% - 198px); 
-    color:#fff; 
-    font:700 16px SansSerif; 
-    text-align:left; 
-}
-
-.desktop1-text2{ 
-    position:absolute; 
-    top:434px; 
-    left:calc(50% - 198px); 
-    color:#fff; 
-    font:700 16px SansSerif; 
-    text-align:left; 
-}
-
-/* Inputs */
-.desktop1-input{ 
-    position:absolute; 
-    left:calc(50% - 198px); 
-    width:395px; 
-    height:35px; 
-    padding:6px 10px; 
-    border:1px solid #fff; 
-    border-radius:0; 
-    background:transparent; 
-    color:#fff; 
-    outline:none; 
-}
-
-.desktop1-input::placeholder{ color:#ffe0ea; }
-.desktop1-input1{ top:371px; }
-.desktop1-input2{ top:454px; }
 
 /* Title */
-.desktop1-text3{ 
-    position:absolute; 
-    top:290px; 
-    left:50%; 
-    transform:translateX(-50%); 
-    color:#fff; 
-    font:800 32px SansSerif; 
-    letter-spacing:1px; 
-    text-align:center; 
+.terms-title {
+  font-size: 37px;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 25px;
+  letter-spacing: 1px;
 }
 
-/* Helper text */
-.desktop1-text4{ 
-    position:absolute; 
-    top:506px; 
-    left:calc(50% - 198px); 
-    color:#fff; 
-    font:700 16px SansSerif; 
-    text-align:left; 
+/* Intro Text */
+.terms-intro,
+.terms-update p {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  line-height: 1.6;
+  text-align: left;
 }
 
-.desktop1-text5{ color:#fff; }
-
-.desktop1-create{ 
-    background:none; 
-    border:none; 
-    padding:0; 
-    margin-left:1px; 
-    color:#ff5ea0; 
-    font:700 16px SansSerif; 
-    text-decoration:underline; 
-    cursor:pointer; 
+/* Terms List */
+.terms-list {
+  list-style-type: decimal;
+  list-style-position:outside;
+  margin: 20px 0;
+  padding-left: 0;
+  text-align: left;
 }
 
-/* Button */
-.desktop1-button{ 
-    position:absolute; 
-    top:629px; 
-    left:calc(50% + 197px); 
-    width:110px; 
-    height:37px; 
-    display:flex; 
-    align-items:center; 
-    justify-content:center; 
-    background:#fff; 
-    color:#ff5ea0; 
-    border:1px solid rgba(255,255,255,.75); 
-    border-radius:999px; 
-    cursor:pointer; 
-    box-shadow:0 10px 28px rgba(0,0,0,0.35); /* slightly stronger shadow only */
+.terms-list li {
+  font-size: 1rem;
+  font-weight: 600px;
+  margin-bottom: 10px;
+  line-height: 1.5;
 }
 
-.desktop1-text7{ 
-    color:#ff5ea0; 
-    font:700 16px SansSerif; 
-    text-decoration:underline; 
+/* Button Styles */
+.terms-button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.desktop1-button {
+  width: 110px;
+  height: 37px;
+  background: #ff5ea0;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.2s;
+}
+
+.desktop1-button:hover {
+  opacity: 0.9;
+}
+
+.desktop1-text7 {
+  color: #ffffff;
+}
+
+/* Go Back Button at the Top Left */
+.go-back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 90px;
+  height: 32px;
+  font-size: 0.9rem;
+}
+
+/* Responsive Styling */
+@media (max-width: 600px) {
+  .terms-card {
+    padding: 30px 20px;
+  }
+
+  .terms-title {
+    font-size: 1.5rem;
+  }
 }

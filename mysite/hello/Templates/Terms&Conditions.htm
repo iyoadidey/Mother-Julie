@@ -1,200 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <title>Mother Julie — Terms & Conditions</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="utf-8" />
     <meta property="twitter:card" content="summary_large_image" />
-
-    <!-- Link to the Inter font -->
+    
     <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
     />
-
-    <style data-tag="reset-style-sheet">
-        /* Simplified Reset */
-        html { line-height: 1.15; box-sizing: border-box; }
-        *, *::before, *::after { box-sizing: inherit; }
-        body { margin: 0; font-family: sans-serif; }
-        p, li, ul, h1, h2, h3 { margin: 0; padding: 0; }
-        img { display: block; max-width: 100%; }
-        button { background-color: transparent; border: none; padding: 0; }
-    </style>
-
-    <style>
-        /* Define a consistent font and colors */
-        :root {
-            --color-pink-bg: #faacc9; /* Background Pink */
-            --color-card-pink: #f99dbf; /* Card Pink */
-            --color-text-white: #fff;
-            --color-button-pink: #ff5ea0;
-        }
-
-        /* Apply the 'Inter' font to the whole page */
-        html { font-family: 'Inter', sans-serif; font-size: 16px; }
-
-        body {
-            font-weight: 400;
-            background: var(--color-pink-bg);
-            /* Centering the entire page content using Flexbox */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        /* Container for logo and card, centered on the page */
-        .terms-page-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 732px; /* Set a max width for the whole content */
-            width: 100%;
-            margin-top: -150px; /* Pull the content up a bit for visual balance */
-        }
-
-        /* Logo Styling */
-        .logo {
-            width: 189px;
-            height: auto;
-            margin-bottom: 20px; /* Space between logo and card */
-            mix-blend-mode: overlay; /* To get the faded look on the background */
-            opacity: 1;
-        }
-
-        /* Main Card Styling */
-        .terms-card {
-            background: var(--color-card-pink);
-            border-radius: 20px; /* Added rounded corners */
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
-            padding: 30px 50px; /* Inner padding */
-            width: 100%;
-            color: var(--color-text-white);
-        }
-
-        /* Title Styling (Common styling for both titles) */
-        .card-title {
-            font-family: 'Inter', sans-serif; /* Same font for both titles */
-            font: 800 32px SansSerif; 
-            text-align: center;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-        }
-
-        /* Intro Text Styling */
-        .intro-text {
-            font-size: 1rem;
-            font-weight: 700; /* Bold */
-            line-height: 1.5;
-            margin-bottom: 15px; /* Space before the list */
-        }
-
-        /* List Styling */
-        .terms-list {
-            /* This makes the bullet points align inside the text block, like the image */
-            list-style-position: inside; 
-            margin-bottom: 30px; /* Increased space after the list */
-            font-size: 1rem;
-        }
-
-        .terms-list li {
-            margin-bottom: 12px; /* Slightly increased space between items */
-            line-height: 1.4;
-            font-weight: 700; /* List items are bold in the image */
-            padding-left: 5px; /* Small space between bullet and text */
-        }
-
-        .terms-list li:last-child {
-            margin-bottom: 0; /* No bottom margin on the last item */
-        }
-
-        /* Update Text Styling for the two separate paragraphs */
-        .update-text p {
-            font-size: 1rem;
-            font-weight: 700;
-            line-height: 1.5;
-        }
-
-        /* Button Wrapper for aligning button to the right */
-        .button-wrapper {
-            display: flex;
-            justify-content: flex-end;
-            padding-top: 30px; /* Increased space before the button */
-        }
-
-        /* Button Styling */
-        .go-back-button {
-            width: 110px;
-            height: 37px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--color-text-white);
-            color: var(--color-button-pink);
-            border-radius: 999px;
-            cursor: pointer;
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-            font-size: 1rem;
-            font-weight: 700; /* Bold */
-            text-decoration: none;
-            transition: background-color 0.2s, opacity 0.2s;
-        }
-
-        .go-back-button:hover {
-            opacity: 0.9;
-        }
-
-        /* Media Query for smaller screens */
-        @media (max-width: 768px) {
-            .terms-card {
-                padding: 20px 30px; /* Reduced padding on small screens */
-            }
-
-            .card-title {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
+    
     {% load static %}
-    <div class="terms-page-container">
-        <img
-            src="{% static 'motherjulie.png' %}"
-            alt="motherjulielogo"
-            class="logo"
-        />
+    <link href="{% static 'Terms&Conditions.css' %}" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="desktop1-container1">
+      <div class="desktop1-desktop1">
+        <img src="{% static 'motherjulie.png' %}" alt="Mother Julie Logo" class="motherjulielogo" />
 
         <div class="terms-card">
-            <!-- Consistent Title Styling for both pages -->
-            <h1 class="card-title">Terms & Condition, and Privacy Policy</h1>
+          <h1 class="terms-title">Terms & Conditions, and Privacy Policy</h1>
+          
+          <p class="terms-intro">By creating an account, you agree to the following:</p>
+          
+          <ol class="terms-list">
+            <li>You’ll provide true and accurate details when signing up.</li>
+            <li>You’re responsible for keeping your account secure.</li>
+            <li>Orders placed must be paid in full through our secure payment partners.</li>
+            <li>We collect your contact and location info to process orders and improve our service.</li>
+            <li>Your data is protected and only shared with our partner restaurants, riders, and payment providers.</li>
+            <li>We don’t sell or misuse your personal information.</li>
+            <li>You may request to update or delete your account anytime by emailing us.</li>
+          </ol>
 
-            <p class="intro-text">By creating an account, you agree to the following:</p>
+          <div class="terms-update">
+            <p>We may update these terms from time to time.</p>
+            <p>By continuing, you accept the latest version of our Terms & Privacy Policy.</p>
+          </div>
 
-            <ul class="terms-list">
-                <li>You’ll provide true and accurate details when signing up.</li>
-                <li>You’re responsible for keeping your account secure.</li>
-                <li>Orders placed must be paid in full through our secure payment partners.</li>
-                <li>We collect your contact and location info to process orders and improve our service.</li>
-                <li>Your data is protected and only shared with our partner restaurants, riders, and payment providers.</li>
-                <li>We don’t sell or misuse your personal information.</li>
-                <li>You may request to update or delete your account anytime by emailing us.</li>
-            </ul>
-
-            <div class="update-text">
-                <p>We may update these terms from time to time.</p>
-                <p>By continuing, you accept the latest version of our Terms & Privacy Policy.</p>
-            </div>
-
-            <div class="button-wrapper">
-                <a href="{% url 'signup' %}" class="go-back-button" aria-label="Go Back">
-                    Go back
-                </a>
-            </div>
-
+          <div class="terms-button-wrapper">
+            <a href="{% url 'signup' %}" class="desktop1-button">
+              <span class="desktop1-text7">Go Back</span>
+            </a>
+          </div>
         </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

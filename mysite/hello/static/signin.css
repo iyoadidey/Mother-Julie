@@ -1,142 +1,120 @@
-/* Page layout */
-.desktop1-container1{ 
-    width:100%; 
-    min-height:100vh; 
-    display:flex; 
-    align-items:center; 
-    flex-direction:column; 
+/* Reset and base styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(120deg, #ffb6c1, #ff6f91, #ff4081);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
-.desktop1-desktop1{ 
-    position:relative; 
-    width:100%; 
-    height:1024px; 
-    background:#faacc9; 
-    background: radial-gradient(circle, rgba(250, 172, 201, 1) 45%, rgba(255, 255, 255, 1) 78%);
-    
+* {
+  box-sizing: border-box;
 }
 
+/* Container */
+.desktop1-container1 {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  background: #fff;
+  border-radius: 25px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
 
 /* Logo */
-.desktop1, 
-.motherjulielogo { 
-    position:absolute; 
-    top:115px;               
-    left:50%; 
-    transform:translateX(-50%); 
-    width:189px; 
-    height:auto; 
-    mix-blend-mode: overlay; 
-    opacity: 1; 
+.motherjulielogo {
+  width: 120px;
+  margin: 0 auto 20px;
+  display: block;
 }
 
-/* Card rectangle */
-.desktop1-rectangle1 {
-    position: absolute;
-    top: 268px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 692px;
-    height: 480px;
-    border-radius: 35px;
-    background: #faacc9;
-    box-shadow:  29px -29px 58px #c6889f,
-        -29px 29px 58px #ffd0f3;
-}
-
-/* Labels */
-.desktop1-text1{ 
-    position:absolute; 
-    top:351px; 
-    left:calc(50% - 198px); 
-    color:#fff; 
-    font:700 16px SansSerif; 
-    text-align:left; 
-}
-
-.desktop1-text2{ 
-    position:absolute; 
-    top:434px; 
-    left:calc(50% - 198px); 
-    color:#fff; 
-    font:700 16px SansSerif; 
-    text-align:left; 
+/* Title */
+.desktop1-text3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ff5b89;
+  margin-bottom: 25px;
+  letter-spacing: 1px;
 }
 
 /* Inputs */
-.desktop1-input{ 
-    position:absolute; 
-    left:calc(50% - 198px); 
-    width:395px; 
-    height:35px; 
-    padding:6px 10px; 
-    border:1px solid #fff; 
-    border-radius:7px; 
-    background:transparent; 
-    color:#fff; 
-    outline:none; 
+.desktop1-input {
+  width: 100%;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
 }
 
-.desktop1-input::placeholder{ color:#ffe0ea; }
-.desktop1-input1{ top:371px; }
-.desktop1-input2{ top:454px; }
-
-/* Title */
-.desktop1-text3{ 
-    position:absolute; 
-    top:290px; 
-    left:50%; 
-    transform:translateX(-50%); 
-    color:#fff; 
-    font:800 32px SansSerif; 
-    letter-spacing:1px; 
-    text-align:center; 
-}
-
-/* Helper text */
-.desktop1-text4{ 
-    position:absolute; 
-    top:506px; 
-    left:calc(50% - 198px); 
-    color:#fff; 
-    font:700 16px SansSerif; 
-    text-align:left; 
-}
-
-.desktop1-text5{ color:#fff; }
-
-.desktop1-create{ 
-    background:none; 
-    border:none; 
-    padding:0; 
-    margin-left:1px; 
-    color:#ff5ea0; 
-    font:700 16px SansSerif; 
-    text-decoration:underline; 
-    cursor:pointer; 
+.desktop1-input:focus {
+  border-color: #ff5b89;
+  box-shadow: 0 0 6px rgba(255, 91, 137, 0.4);
+  outline: none;
 }
 
 /* Button */
-.desktop1-button{ 
-    position:absolute; 
-    top:629px; 
-    left:calc(50% + 197px); 
-    width:110px; 
-    height:37px; 
-    display:flex; 
-    align-items:center; 
-    justify-content:center; 
-    background:#fff; 
-    color:#ff5ea0; 
-    border:1px solid rgba(255,255,255,.75); 
-    border-radius:999px; 
-    cursor:pointer; 
-    box-shadow:0 10px 28px rgba(0,0,0,0.35); /* slightly stronger shadow only */
+.desktop1-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 25px;
+  background-color: #ff5b89;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 91, 137, 0.4);
+  cursor: pointer; /* Add pointer cursor to indicate it's clickable */
 }
 
-.desktop1-text7{ 
-    color:#ff5ea0; 
-    font:700 16px SansSerif; 
-    text-decoration:none; 
+.desktop1-button:hover {
+  background-color: #ff3e70;
+  transform: translateY(-2px); /* Slightly lift the button on hover */
+  box-shadow: 0 6px 20px rgba(255, 91, 137, 0.6);
 }
 
+.desktop1-button:focus {
+  outline: none; /* Removes focus border */
+  box-shadow: 0 0 6px rgba(255, 91, 137, 0.7); /* Focus state */
+}
+
+/* Ensure that the text inside the button is styled */
+.desktop1-text7 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+/* Bottom Link */
+.desktop1-bottom-link {
+  margin-top: 20px;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.desktop1-link {
+  color: #ff5b89;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-left: 5px;
+}
+
+.desktop1-link:hover {
+  color: #dc3c6e;
+}
+
+/* Messages */
+.messages-container {
+  background: rgba(255, 91, 137, 0.05);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  border: 1px solid rgba(255, 91, 137, 0.2);
+  color: #dc3c6e;
+}
