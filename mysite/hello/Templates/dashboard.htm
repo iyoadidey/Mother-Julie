@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mother Julie - Dashboard</title>
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <nav class="container">
+            <a href="{% url 'dashboard' %}" class="logo">
+                <img src="{% static 'motherjulie.png' %}" alt="Mother Julie Logo">
+            </a>
+            <ul>
+                <li><a href="#">ABOUT US</a></li>
+                <li><a href="#">WHY MOTHER JULIE?</a></li>
+                <li><a href="#">OUR MENU</a></li>
+            </ul>
+            <a href="#" class="username">
+                USERNAME
+                <img src="{% static 'images/user-icon.svg' %}" alt="User Account" class="user-icon">
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container hero-content">
+                <div class="hero-illustration">
+                    <img src="{% static 'coffee-cup.png' %}" alt="Coffee Cup">
+                </div>
+                <div class="hero-text">
+                    <h1>Mabuhay, Food Lovers!</h1>
+                    <p>A bunch of home-made recipes — from Filipino desserts to comforting dishes. Experience the taste of home in every bite and sip.</p>
+                    <button class="btn-primary">ORDER NOW</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="featured">
+            <div class="container">
+                <h2>FEATURED ITEMS</h2>
+                <div class="items-grid">
+                    <div class="item-card">
+                        <img src="{% static 'avocado_moto.png' %}" alt="Avocado Moto Drink">
+                        
+                    </div>
+
+                    <div class="item-card">
+                        <img src="{% static 'mais_conyelo.png' %}" alt="Mais Con Yelo Drink">
+                        <div class="card-overlay-text mais-title">
+                        </div>
+                    </div>
+
+                    <div class="item-card">
+                        <img src="{% static 'biscoff.png' %}" alt="Biscoff Drink">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer with Navigation -->
+    <footer>
+        <div class="footer-container">
+            
+            <nav class="footer-nav">
+                <ul>
+                    <li><a href="#">Address: 1983 Old Torres 1st Street, Tondo, Manila, Philippines</a></li>
+                <li><a href="mailto:contact.motherjulie@gmail.com">Email: contact.motherjulie@gmail.com</a></li>
+                </ul>
+            </nav>
+            <div class="footer-social">
+                <span>Follow us on:</span>
+                <a href="https://www.facebook.com/motherjulie.products" class="social-icon" target="_blank">Facebook</a> |
+                <a href="https://www.instagram.com/mother.julie?utm_source=ig_web_button_share_sheet&igsh=MXYzcDBibmRid3d0bg==" class="social-icon" target="_blank">Instagram</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

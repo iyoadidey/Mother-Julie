@@ -6,68 +6,47 @@
     <meta charset="utf-8" />
     <meta property="twitter:card" content="summary_large_image" />
 
-    <style data-tag="reset-style-sheet">
-      html {  line-height: 1.15;}body {  margin: 0;}* {  box-sizing: border-box;  border-width: 0;  border-style: solid;  -webkit-font-smoothing: antialiased;}p,li,ul,pre,div,h1,h2,h3,h4,h5,h6,figure,blockquote,figcaption {  margin: 0;  padding: 0;}button {  background-color: transparent;}button,input,optgroup,select,textarea {  font-family: inherit;  font-size: 100%;  line-height: 1.15;  margin: 0;}button,select {  text-transform: none;}button,[type="button"],[type="reset"],[type="submit"] {  -webkit-appearance: button;  appearance: button;  color: inherit;}button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner {  border-style: none;  padding: 0;}button:-moz-focus,[type="button"]:-moz-focus,[type="reset"]:-moz-focus,[type="submit"]:-moz-focus {  outline: 1px dotted ButtonText;}a {  color: inherit;  text-decoration: inherit;}pre {  white-space: normal;}input {  padding: 2px 4px;}img {  display: block;}details {  display: block;  margin: 0;  padding: 0;}summary::-webkit-details-marker {  display: none;}[data-thq="accordion"] [data-thq="accordion-content"] {  max-height: 0;  overflow: hidden;  transition: max-height 0.3s ease-in-out;  padding: 0;}[data-thq="accordion"] details[data-thq="accordion-trigger"][open] + [data-thq="accordion-content"] {  max-height: 1000vh;}details[data-thq="accordion-trigger"][open] summary [data-thq="accordion-icon"] {  transform: rotate(180deg);}html { scroll-behavior: smooth  }
-    </style>
-    <style data-tag="default-style-sheet">
-      html {
-        font-family: Inter;
-        font-size: 16px;
-      }
-
-      body {
-        font-weight: 400;
-        font-style:normal;
-        text-decoration: none;
-        text-transform: none;
-        letter-spacing: normal;
-        line-height: 1.15;
-        color: var(--dl-color-theme-neutral-dark);
-        background: var(--dl-color-theme-neutral-light);
-
-        fill: var(--dl-color-theme-neutral-dark);
-      }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/animate.css@4.1.1/animate.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" />
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital@0;1&display=swap" rel="stylesheet">
     {% load static %}
-    <link href="{% static 'signup.css' %}" rel="stylesheet" />
+    <link href="{% static 'signin.css' %}" rel="stylesheet" />
+  </head>
 
-  </head>
-  </head>
   <body>
-    <div>
+    <div class="desktop1-container1">
+      <div class="desktop1-desktop1">
+        <img src="{% static 'motherjulie.png' %}" alt="Mother Julie Logo" class="motherjulielogo" />
+        <span class="desktop1-text3">WELCOME! SIGN IN</span>
 
-      <div class="desktop1-container1">
-    <div class="desktop1-desktop1 gradient-anim"></div>
-          <img
-            src="{% static 'motherjulie.png' %}"
-            alt="motherjulielogo"
-            class="motherjulielogo"
-          />
-          <div class="desktop1-rectangle1" aria-hidden="true"></div>
+        <!-- Django messages -->
+        {% if messages %}
+          <div class="messages-container">
+            {% for message in messages %}
+              <p>{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
 
-          <span class="desktop1-text1">Email</span>
-          <span class="desktop1-text2">Password</span>
+        <form id="signin-form" action="{% url 'signin' %}" method="POST">
+          {% csrf_token %}
+          <input name="email" type="email" class="desktop1-input" placeholder="Email" required />
+          <input name="password" type="password" class="desktop1-input" placeholder="Password" required />
 
-          <input type="text" class="desktop1-input desktop1-input1" placeholder="Enter your email" required />
-          <input type="password" class="desktop1-input desktop1-input2" placeholder="Enter your password" required />
-
-          <span class="desktop1-text3">WELCOME!</span>
-
-<span class="desktop1-text4">
-  <span class="desktop1-text5">Don’t have an account?</span>
-  <a href="{% url 'signup' %}" class="desktop1-create">Create Account</a>
-</span>>
-
+        <form method="post" action="{% url 'dashboard' %}">
+  {% csrf_token %}
+  <button type="submit" class="desktop1-button" aria-label="Sign In">
+    <span class="desktop1-text7">Sign In</span>
+  </button>
+</form>
 
 
-          <button type="button" class="desktop1-button" aria-label="Sign in">
-            <span class="desktop1-text7">Sign in</span>
-          </button>
-        </div>
+
+          <p class="desktop1-bottom-link">
+            Don't have an account?
+            <a href="{% url 'signup' %}" class="desktop1-link">Sign Up</a>
+          </p>
+        </form>
       </div>
     </div>
   </body>

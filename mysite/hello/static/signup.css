@@ -1,293 +1,290 @@
-/* General Layout */
+html { line-height: 1.15; }
+body { margin: 0; }
+* { box-sizing: border-box; border-width: 0; border-style: solid; -webkit-font-smoothing: antialiased; }
+p,li,ul,pre,div,h1,h2,h3,h4,h5,h6,figure,blockquote,figcaption { margin: 0; padding: 0; }
+button { background-color: transparent; }
+button,input,optgroup,select,textarea { font-family: inherit; font-size: 100%; line-height: 1.15; margin: 0; }
+button,select { text-transform: none; }
+button,[type="button"],[type="reset"],[type="submit"] { -webkit-appearance: button; appearance: button; color: inherit; }
+button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner { border-style: none; padding: 0; }
+button:-moz-focus,[type="button"]:-moz-focus,[type="reset"]:-moz-focus,[type="submit"]:-moz-focus { outline: 1px dotted ButtonText; }
+a { color: inherit; text-decoration: inherit; }
+pre { white-space: normal; }
+input { padding: 2px 4px; }
+img { display: block; }
+details { display: block; margin: 0; padding: 0; }
+summary::-webkit-details-marker { display: none; }
+html { scroll-behavior: smooth; font-family: Inter; font-size: 16px; }
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(120deg, #ffb6c1, #ff6f91, #ff4081);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Form Container */
 .desktop1-container1 {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  background: #fff;
+  border-radius: 25px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
 }
 
-html, body {
-    font-family: 'Source Sans 3', sans-serif !important;
-}
-* {
-    font-family: inherit !important;
-}
-.desktop1-desktop1 {
-    position: relative;
-    width: 100%;
-    height: 1024px;
-    background: #faacc9;
-    }
-
-/* Logo */
 .motherjulielogo {
-    position: absolute;
-    top: 115px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 189px;
-    height: auto;
-    opacity: 5;
+  width: 150px;
+  margin: 0 auto 20px;
+  display: block;
 }
 
-/* Card */
-.desktop1-rectangle1 {
-    position: absolute;
-    top: 268px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 692px;
-    height: 480px;
-    border-radius: 35px;
-    background: #faacc9;
-    box-shadow:  29px -29px 58px #c6889f,
-        -29px 29px 58px #ffd0f3;
-}
-
-/* Title */
 .desktop1-text3 {
-    position: absolute;
-    top: 290px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #000000;
-    font: 800 32px SansSerif;
-    text-align: center;
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ff5b89;
+  margin-bottom: 25px;
+  letter-spacing: 1px;
 }
 
-/* Labels */
-.desktop1-text-first,
-.desktop1-text-last,
-.desktop1-text1,
-.desktop1-text2,
-.desktop1-text4 {
-    position: absolute;
-    color: #000000;
-    font: 700 16px SansSerif;
-    text-align: left;
-}
-
-.desktop1-text-first { top: 350px; left: calc(50% - 198px); }
-.desktop1-text-last { top: 350px; left: calc(50% + 17px); }
-.desktop1-text1 { top: 424px; left: calc(50% - 198px); }
-.desktop1-text2 { top: 487px; left: calc(50% - 198px); }
-.desktop1-text4 { top: 550px; left: calc(50% - 198px); }
-
-/* Inputs */
+/* Input Styling */
 .desktop1-input {
-    position: absolute;
-    left: calc(50% - 198px);
-    width: 395px;
-    height: 35px;
-    padding: 6px 10px;
-    border: 2px solid #fff;
-    border-radius: 7px;
-    background: transparent;
-    color: #000000;
-    outline: none;
+  width: 100%;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
 }
-
-.desktop1-input::placeholder { color: #B43A66; }
 
 .desktop1-input:focus {
-    background-color: #f99dbf;
-    color: #ff5ea0;
-    box-shadow: 5px 5px #B43A66;
+  border-color: #ff5b89;
+  box-shadow: 0 0 6px rgba(255, 91, 137, 0.4);
+  outline: none;
 }
 
-.desktop1-input1 { top: 444px; }
-.desktop1-input2 { top: 507px; }
-.desktop1-input3 { top: 570px; }
-
-.desktop1-input-first {
-    top: 370px;
-    width: 180px;
-    height: 35px;
+/* Button */
+.desktop1-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 25px;
+  background-color: #ff5b89;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 91, 137, 0.4);
 }
 
-.desktop1-input-last {
-    top: 370px;
-    left: calc(50% + 17px);
-    width: 180px;
+.desktop1-button:hover {
+  background-color: #ff3e70;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 91, 137, 0.6);
 }
 
-/* Agreement Section */
-.desktop1-agreement {
-    position: absolute;
-    top: 615px !important;
-    left: calc(50% - 198px);
-    width: 395px;
-    color: #fff;
-    font: 700 14px 'SansSerif';
-    text-align: left;
-    line-height: 1.35;
+/* Agreement Row */
+.agreement-container {
+  display: flex;
+  align-items: center;
+  gap: 0px; /* space between checkbox and text */
+}
+
+.heart-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border: 2px solid #ff5c8d;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Add a pink heart when checked ❤️ */
+.heart-checkbox:checked::before {
+  content: "♥";
+  color: #ff5c8d;
+  font-size: 16px;
+  position: absolute;
+  top: -2px;
+  left: 2px;
+}
+
+.agreement-text {
+  font-size: 14px;
+  color: #333;
+}
+
+.agreement-link {
+  color: #ff5c8d;
+  text-decoration: underline;
+}
+
+.agreement-text {
+  line-height: 1.4;
+  text-align: left;
+  flex: 1;
 }
 
 .desktop1-link {
-    color: #ff5ea0;
-    text-decoration: underline;
-    font-weight: 700;
+  color: #ff5b89;
+  font-weight: 600;
+  text-decoration: underline;
+  transition: color 0.3s ease;
 }
 
-/* Heart Checkbox (Interactive) */
-/* Heart Checkbox Animation */
-/* Interactive Heart Checkbox */
+.desktop1-link:hover {
+  color: #dc3c6e;
+}
+
+/* Messages Container */
+.messages-container {
+  background: rgba(255, 91, 137, 0.05);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.9rem;
+  margin-top: 20px;
+  border: 1px solid rgba(255, 91, 137, 0.2);
+  max-width: 420px;
+  width: 100%;
+  position: fixed;
+  bottom: 20px;
+  z-index: 100;
+}
+
+/* Heart Checkbox */
 .heart-container {
-    --heart-color: #B43A66;
-    position: relative;
-    width: 24px;
-    height: 24px;
-    transition: 0.3s;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 6px;
-    overflow: visible;
+  --heart-color: rgb(255, 91, 137);
+  position: relative;
+  width: 50px;
+  height: 50px;
+  transition: 0.3s;
+  transform: scale(0.65);
+  transform-origin: top left;
+  margin-left: 0;
+  flex-shrink: 0;
 }
 
 .heart-container .checkbox {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    z-index: 20;
-    cursor: pointer;
+  position: absolute;
+  top: 0;        /* Position the checkbox at the top of the heart */
+  left: 0;       /* Position the checkbox at the left of the heart */
+  width: 100%;   /* Ensure it covers the full width of the heart */
+  height: 100%;  /* Ensure it covers the full height of the heart */
+  opacity: 0;    /* Keep the checkbox invisible */
+  z-index: 20;   /* Ensure it stays on top of the heart icon */
+  cursor: pointer;
 }
 
 .heart-container .svg-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Default: hollow heart */
-.heart-container .svg-outline {
-    stroke: var(--heart-color);
-    stroke-width: 2px;
-    fill: none;
-    transition: 0.3s;
-}
-
-/* Hidden by default */
-.heart-container .svg-filled {
+.svg-outline,
+.svg-filled {
   fill: var(--heart-color);
-  display: none;
-  transition: 0.3s;
+  position: absolute;
 }
 
-/* Confetti animation */
-.heart-container .svg-celebrate {
+.svg-filled {
+  animation: keyframes-svg-filled 1s;
+  display: none;
+}
+
+.svg-celebrate {
   position: absolute;
-  animation: keyframes-svg-celebrate 0.5s;
-  animation-fill-mode: forwards;
+  animation: keyframes-svg-celebrate 0.5s forwards;
   display: none;
   stroke: var(--heart-color);
   fill: var(--heart-color);
   stroke-width: 2px;
 }
 
-/* When checked: show filled heart, hide outline */
-.heart-container .checkbox:checked ~ .svg-container .svg-outline {
-  display: none;
-}
+.checkbox:checked ~ .svg-container .svg-filled { display: block; }
+.checkbox:checked ~ .svg-container .svg-celebrate { display: block; }
 
-.heart-container .checkbox:checked ~ .svg-container .svg-filled {
-  display: block;
-  animation: keyframes-svg-filled 0.6s ease-in-out;
-}
-
-.heart-container .checkbox:checked ~ .svg-container .svg-celebrate {
-  display: block;
-}
-
-/* Animations */
 @keyframes keyframes-svg-filled {
-  0% {
-    transform: scale(0);
-  }
-  25% {
-    transform: scale(1.2);
-  }
-  50% {
-    transform: scale(1);
-    filter: brightness(1.5);
-  }
+  0% { transform: scale(0); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(1); filter: brightness(1.5); }
 }
 
 @keyframes keyframes-svg-celebrate {
-  0% {
-    transform: scale(0);
-  }
-  50% {
-    opacity: 1;
-    filter: brightness(1.5);
-  }
-  100% {
-    transform: scale(1.4);
-    opacity: 0;
-    display: none;
-  }
+  0% { transform: scale(0); }
+  50% { opacity: 1; filter: brightness(1.5); }
+  100% { transform: scale(1.4); opacity: 0; display: none; }
 }
 
-/* Text beside heart */
-.desktop1-text-agreement {
-  display: inline-block;
-  vertical-align: middle;
+/* Responsive */
+@media (max-width: 520px) {
+  .desktop1-container1 { padding: 25px; }
+  .desktop1-agreement-row { flex-direction: column; gap: 8px; }
+  .heart-container { margin-left: 0; }
+}
+
+.desktop1-agreement-row {
+  display: flex;
+  align-items: center; /* Align checkbox and text vertically */
+  gap: 0;           /* Space between heart and text */
+}
+
+.heart-container {
+  width: 35px;          /* Adjust size */
+  height: 35px;
+  transform: scale(0.6); /* Optional: scale smaller to fit text height */
+  margin-left: 0;
+}
+
+
+.agreement-text {
+  flex: 1;              /* Let text take remaining space */
   line-height: 1.4;
-  color: #333;
+  font-size: 14px;
 }
 
-
-/* Agreement text styling */
-.desktop1-text-agreement {
-    display: inline-block;
-    vertical-align: middle;
-    line-height: 1.4;
-    color: #333;
+/* Container for First Name and Last Name inputs */
+.input-container {
+  display: flex;
+  align-items: center;  /* Vertically center the inputs */
+  gap: 10px;            /* Space between the two input fields */
+  width: 100%;          /* Full width of the container */
 }
 
-
-/* Sign Up Button */
-.desktop1-button[aria-label="Sign Up"] {
-    position: absolute;
-    top: 665px !important;
-    left: calc(50% + 106px) !important;
-    width: 110px;
-    height: 37px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    color: #ff5ea0;
-    border-radius: 999px;
-    cursor: pointer;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-    
-
+/* Style for input fields */
+.input-container input {
+  width: 100%;               /* Ensure the input takes full width */
+  padding: 12px 16px;        /* Match the padding */
+  margin: 8px 0;             /* Add margin to create spacing */
+  border: 1.5px solid #ccc; /* Match the border */
+  border-radius: 10px;      /* Round the corners */
+  font-size: 1rem;           /* Match the font size */
+  flex: 1;                   /* Make inputs fill available space */
 }
 
-.desktop1-text7 {
-color: #ff5ea0;
-font: 700 16px SansSerif;
-text-decoration: none;
+/* Optional: Adjust widths for each input */
+.input-container input:first-child {
+  width: calc(50% - 5px); /* Adjust width for the first input */
 }
 
-@keyframes gradient {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% { 
-        background-position: 0% 50%;
-    }
+.input-container input:last-child {
+  width: calc(50% - 5px);  /* Adjust width for the second input */
 }
 
-.gradient-anim {
-background: linear-gradient(90deg,rgba(241, 95, 157, 1) 36%, rgba(246, 139, 180, 1) 75%);    background-size: 200% 200%;
-    animation: gradient 10s ease infinite;
+/* Focus styling for input fields */
+.input-container input:focus {
+  border-color: #ff5b89;                       /* Focused border color */
+  box-shadow: 0 0 6px rgba(255, 91, 137, 0.4);  /* Focused shadow */
+  outline: none;                                /* Remove outline */
 }
-
