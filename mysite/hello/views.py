@@ -34,3 +34,6 @@ def terms_view(request):
 
 def dashboard_view(request):
     return render(request, 'dashboard.htm')
+
+def orders_menu_view(request):
+    return render(request, 'orders_menu.htm')
