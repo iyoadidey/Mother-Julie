@@ -23,7 +23,7 @@
             </a>
             <ul>
                 <li><a href="#">ABOUT US</a></li>
-                <li><a href="#">ORDERS</a></li>
+                <li><a href="{% url 'orders_menu' %}">ORDERS</a></li>
                 <li><a href="#">OUR MENU</a></li>
             </ul>
             <a href="#" class="username">
@@ -42,7 +42,7 @@
                 <div class="hero-text">
                     <h1>Mabuhay, Food Lovers!</h1>
                     <p>A bunch of home-made recipes — from Filipino desserts to comforting dishes. Experience the taste of home in every bite and sip.</p>
-                    <button class="btn-primary">ORDER NOW</button>
+                    <a href="{% url 'orders_menu' %}" class="btn-primary">ORDER NOW</a>
                 </div>
             </div>
         </section>
