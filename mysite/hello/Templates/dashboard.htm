@@ -9,6 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sansita:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sansita+One&display=swap" rel="stylesheet">
+
+
 </head>
 <body>
 
@@ -19,12 +23,12 @@
             </a>
             <ul>
                 <li><a href="#">ABOUT US</a></li>
-                <li><a href="#">WHY MOTHER JULIE?</a></li>
+                <li><a href="#">ORDERS</a></li>
                 <li><a href="#">OUR MENU</a></li>
             </ul>
             <a href="#" class="username">
                 USERNAME
-                <img src="{% static 'images/user-icon.svg' %}" alt="User Account" class="user-icon">
+                <img src="{% static 'user-icon.png' %}" alt="User Account" class="user-icon">
             </a>
         </nav>
     </header>
@@ -61,9 +65,17 @@
                     <div class="item-card">
                         <img src="{% static 'biscoff.png' %}" alt="Biscoff Drink">
                     </div>
+
+                    <div class="item-card">
+                        <img src="{% static 'best_sellers.png' %}" alt="Best Sellers of the Week">
+                    </div>
+
                 </div>
             </div>
         </section>
+
+    
+    <section class="ABOUT US"></section>
     </main>
 
     <!-- Footer with Navigation -->
@@ -72,8 +84,10 @@
             
             <nav class="footer-nav">
                 <ul>
-                    <li><a href="#">Address: 1983 Old Torres 1st Street, Tondo, Manila, Philippines</a></li>
-                <li><a href="mailto:contact.motherjulie@gmail.com">Email: contact.motherjulie@gmail.com</a></li>
+                <span>ADDRESS:</span>
+                <li><a href="https://maps.app.goo.gl/JipXk6gC6BM9dFnDA">Mother Julie</a></li>
+                <span>EMAIL:</span>
+                <li><a href="mailto:contact.motherjulie@gmail.com">contact.motherjulie@gmail.com</a></li>
                 </ul>
             </nav>
             <div class="footer-social">
@@ -83,6 +97,7 @@
             </div>
         </div>
     </footer>
+
 
 </body>
 </html>

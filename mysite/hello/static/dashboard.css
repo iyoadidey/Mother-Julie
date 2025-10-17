@@ -1,7 +1,7 @@
 /* ======================= GENERAL STYLES & VARIABLES ======================= */
 :root {
-    --brand-pink: #F8C8DC;
-    --brand-hot-pink: #EE7BA4;
+    --brand-pink: #F9A8C9;
+    --brand-hot-pink: #F9A8C9;
     --text-dark: #333;
     --text-light: #fff;
     --bg-light: #fff;
@@ -15,9 +15,8 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Sansita', sans-serif;
     color: var(--text-dark);
-    background-color: var(--bg-light);
 }
 
 .container {
@@ -34,38 +33,68 @@ a {
 /* ======================= HEADER ======================= */
 header {
     background-color: var(--brand-pink);
-    padding: 15px 0;
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
 }
 
 header nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 95px;
+    background-color: var(--brand-pink);
+    padding: 0 40px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+/* Center logo */
+.logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    mix-blend-mode: overlay;
 }
 
 .logo img {
-    height: 80px; /* Adjust based on your logo's size */
+    height: 105px;
 }
 
+/* Left navigation links */
 nav ul {
     list-style: none;
     display: flex;
     gap: 40px;
-    font-weight: 600;
-    font-size: 0.9rem;
+    margin: 0;
+    padding: 0;
 }
 
+nav ul li a {
+    color: white;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s ease;
+}
+
+nav ul li a:hover {
+    opacity: 0.8;
+}
+
+/* Right side (username + icon) */
 .username {
     display: flex;
     align-items: center;
     gap: 10px;
+    color: white;
+    font-size: 0.9rem;
     font-weight: 600;
 }
 
 .user-icon {
-    height: 30px;
+    height: 35px;
+    width: 35px;
 }
-
 
 /* ======================= HERO SECTION ======================= */
 .hero {
@@ -76,14 +105,16 @@ nav ul {
     display: flex;
     align-items: center;
     gap: 50px;
+    height: 350px ;
 }
 
 .hero-illustration {
-    flex: 0 0 150px; /* Does not grow or shrink, base width 150px */
+    flex: 0 0 150px; /* Fixed width for illustration */
 }
 
 .hero-illustration img {
     width: 100%;
+    filter: drop-shadow(15px 15px 20px #F9A8C9);
 }
 
 .hero-text {
@@ -91,22 +122,24 @@ nav ul {
 }
 
 .hero-text h1 {
-    font-family: 'Pacifico', cursive;
-    color: var(--brand-hot-pink);
+    font-family: 'Sansita One', sans-serif;
+    color: #FF5EA0;
     font-size: 3rem;
-    font-weight: 400;
+    font-weight: 450;
     margin-bottom: 15px;
 }
 
 .hero-text p {
+    font-family: 'Inter', sans-serif;
     font-size: 1.1rem;
+    font-weight: 450;
     line-height: 1.6;
     max-width: 500px;
     margin-bottom: 30px;
 }
 
 .btn-primary {
-    background-image: linear-gradient(to right, #FF8AAE, var(--brand-hot-pink));
+    background-color: #FF5EA0;
     color: var(--text-light);
     border: none;
     border-radius: 50px;
@@ -129,7 +162,7 @@ nav ul {
 }
 
 .featured h2 {
-    color: var(--brand-hot-pink);
+    color: #FF5EA0;
     font-weight: 600;
     font-size: 1.1rem;
     letter-spacing: 1px;
@@ -137,23 +170,30 @@ nav ul {
 }
 
 .items-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
+    display: flex;   /* Use flexbox for a single horizontal line */
+    gap: 40px;       /* Space between items */
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    scroll-snap-type: x mandatory; /* Smooth scrolling behavior */
+    padding-bottom: 20px;  /* Add some bottom space for smooth scroll */
 }
 
+/* Item Cards Styling */
 .item-card {
     position: relative;
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    min-width: 400px; /* Increased width for each item card */
+    height: 400px;    /* Increased height for larger images */
+    flex-shrink: 0;   /* Prevent shrinking of items */
 }
 
+/* Image Styling */
 .item-card img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;  /* Ensure full image is shown */
     display: block;
 }
 
@@ -168,9 +208,6 @@ nav ul {
     color: var(--text-light);
     text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
 }
-
-
-
 
 /* Tags on Cards */
 .tag {
@@ -214,10 +251,10 @@ nav ul {
 /* ======================= FOOTER ======================= */
 footer {
     background-color: var(--brand-pink);
-    color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
     padding: 40px 0;
     text-align: center;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 .footer-container {
@@ -244,7 +281,7 @@ footer {
 }
 
 .footer-nav ul li a {
-    color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
     font-weight: 600;
     font-size: 1rem;
 }
@@ -254,7 +291,7 @@ footer {
 }
 
 .footer-social span {
-    color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
     font-weight: 500;
     margin: 0 10px;
     font-size: 1rem;
@@ -263,15 +300,15 @@ footer {
 
 /* Social Media Links */
 .footer-social .social-icon {
-    color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
     font-weight: 600;
     font-size: 1rem;
-    text-decoration: none; /* Remove underline */
+    text-decoration: none;
     display: inline-block;
     margin: 0 10px;
     transition: color 0.3s ease;
 }
 
 .footer-social .social-icon:hover {
-    color: #ff5ea0; /* Highlight color for hover */
+    color: #ff5ea0;
 }
