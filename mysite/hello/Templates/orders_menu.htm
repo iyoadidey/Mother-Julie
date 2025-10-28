@@ -2,327 +2,656 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Mother Julie - All Menu</title>
-  <link rel="stylesheet" href="{% static 'orders_menu.css' %}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mother Julie - Order Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sansita:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'orders_menu.css' %}" />
 </head>
 <body>
-  <!-- Top Navigation -->
-  <header class="topbar">
-    <div class="topbar-left">
-      <!-- Replace src with your logo path if you have one -->
-      <img class="logo" src="https://via.placeholder.com/82x44?text=Logo" alt="Mother Julie logo">
-      <div class="location">
-        <svg class="pin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-          <path fill="currentColor" d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 6.5 12 6.5s2.5 1.1 2.5 2.5S13.4 11.5 12 11.5z"/>
-        </svg>
-        <span class="loc-text">CURRENT LOCATION...</span>
-      </div>
+    <div id="root">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <img class="logo" src="motherjulie.png" alt="Mother Julie logo">
+                <div class="location">
+                    <span class="pin">📍</span>
+                    <span class="loc-text">Manila, Philippines</span>
+                    <button class="location-search">Change</button>
+                </div>
+            </div>
+            
+            <div class="topbar-center">
+                <h1>ALL MENU</h1>
+            </div>
+            
+            <div class="topbar-right">
+                <div class="username">
+                    <div class="profile-pic">👤</div>
+                    <span>Username</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Button -->
+        <button class="orders-btn">
+            Orders <span class="orders-count">0</span>
+        </button>
+
+        <!-- App Layout -->
+        <div class="app">
+            <!-- Sidebar -->
+            <aside class="sidebar" aria-label="Main navigation">
+                <img class="logo" src="{% static 'motherjulie.png' %}" alt="Mother Julie logo">
+                <nav>
+                    <ul>
+                        <li class="nav-item" data-target="all">
+                            <img class="nav-logo" src="{% static 'menu.png' %}" alt="All Menu">
+                            <span class="nav-label">All Menu</span>
+                        </li>
+                        <li class="nav-item" data-target="desserts">
+                            <img class="nav-logo" src="{% static 'dessert.png' %}" alt="Desserts">
+                            <span class="nav-label">Desserts</span>
+                        </li>
+                        <li class="nav-item" data-target="spuds">
+                            <img class="nav-logo" src="{% static 'spud.png' %}" alt="Spuds">
+                            <span class="nav-label">Spuds</span>
+                        </li>
+                        <li class="nav-item" data-target="pasta">
+                            <img class="nav-logo" src="{% static 'pasta.png' %}" alt="Pasta / Bread">
+                            <span class="nav-label">Pasta / Bread</span>
+                        </li>
+                        <li class="nav-item" data-target="wrap">
+                            <img class="nav-logo" src="{% static 'wrap.png' %}" alt="Wrap">
+                            <span class="nav-label">Wrap</span>
+                        </li>
+                        <li class="nav-item" data-target="appetizers">
+                            <img class="nav-logo" src="{% static 'nachos.png' %}" alt="Appetizers">
+                            <span class="nav-label">Appetizers</span>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="main">
+                <!-- ALL MENU Section -->
+                <div class="category active" id="all">
+                    <h2 class="section-title">ALL MENU</h2>
+                    
+                    <!-- DESSERTS Category -->
+                    <div class="category-section">
+                        <h3 class="category-subtitle">DESSERTS</h3>
+                        <div class="menu-grid">
+                            <!-- Mais Con Yelo -->
+                            <div class="card">
+                                <img src="mais-con-yelo.jpg" alt="Mais Con Yelo">
+                                <div class="card-body">
+                                    <h3>Mais Con Yelo</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label>
+                                            <input type="radio" name="mais-size" value="L"> L
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="mais-size" value="M"> M
+                                        </label>
+                                    </div>
+                                    <div class="price">Php 130 (L) • Php 110 (M)</div>
+                                </div>
+                                <button class="add-to-cart"></button>
+                            </div>
+
+                            <!-- Biscoff Classic -->
+                            <div class="card">
+                                <img src="biscoff-classic.jpg" alt="Biscoff Classic">
+                                <div class="card-body">
+                                    <h3>Biscoff Classic</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label>
+                                            <input type="radio" name="biscoff-size" value="L"> L
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="biscoff-size" value="M"> M
+                                        </label>
+                                    </div>
+                                    <div class="price">Php 200 (L) • Php 175 (M)</div>
+                                </div>
+                                <button class="add-to-cart"></button>
+                            </div>
+
+                            <!-- Buko Pandan -->
+                            <div class="card">
+                                <img src="buko-pandan.jpg" alt="Buko Pandan">
+                                <div class="card-body">
+                                    <h3>Buko Pandan</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label>
+                                            <input type="radio" name="buko-size" value="L"> L
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="buko-size" value="M"> M
+                                        </label>
+                                    </div>
+                                    <div class="price">Php 120 (L) • Php 100 (M)</div>
+                                </div>
+                                <button class="add-to-cart"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SPUDS Category -->
+                    <div class="category-section">
+                        <h3 class="category-subtitle">SPUDS</h3>
+                        <div class="menu-grid">
+                            <!-- Cheesy Bacon -->
+                            <div class="card">
+                                <img src="cheesy-bacon.jpg" alt="Cheesy Bacon">
+                                <div class="card-body">
+                                    <h3>Cheesy Bacon</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="price">Php 159</div>
+                                </div>
+                                <button class="add-to-cart"></button>
+                            </div>
+
+                            <!-- Chili Con Carne -->
+                            <div class="card">
+                                <img src="chili-con-carne.jpg" alt="Chili Con Carne">
+                                <div class="card-body">
+                                    <h3>Chili Con Carne</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="price">Php 179</div>
+                                </div>
+                                <button class="add-to-cart"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Category Sections -->
+                <div class="category" id="desserts">
+                    <h2 class="section-title">DESSERTS</h2>
+                    <div class="menu-grid">
+                        <!-- Dessert items will be populated here -->
+                    </div>
+                </div>
+
+                <div class="category" id="spuds">
+                    <h2 class="section-title">SPUDS</h2>
+                    <div class="menu-grid">
+                        <!-- Spud items will be populated here -->
+                    </div>
+                </div>
+
+                <div class="category" id="pasta">
+                    <h2 class="section-title">PASTA / BREAD</h2>
+                    <div class="menu-grid">
+                        <!-- Pasta items will be populated here -->
+                    </div>
+                </div>
+
+                <div class="category" id="wrap">
+                    <h2 class="section-title">WRAP</h2>
+                    <div class="menu-grid">
+                        <!-- Wrap items will be populated here -->
+                    </div>
+                </div>
+
+                <div class="category" id="appetizers">
+                    <h2 class="section-title">APPETIZERS</h2>
+                    <div class="menu-grid">
+                        <!-- Appetizer items will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Modal -->
+        <div class="location-modal" id="locationModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h3>Set Your Location</h3>
+                        <div class="modal-subtitle">Philippines Only</div>
+                    </div>
+                    <button class="modal-close" id="modalClose">&times;</button>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="locationInput" placeholder="Search cities in Philippines...">
+                    <button class="search-btn" id="searchBtn">Search</button>
+                </div>
+                
+                <div class="suggestions" id="suggestions"></div>
+                
+                <div class="current-location">
+                    <button class="current-location-btn" id="currentLocationBtn">
+                        📍 Use Current Location
+                    </button>
+                    <div class="location-error" id="locationError">
+                        Location outside Philippines. Please search for Philippine locations only.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Panel -->
+        <div class="billing-panel" id="billingPanel">
+            <div class="billing-header">
+                <h2>Your Order</h2>
+                <button class="billing-close" id="billingClose">✕</button>
+            </div>
+            <div class="billing-items" id="billingItems">
+                <!-- Order items will appear here -->
+            </div>
+            <div class="billing-summary">
+                <div class="subtotal">Subtotal: Php 0.00</div>
+                <div class="tax">Tax: Php 0.00</div>
+                <div class="total">Total: Php 0.00</div>
+            </div>
+            <div class="order-type">
+                <button>Dine-in</button>
+                <button>Takeaway</button>
+            </div>
+            <div class="payment-methods">
+                <button>Cash</button>
+                <button>Card</button>
+                <button>GCash</button>
+            </div>
+            <button class="process">Place Order</button>
+        </div>
     </div>
 
-    <div class="topbar-center">
-      <h1>ALL MENU</h1>
-    </div>
+<script>
+// Order Management System
+let cart = [];
+let orderCount = 0;
 
-    <div class="topbar-right">
-      <div class="username">
-        <span>Username</span>
-        <div class="profile-pic" aria-hidden="true">👤</div>
-      </div>
-
-      <button id="ordersBtn" class="orders-btn" aria-controls="billing" aria-expanded="false">
-        Orders <span class="orders-count">5</span>
-      </button>
-    </div>
-  </header>
-
-  <div class="app">
-    <!-- Left Sidebar (vertical) -->
-    <aside class="sidebar" aria-label="Main navigation">
-      <nav>
-        <ul>
-          <li class="nav-item" data-target="all" onclick="showCategory('all')">
-            <span class="nav-ico">📋</span>
-            <span class="nav-label">All Menu</span>
-          </li>
-          <li class="nav-item" data-target="desserts" onclick="showCategory('desserts')">
-            <span class="nav-ico">🍨</span>
-            <span class="nav-label">Desserts</span>
-          </li>
-          <li class="nav-item" data-target="spuds" onclick="showCategory('spuds')">
-            <span class="nav-ico">🍟</span>
-            <span class="nav-label">Spuds</span>
-          </li>
-          <li class="nav-item" data-target="pasta" onclick="showCategory('pasta')">
-            <span class="nav-ico">🍞</span>
-            <span class="nav-label">Pasta / Bread</span>
-          </li>
-          <li class="nav-item" data-target="wrap" onclick="showCategory('wrap')">
-            <span class="nav-ico">🌯</span>
-            <span class="nav-label">Wrap</span>
-          </li>
-          <li class="nav-item" data-target="appetizers" onclick="showCategory('appetizers')">
-            <span class="nav-ico">🍤</span>
-            <span class="nav-label">Appetizers</span>
-          </li>
-        </ul>
-      </nav>
-
-      <button class="billing-toggle" id="sidebarBillingToggle" aria-controls="billing" aria-expanded="false">
-        🧾 Billing
-      </button>
-    </aside>
-
-    <!-- Main content -->
-    <main class="main">
-      <!-- Search & heading are handled by the topbar title; add optional search -->
-      <section class="menu-area">
-        <!-- All categories visible for "all" -->
-        <div id="all" class="category active">
-          <h2 class="section-title">ALL MENU</h2>
-          <div class="menu-grid">
-            <!-- Examples - replace images/prices with your assets -->
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Mais Con Yelo">
-              <div class="card-body">
-                <h3>Mais Con Yelo</h3>
-                <div class="price">Php 104 <small>(S)</small></div>
-                <div class="availability">Available</div>
-              </div>
-            </article>
-
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Biscoff Classic">
-              <div class="card-body">
-                <h3>Biscoff Classic</h3>
-                <div class="price">Php 200 <small>(L)</small></div>
-                <div class="availability">Available</div>
-              </div>
-            </article>
-
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Buko Pandan">
-              <div class="card-body">
-                <h3>Buko Pandan</h3>
-                <div class="price">Php 120</div>
-                <div class="availability">Available</div>
-              </div>
-            </article>
-
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Coffee Jelly">
-              <div class="card-body">
-                <h3>Coffee Jelly</h3>
-                <div class="price">Php 240 <small>(L)</small></div>
-                <div class="availability">Available</div>
-              </div>
-            </article>
-
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Cheesy Bacon">
-              <div class="card-body">
-                <h3>Cheesy Bacon</h3>
-                <div class="price">Php 159</div>
-                <div class="availability">Available</div>
-              </div>
-            </article>
-
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Nachos">
-              <div class="card-body">
-                <h3>Nachos</h3>
-                <div class="price">Php 129</div>
-                <div class="availability">Available</div>
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <!-- Desserts only -->
-        <div id="desserts" class="category">
-          <h2 class="section-title">DESSERTS</h2>
-          <div class="menu-grid">
-            <!-- copy or narrow down cards -->
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Mais Con Yelo">
-              <div class="card-body"><h3>Mais Con Yelo</h3><div class="price">Php 104</div></div>
-            </article>
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Biscoff">
-              <div class="card-body"><h3>Biscoff Classic</h3><div class="price">Php 200</div></div>
-            </article>
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Buko Pandan">
-              <div class="card-body"><h3>Buko Pandan</h3><div class="price">Php 120</div></div>
-            </article>
-          </div>
-        </div>
-
-        <!-- Spuds -->
-        <div id="spuds" class="category">
-          <h2 class="section-title">SPUDS</h2>
-          <div class="menu-grid">
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Cheesy Bacon">
-              <div class="card-body"><h3>Cheesy Bacon</h3><div class="price">Php 159</div></div>
-            </article>
-            <article class="card">
-              <img src="https://via.placeholder.com/320x220" alt="Chili Con Carne">
-              <div class="card-body"><h3>Chili Con Carne</h3><div class="price">Php 179</div></div>
-            </article>
-          </div>
-        </div>
-
-        <!-- Pasta/Bread -->
-        <div id="pasta" class="category">
-          <h2 class="section-title">PASTA / BREAD</h2>
-          <div class="menu-grid">
-            <article class="card"><img src="https://via.placeholder.com/320x220" alt="Garlic Bread"><div class="card-body"><h3>Garlic Bread</h3><div class="price">Php 69</div></div></article>
-            <article class="card"><img src="https://via.placeholder.com/320x220" alt="Pesto Bread"><div class="card-body"><h3>Pesto and Bread</h3><div class="price">Php 139</div></div></article>
-          </div>
-        </div>
-
-        <!-- Wrap -->
-        <div id="wrap" class="category">
-          <h2 class="section-title">WRAP</h2>
-          <div class="menu-grid">
-            <article class="card"><img src="https://via.placeholder.com/320x220" alt="Honagr Chicken"><div class="card-body"><h3>Hongar Chicken</h3><div class="price">Php 179</div></div></article>
-            <article class="card"><img src="https://via.placeholder.com/320x220" alt="Beef Nacho"><div class="card-body"><h3>Beef Nacho</h3><div class="price">Php 169</div></div></article>
-            <article class="card"><img src="https://via.placeholder.com/320x220" alt="Kesodilla"><div class="card-body"><h3>Kesodilla</h3><div class="price">Php 99</div></div></article>
-          </div>
-        </div>
-
-        <!-- Appetizers -->
-        <div id="appetizers" class="category">
-          <h2 class="section-title">APPETIZERS</h2>
-          <div class="menu-grid">
-            <article class="card"><img src="https://via.placeholder.com/320x220" alt="Nachos"><div class="card-body"><h3>Nachos</h3><div class="price">Php 129</div></div></article>
-            <article class="card"><img src="https://via.placeholder.com/320x220" alt="Chicken Poppers"><div class="card-body"><h3>Chicken Poppers & Fries</h3><div class="price">Php 139</div></div></article>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- Billing panel (slide-out) -->
-    <aside id="billing" class="billing-panel" aria-hidden="true">
-      <div class="billing-header">
-        <h2>BILLING</h2>
-        <button class="billing-close" id="billingClose" aria-label="Close billing">✕</button>
-      </div>
-
-      <div class="billing-items">
-        <div class="b-item">
-          <img src="https://via.placeholder.com/64" alt="" aria-hidden="true">
-          <div class="b-desc">
-            <div class="b-title">Coffee Jelly (L)</div>
-            <div class="b-meta">Dessert</div>
-          </div>
-          <div class="b-price">Php 240.00</div>
-        </div>
-
-        <div class="b-item">
-          <img src="https://via.placeholder.com/64" alt="" aria-hidden="true">
-          <div class="b-desc">
-            <div class="b-title">Kesodilla</div>
-            <div class="b-meta">Wrap</div>
-          </div>
-          <div class="b-price">Php 99.00</div>
-        </div>
-
-        <div class="b-item">
-          <img src="https://via.placeholder.com/64" alt="" aria-hidden="true">
-          <div class="b-desc">
-            <div class="b-title">Cheesy Bacon</div>
-            <div class="b-meta">Spuds</div>
-          </div>
-          <div class="b-price">Php 159.00</div>
-        </div>
-
-        <div class="b-item">
-          <img src="https://via.placeholder.com/64" alt="" aria-hidden="true">
-          <div class="b-desc">
-            <div class="b-title">Chicken poppers & Fries</div>
-            <div class="b-meta">Appetizers</div>
-          </div>
-          <div class="b-price">Php 139.00</div>
-        </div>
-      </div>
-
-      <div class="billing-summary">
-        <div>Items: <strong>4</strong></div>
-        <div>Subtotal: <strong>Php 637.00</strong></div>
-        <div>Delivery Fee: <strong>Php 50.00</strong></div>
-        <div class="total">TOTAL: <strong>Php 687.00</strong></div>
-      </div>
-
-      <div class="billing-actions">
-        <div class="order-type">
-          <button>Delivery</button>
-          <button>Pick up</button>
-        </div>
-
-        <div class="payment-methods">
-          <button>Cash</button>
-          <button>GCash</button>
-        </div>
-
-        <button class="process">Process Transaction</button>
-      </div>
-    </aside>
-  </div>
-
-  <script>
-    // Category switching
-    function showCategory(id) {
-      // if id === 'all' show the "all" container (and optionally others) - here we'll show only the 'all' container as grouping
-      const categories = document.querySelectorAll('.category');
-      categories.forEach(c => c.classList.remove('active'));
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.add('active');
-      } else {
-        // fallback: show all if element not found
+// Category Management
+function showCategory(category) {
+    // Remove active class from all nav items
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Add active class to clicked item
+    const clickedItem = document.querySelector(`[data-target="${category}"]`);
+    if (clickedItem) {
+        clickedItem.classList.add('active');
+    }
+    
+    // Hide all categories
+    const categories = document.querySelectorAll('.category');
+    categories.forEach(cat => {
+        cat.classList.remove('active');
+    });
+    
+    // Show selected category
+    if (category === 'all') {
         document.getElementById('all').classList.add('active');
-      }
+    } else {
+        const targetCategory = document.getElementById(category);
+        if (targetCategory) {
+            targetCategory.classList.add('active');
+        }
     }
+}
 
-    // Billing toggle from Orders button and sidebar button
-    const billingEl = document.getElementById('billing');
-    const ordersBtn = document.getElementById('ordersBtn');
-    const sidebarBillingToggle = document.getElementById('sidebarBillingToggle');
-    const billingClose = document.getElementById('billingClose');
-
-    function setBillingOpen(open) {
-      if (open) {
-        billingEl.classList.add('open');
-        billingEl.setAttribute('aria-hidden', 'false');
-        ordersBtn.setAttribute('aria-expanded', 'true');
-        sidebarBillingToggle.setAttribute('aria-expanded', 'true');
-      } else {
-        billingEl.classList.remove('open');
-        billingEl.setAttribute('aria-hidden', 'true');
-        ordersBtn.setAttribute('aria-expanded', 'false');
-        sidebarBillingToggle.setAttribute('aria-expanded', 'false');
-      }
+// Toggle Billing Panel - ONLY FOR ORDERS BUTTON
+function toggleBillingPanel() {
+    const billingPanel = document.getElementById('billingPanel');
+    if (!billingPanel) {
+        console.error('Billing panel not found!');
+        return;
     }
+    
+    billingPanel.classList.toggle('open');
+    
+    if (billingPanel.classList.contains('open')) {
+        console.log('Opening billing panel');
+        updateBillingPanel();
+    } else {
+        console.log('Closing billing panel');
+    }
+}
 
-    function toggleBilling() { setBillingOpen(!billingEl.classList.contains('open')); }
+// Update Billing Panel
+function updateBillingPanel() {
+    const billingPanel = document.getElementById('billingPanel');
+    const billingItems = document.getElementById('billingItems');
+    const subtotalElement = document.querySelector('.subtotal');
+    const totalElement = document.querySelector('.total');
+    
+    // Only update if billing panel is open
+    if (!billingPanel.classList.contains('open')) {
+        return;
+    }
+    
+    // Clear current items
+    billingItems.innerHTML = '';
+    
+    if (cart.length === 0) {
+        billingItems.innerHTML = '<div class="b-item" style="text-align: center; color: #666;">No items in cart</div>';
+        subtotalElement.textContent = 'Subtotal: Php 0.00';
+        totalElement.textContent = 'Total: Php 0.00';
+        return;
+    }
+    
+    let subtotal = 0;
+    
+    cart.forEach((item, index) => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'b-item';
+        itemElement.innerHTML = `
+            <img src="${item.image}" alt="${item.name}">
+            <div class="b-desc">
+                <div class="b-title">${item.name}</div>
+                <div class="b-meta">${item.size ? `Size: ${item.size}` : ''} • Qty: ${item.quantity}</div>
+            </div>
+            <div class="b-price">Php ${(item.price * item.quantity).toFixed(2)}</div>
+            <button class="remove-item" onclick="removeFromCart(${index})">✕</button>
+        `;
+        billingItems.appendChild(itemElement);
+        
+        subtotal += item.price * item.quantity;
+    });
+    
+    const tax = subtotal * 0.12; // 12% tax
+    const total = subtotal + tax;
+    
+    subtotalElement.textContent = `Subtotal: Php ${subtotal.toFixed(2)}`;
+    document.querySelector('.tax').textContent = `Tax: Php ${tax.toFixed(2)}`;
+    totalElement.textContent = `Total: Php ${total.toFixed(2)}`;
+}
 
-    ordersBtn.addEventListener('click', toggleBilling);
-    sidebarBillingToggle.addEventListener('click', toggleBilling);
-    billingClose.addEventListener('click', () => setBillingOpen(false));
+// Add to Cart Function
+function addToCart(cardElement) {
+    const itemName = cardElement.querySelector('h3').textContent;
+    const itemImage = cardElement.querySelector('img').src;
+    
+    // Get selected size and price
+    let selectedSize = '';
+    let price = 0;
+    
+    const sizeRadios = cardElement.querySelectorAll('input[type="radio"]');
+    if (sizeRadios.length > 0) {
+        const selectedRadio = Array.from(sizeRadios).find(radio => radio.checked);
+        if (selectedRadio) {
+            selectedSize = selectedRadio.value;
+            // Extract price based on size (simplified logic)
+            const priceText = cardElement.querySelector('.price').textContent;
+            const priceMatch = priceText.match(/Php\s*(\d+)/);
+            price = priceMatch ? parseInt(priceMatch[1]) : 0;
+        } else {
+            alert('Please select a size');
+            return;
+        }
+    } else {
+        // For items without size options
+        const priceText = cardElement.querySelector('.price').textContent;
+        const priceMatch = priceText.match(/Php\s*(\d+)/);
+        price = priceMatch ? parseInt(priceMatch[1]) : 0;
+    }
+    
+    // Check if item already exists in cart
+    const existingItemIndex = cart.findIndex(item => 
+        item.name === itemName && item.size === selectedSize
+    );
+    
+    if (existingItemIndex > -1) {
+        // Increase quantity if item exists
+        cart[existingItemIndex].quantity += 1;
+    } else {
+        // Add new item to cart
+        cart.push({
+            name: itemName,
+            image: itemImage,
+            size: selectedSize,
+            price: price,
+            quantity: 1
+        });
+    }
+    
+    // Update orders count
+    orderCount += 1;
+    updateOrdersCount();
+    
+    // Real-time update billing panel if it's open
+    updateBillingPanel();
+}
 
-    // close billing on ESC
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') setBillingOpen(false);
+// Remove from Cart
+function removeFromCart(index) {
+    orderCount -= cart[index].quantity;
+    cart.splice(index, 1);
+    updateOrdersCount();
+    updateBillingPanel();
+}
+
+// Update Orders Count
+function updateOrdersCount() {
+    const ordersCountElement = document.querySelector('.orders-count');
+    ordersCountElement.textContent = orderCount;
+    
+    // Add animation
+    ordersCountElement.style.transform = 'scale(1.2)';
+    setTimeout(() => {
+        ordersCountElement.style.transform = 'scale(1)';
+    }, 300);
+}
+
+// Process Order
+function processOrder() {
+    if (cart.length === 0) {
+        alert('Your cart is empty!');
+        return;
+    }
+    
+    const orderType = document.querySelector('.order-type button:first-child').classList.contains('active') ? 'Dine-in' : 'Takeaway';
+    
+    // Simulate order processing
+    alert(`Order placed successfully!\nOrder Type: ${orderType}\nTotal: ${document.querySelector('.total').textContent}\n\nThank you for your order!`);
+    
+    // Clear cart
+    cart = [];
+    orderCount = 0;
+    updateOrdersCount();
+    updateBillingPanel();
+    
+    // Close billing panel
+    document.getElementById('billingPanel').classList.remove('open');
+}
+
+// Initialize everything
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize with all menu
+    showCategory('all');
+    
+    // Add click events to nav items
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const target = this.getAttribute('data-target');
+            showCategory(target);
+        });
     });
 
-    // initial state
-    document.addEventListener('DOMContentLoaded', () => {
-      // Start with "desserts" active (mirrors earlier code) or 'all'
-      showCategory('desserts');
+    // Add to cart buttons
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const card = this.closest('.card');
+            addToCart(card);
+        });
     });
-  </script>
+
+    // Orders button functionality
+    const ordersBtn = document.querySelector('.orders-btn');
+    if (ordersBtn) {
+        ordersBtn.addEventListener('click', toggleBillingPanel);
+    }
+    
+    // Billing close button
+    document.getElementById('billingClose').addEventListener('click', function() {
+        document.getElementById('billingPanel').classList.remove('open');
+    });
+
+    // Order type selection
+    const orderTypeButtons = document.querySelectorAll('.order-type button');
+    orderTypeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            orderTypeButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Payment method selection
+    const paymentButtons = document.querySelectorAll('.payment-methods button');
+    paymentButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            paymentButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Process order button
+    document.querySelector('.process').addEventListener('click', processOrder);
+
+    // Set default order type
+    orderTypeButtons[0].classList.add('active');
+    paymentButtons[0].classList.add('active');
+
+    // Location Modal functionality
+    initializeLocationModal();
+});
+
+// Location Modal functionality
+function initializeLocationModal() {
+    const locationModal = document.getElementById('locationModal');
+    const locationInput = document.getElementById('locationInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const suggestions = document.getElementById('suggestions');
+    const currentLocationBtn = document.getElementById('currentLocationBtn');
+    const locationError = document.getElementById('locationError');
+    const modalClose = document.getElementById('modalClose');
+
+    const philippineLocations = ["Manila", "Quezon City", "Makati", "Taguig", "Pasig", "Mandaluyong", "San Juan", "Pasay", "Parañaque", "Las Piñas", "Muntinlupa", "Marikina", "Caloocan", "Valenzuela", "Malabon", "Navotas", "Cebu City", "Davao City", "Baguio", "Iloilo City", "Bacolod", "Cagayan de Oro", "Zamboanga City"];
+
+    document.querySelector('.location-search').addEventListener('click', () => {
+        locationModal.style.display = 'flex';
+        locationInput.focus();
+    });
+
+    modalClose.addEventListener('click', () => {
+        locationModal.style.display = 'none';
+        clearError();
+    });
+
+    locationModal.addEventListener('click', (e) => {
+        if (e.target === locationModal) {
+            locationModal.style.display = 'none';
+            clearError();
+        }
+    });
+
+    searchBtn.addEventListener('click', searchLocations);
+    locationInput.addEventListener('input', searchLocations);
+    locationInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchLocations();
+    });
+
+    function searchLocations() {
+        const query = locationInput.value.toLowerCase().trim();
+        suggestions.innerHTML = '';
+        
+        if (query.length === 0) return;
+        
+        const filtered = philippineLocations.filter(location => 
+            location.toLowerCase().includes(query)
+        );
+        
+        if (filtered.length === 0) {
+            suggestions.innerHTML = '<div class="suggestion-item">No locations found in Philippines</div>';
+            return;
+        }
+        
+        filtered.forEach(location => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            div.textContent = location;
+            div.addEventListener('click', () => selectLocation(location));
+            suggestions.appendChild(div);
+        });
+    }
+
+    function selectLocation(location) {
+        document.querySelector('.location .loc-text').textContent = location;
+        locationModal.style.display = 'none';
+        locationInput.value = '';
+        suggestions.innerHTML = '';
+        clearError();
+    }
+
+    currentLocationBtn.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            showError('Geolocation is not supported by your browser');
+            return;
+        }
+        
+        currentLocationBtn.textContent = '📍 Getting Location...';
+        currentLocationBtn.disabled = true;
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                if (isInPhilippines(lat, lng)) {
+                    const city = getNearestPhilippineCity(lat, lng);
+                    document.querySelector('.location .loc-text').textContent = city;
+                    locationModal.style.display = 'none';
+                    clearError();
+                } else {
+                    showError('Location outside Philippines. Please search for Philippine locations only.');
+                }
+                
+                currentLocationBtn.textContent = '📍 Use Current Location';
+                currentLocationBtn.disabled = false;
+            },
+            (error) => {
+                showError('Unable to retrieve your location. Please search manually.');
+                currentLocationBtn.textContent = '📍 Use Current Location';
+                currentLocationBtn.disabled = false;
+            }
+        );
+    });
+
+    function isInPhilippines(lat, lng) {
+        const phBounds = { north: 21.5, south: 4.0, west: 116.0, east: 127.0 };
+        return lat >= phBounds.south && lat <= phBounds.north && lng >= phBounds.west && lng <= phBounds.east;
+    }
+
+    function getNearestPhilippineCity(lat, lng) {
+        if (lat > 14.5 && lng > 120.9) return "Manila";
+        if (lat > 10.3 && lng < 124.0) return "Cebu City";
+        if (lat < 7.5 && lng > 125.5) return "Davao City";
+        if (lat > 16.4) return "Baguio";
+        return "Metro Manila";
+    }
+
+    function showError(message) {
+        locationError.textContent = message;
+        locationError.style.display = 'block';
+    }
+
+    function clearError() {
+        locationError.style.display = 'none';
+    }
+}
+</script>
 </body>
 </html>
