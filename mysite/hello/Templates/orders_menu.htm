@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mother Julie - Order Menu</title>
     <link href="https://fonts.googleapis.com/css2?family=Sansita:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'orders_menu.css' %}" />
 </head>
 <body>
@@ -13,7 +14,6 @@
         <!-- Topbar -->
         <div class="topbar">
             <div class="topbar-left">
-                <img class="logo" src="motherjulie.png" alt="Mother Julie logo">
                 <div class="location">
                     <span class="pin">📍</span>
                     <span class="loc-text">Manila, Philippines</span>
@@ -22,6 +22,7 @@
             </div>
             
             <div class="topbar-center">
+                <img class="title-logo" src="{% static 'menu.png' %}" alt="All Menu">                
                 <h1>ALL MENU</h1>
             </div>
             
@@ -34,7 +35,7 @@
         </div>
 
         <!-- Orders Button -->
-        <button class="orders-btn">
+        <button class="orders-btn" id="ordersButton">
             Orders <span class="orders-count">0</span>
         </button>
 
@@ -76,9 +77,7 @@
             <!-- Main Content -->
             <div class="main">
                 <!-- ALL MENU Section -->
-                <div class="category active" id="all">
-                    <h2 class="section-title">ALL MENU</h2>
-                    
+                <div class="category active" id="all">                    
                     <!-- DESSERTS Category -->
                     <div class="category-section">
                         <h3 class="category-subtitle">DESSERTS</h3>
@@ -244,24 +243,24 @@
                 <h2>Your Order</h2>
                 <button class="billing-close" id="billingClose">✕</button>
             </div>
+            
             <div class="billing-items" id="billingItems">
                 <!-- Order items will appear here -->
             </div>
+            
             <div class="billing-summary">
                 <div class="subtotal">Subtotal: Php 0.00</div>
-                <div class="tax">Tax: Php 0.00</div>
-                <div class="total">Total: Php 0.00</div>
+                <div class="delivery-charge">Delivery: Php 50.00</div>
+                <div class="total">Total: Php 50.00</div>
             </div>
+            
             <div class="order-type">
-                <button>Dine-in</button>
-                <button>Takeaway</button>
+                <button class="order-btn active">Dine-in</button>
+                <button class="order-btn">Pickup</button>
+                <button class="order-btn">Delivery</button>
             </div>
-            <div class="payment-methods">
-                <button>Cash</button>
-                <button>Card</button>
-                <button>GCash</button>
-            </div>
-            <button class="process">Place Order</button>
+            
+            <button class="process-order">Place Order</button>
         </div>
     </div>
 
@@ -269,6 +268,7 @@
 // Order Management System
 let cart = [];
 let orderCount = 0;
+const deliveryCharge = 50; // Fixed delivery charge
 
 // Category Management
 function showCategory(category) {
@@ -301,22 +301,36 @@ function showCategory(category) {
     }
 }
 
-// Toggle Billing Panel - ONLY FOR ORDERS BUTTON
-function toggleBillingPanel() {
+// Toggle Billing Panel - Hides orders button when open
+function toggleBillingPanel(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     const billingPanel = document.getElementById('billingPanel');
+    const ordersButton = document.getElementById('ordersButton');
+    
     if (!billingPanel) {
         console.error('Billing panel not found!');
         return;
     }
     
-    billingPanel.classList.toggle('open');
-    
-    if (billingPanel.classList.contains('open')) {
-        console.log('Opening billing panel');
+    // Only open if not already open
+    if (!billingPanel.classList.contains('open')) {
+        billingPanel.classList.add('open');
+        ordersButton.classList.add('hidden');
         updateBillingPanel();
-    } else {
-        console.log('Closing billing panel');
     }
+}
+
+// Close billing panel function
+function closeBillingPanel() {
+    const billingPanel = document.getElementById('billingPanel');
+    const ordersButton = document.getElementById('ordersButton');
+    
+    billingPanel.classList.remove('open');
+    ordersButton.classList.remove('hidden');
 }
 
 // Update Billing Panel
@@ -337,41 +351,43 @@ function updateBillingPanel() {
     if (cart.length === 0) {
         billingItems.innerHTML = '<div class="b-item" style="text-align: center; color: #666;">No items in cart</div>';
         subtotalElement.textContent = 'Subtotal: Php 0.00';
-        totalElement.textContent = 'Total: Php 0.00';
+        totalElement.textContent = `Total: Php ${deliveryCharge.toFixed(2)}`;
         return;
     }
     
     let subtotal = 0;
     
     cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        subtotal += itemTotal;
+        
         const itemElement = document.createElement('div');
         itemElement.className = 'b-item';
         itemElement.innerHTML = `
-            <img src="${item.image}" alt="${item.name}">
             <div class="b-desc">
-                <div class="b-title">${item.name}</div>
-                <div class="b-meta">${item.size ? `Size: ${item.size}` : ''} • Qty: ${item.quantity}</div>
+                <div class="b-title">${item.name} ${item.size ? `(${item.size})` : ''}</div>
+                <div class="b-meta">Php ${item.price.toFixed(2)} each</div>
             </div>
-            <div class="b-price">Php ${(item.price * item.quantity).toFixed(2)}</div>
+            <div class="b-item-controls">
+                <button class="quantity-btn minus" onclick="updateQuantity(${index}, -1)">-</button>
+                <span class="quantity-display">${item.quantity}</span>
+                <button class="quantity-btn plus" onclick="updateQuantity(${index}, 1)">+</button>
+            </div>
+            <div class="b-price">Php ${itemTotal.toFixed(2)}</div>
             <button class="remove-item" onclick="removeFromCart(${index})">✕</button>
         `;
         billingItems.appendChild(itemElement);
-        
-        subtotal += item.price * item.quantity;
     });
     
-    const tax = subtotal * 0.12; // 12% tax
-    const total = subtotal + tax;
+    const total = subtotal + deliveryCharge;
     
     subtotalElement.textContent = `Subtotal: Php ${subtotal.toFixed(2)}`;
-    document.querySelector('.tax').textContent = `Tax: Php ${tax.toFixed(2)}`;
     totalElement.textContent = `Total: Php ${total.toFixed(2)}`;
 }
 
 // Add to Cart Function
 function addToCart(cardElement) {
     const itemName = cardElement.querySelector('h3').textContent;
-    const itemImage = cardElement.querySelector('img').src;
     
     // Get selected size and price
     let selectedSize = '';
@@ -382,10 +398,10 @@ function addToCart(cardElement) {
         const selectedRadio = Array.from(sizeRadios).find(radio => radio.checked);
         if (selectedRadio) {
             selectedSize = selectedRadio.value;
-            // Extract price based on size (simplified logic)
+            // Extract price based on size
             const priceText = cardElement.querySelector('.price').textContent;
-            const priceMatch = priceText.match(/Php\s*(\d+)/);
-            price = priceMatch ? parseInt(priceMatch[1]) : 0;
+            const sizePriceMatch = priceText.match(new RegExp(`Php\\s*(\\d+)\\s*\\(${selectedSize}\\)`));
+            price = sizePriceMatch ? parseInt(sizePriceMatch[1]) : 0;
         } else {
             alert('Please select a size');
             return;
@@ -409,7 +425,6 @@ function addToCart(cardElement) {
         // Add new item to cart
         cart.push({
             name: itemName,
-            image: itemImage,
             size: selectedSize,
             price: price,
             quantity: 1
@@ -424,12 +439,29 @@ function addToCart(cardElement) {
     updateBillingPanel();
 }
 
+// Update item quantity
+function updateQuantity(index, change) {
+    if (cart[index]) {
+        cart[index].quantity += change;
+        
+        if (cart[index].quantity <= 0) {
+            removeFromCart(index);
+        } else {
+            orderCount += change;
+            updateOrdersCount();
+            updateBillingPanel();
+        }
+    }
+}
+
 // Remove from Cart
 function removeFromCart(index) {
-    orderCount -= cart[index].quantity;
-    cart.splice(index, 1);
-    updateOrdersCount();
-    updateBillingPanel();
+    if (cart[index]) {
+        orderCount -= cart[index].quantity;
+        cart.splice(index, 1);
+        updateOrdersCount();
+        updateBillingPanel();
+    }
 }
 
 // Update Orders Count
@@ -451,7 +483,7 @@ function processOrder() {
         return;
     }
     
-    const orderType = document.querySelector('.order-type button:first-child').classList.contains('active') ? 'Dine-in' : 'Takeaway';
+    const orderType = document.querySelector('.order-btn.active').textContent;
     
     // Simulate order processing
     alert(`Order placed successfully!\nOrder Type: ${orderType}\nTotal: ${document.querySelector('.total').textContent}\n\nThank you for your order!`);
@@ -462,8 +494,8 @@ function processOrder() {
     updateOrdersCount();
     updateBillingPanel();
     
-    // Close billing panel
-    document.getElementById('billingPanel').classList.remove('open');
+    // Close billing panel and show orders button
+    closeBillingPanel();
 }
 
 // Initialize everything
@@ -477,6 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
         item.addEventListener('click', function() {
             const target = this.getAttribute('data-target');
             showCategory(target);
+            updatePageTitle(target);
         });
     });
 
@@ -490,18 +523,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Orders button functionality
-    const ordersBtn = document.querySelector('.orders-btn');
+    const ordersBtn = document.getElementById('ordersButton');
     if (ordersBtn) {
-        ordersBtn.addEventListener('click', toggleBillingPanel);
+        ordersBtn.addEventListener('click', function(e) {
+            toggleBillingPanel(e);
+        });
     }
     
     // Billing close button
-    document.getElementById('billingClose').addEventListener('click', function() {
-        document.getElementById('billingPanel').classList.remove('open');
+    document.getElementById('billingClose').addEventListener('click', function(e) {
+        e.stopPropagation();
+        closeBillingPanel();
+    });
+
+    // Close billing panel when clicking outside
+    document.addEventListener('click', function(e) {
+        const billingPanel = document.getElementById('billingPanel');
+        const ordersButton = document.getElementById('ordersButton');
+        
+        if (billingPanel.classList.contains('open') && 
+            !billingPanel.contains(e.target) && 
+            e.target !== ordersButton) {
+            closeBillingPanel();
+        }
     });
 
     // Order type selection
-    const orderTypeButtons = document.querySelectorAll('.order-type button');
+    const orderTypeButtons = document.querySelectorAll('.order-btn');
     orderTypeButtons.forEach(button => {
         button.addEventListener('click', function() {
             orderTypeButtons.forEach(btn => btn.classList.remove('active'));
@@ -509,21 +557,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Payment method selection
-    const paymentButtons = document.querySelectorAll('.payment-methods button');
-    paymentButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            paymentButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-
     // Process order button
-    document.querySelector('.process').addEventListener('click', processOrder);
+    document.querySelector('.process-order').addEventListener('click', processOrder);
 
     // Set default order type
     orderTypeButtons[0].classList.add('active');
-    paymentButtons[0].classList.add('active');
 
     // Location Modal functionality
     initializeLocationModal();
@@ -650,6 +688,23 @@ function initializeLocationModal() {
 
     function clearError() {
         locationError.style.display = 'none';
+    }
+}
+
+// Function to update page title based on category
+function updatePageTitle(category) {
+    const titleMap = {
+        'all': 'ALL MENU',
+        'desserts': 'DESSERTS',
+        'spuds': 'SPUDS',
+        'pasta': 'PASTA / BREAD',
+        'wrap': 'WRAP',
+        'appetizers': 'APPETIZERS'
+    };
+    
+    const pageTitle = document.querySelector('.topbar-center h1');
+    if (titleMap[category] && pageTitle) {
+        pageTitle.textContent = titleMap[category];
     }
 }
 </script>
