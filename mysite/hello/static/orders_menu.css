@@ -10,18 +10,19 @@ body {
   overflow: hidden; /* Prevent body scrolling */
 }
 
-/* Topbar */
+/* Topbar - COMPRESSED */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 66px;
-  padding: 8px 18px;
-  border-bottom: 4px solid #F9A8C9;
+  height: 50px; /* Reduced from 66px */
+  padding: 4px 18px; /* Reduced padding */
+  border-bottom: 3px solid #F9A8C9; /* Slightly thinner border */
   background: #fff;
   position: sticky;
   top: 0;
   z-index: 50;
+  
 }
 
 .topbar-left {
@@ -30,9 +31,21 @@ body {
   gap: 14px;
 }
 
-.logo {
-  width: 175px;
-  height: 100px;
+.topbar-center h1 {
+  color: #FD2A80 !important;
+  font-size: 35px !important;
+  letter-spacing: 2px !important;
+  margin: 0 !important;
+  text-align: center !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+}
+
+/* Update logo size in topbar */
+.topbar .logo {
+  width: 140px; /* Smaller logo */
+  height: 80px; /* Smaller logo */
   object-fit: contain;
   border-radius: 6px;
   mix-blend-mode: overlay;
@@ -41,33 +54,74 @@ body {
 .location {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: #ff5fa2;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px; /* Smaller font */
+  font-family: 'Inter', sans-serif;
 }
 
 .location-search {
-  background: none;
+  background: linear-gradient(135deg, #ff7bbd, #fd2a80);
+  color: white;
   border: none;
+  padding: 8px 16px;
+  border-radius: 18px;
+  font-weight: 700;
+  font-size: 12px;
   cursor: pointer;
-  font-size: 14px;
-  padding: 4px;
-  margin-left: 8px;
-  border-radius: 4px;
-  transition: background 0.2s;
+  box-shadow: 0 3px 10px rgba(253, 42, 128, 0.3);
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .location-search:hover {
-  background: rgba(255, 95, 162, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(253, 42, 128, 0.4);
+}
+
+/* Update topbar center title */
+.topbar-center h1 {
+  color: #ff2b87;
+  font-size: 18px; /* Smaller font */
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-align: center;
+}
+
+
+.title-logo {
+    width: 35px;
+    height: 35px;
+    object-fit: contain;
+    border-radius: 4px;
+    vertical-align: middle;
+}
+
+.topbar-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.title-logo {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    border-radius: 8px;
 }
 
 .topbar-center h1 {
-  color: #ff2b87;
-  font-size: 22px;
-  letter-spacing: 1px;
-  margin: 0;
-  text-align: center;
+    color: #FD2A80;
+    font-size: 40px;
+    letter-spacing: 1px;
+    margin: 0;
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1;
 }
 
 .topbar-right {
@@ -83,35 +137,53 @@ body {
   color: #FF5FA2;
   font-weight: 600;
   font-size: 14px;
+  font-family: 'Inter', sans-serif;
 }
 
+/* Update profile picture in topbar */
 .profile-pic { 
-  width: 34px; 
-  height: 34px; 
+  width: 28px; /* Smaller */
+  height: 28px; /* Smaller */
   border-radius: 50%; 
   background: #ffd6ea; 
   display:flex; 
   align-items:center; 
   justify-content:center; 
-  font-size:16px; 
+  font-size:14px; /* Smaller icon */
 }
 
+/* Update orders button position */
 .orders-btn {
   background: linear-gradient(180deg,#ff7bbd,#ff5fa2);
   color: #fff;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 10px; /* Smaller padding */
   border-radius: 20px;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   box-shadow: 0 6px 12px rgba(255,95,162,0.18);
   position: fixed; /* Change to fixed */
-  top: 78px; /* Position below topbar */
+  top: 60px; /* Adjusted for compressed topbar */
   right: 18px;
   z-index: 70; /* Higher z-index */
+  font-size: 13px; /* Smaller font */
+}
+
+.orders-btn.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+}
+
+/* Make sure billing panel has proper z-index */
+.billing-panel.open {
+    right: 0;
+    z-index: 100;
 }
 
 .orders-count {
@@ -123,49 +195,58 @@ body {
   font-size: 13px;
 }
 
-/* App layout - FIXED */
+/* Update app layout height */
 .app {
   display: flex;
   gap: 0;
   padding: 0;
   position: relative;
-  height: calc(100vh - 66px); /* Full height minus topbar */
-  min-height: calc(100vh - 66px);
+  height: calc(100vh - 50px); /* Updated for compressed topbar */
+  min-height: calc(100vh - 50px);
 }
 
-/* Sidebar - FIXED FULL HEIGHT */
-/* Sidebar - MOVED UP & BETTER ALIGNED */
 .sidebar {
   width: 160px;
-  background: #F9A8C9; /* Pink background */
-  padding: 0;
+  background: #F9A8C9;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  height: 100vh;
+  align-items: center;
+  gap: 12px;
+  height: 100vh; /* Full viewport height */
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
   border-right: 3px solid #ff8bbd;
-  align-items: center;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  font-family: sans-serif;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 40;
-  padding-top: 70px;
-  justify-content: flex-start;
+  padding-top: 60px; /* Increased from 20px to account for topbar */
+  padding-bottom: 20px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar .logo {
+  width: 140px;
+  height: auto;
+  margin-bottom: 25px;
+  object-fit: contain;
+  display: block;
+  mix-blend-mode: overlay;
 }
 
 .sidebar nav ul {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Reduced gap between items */
+  gap: 14px;
   width: 100%;
   align-items: center;
-  padding: 0;
-  margin: 0;
 }
 
 .nav-item {
@@ -173,37 +254,54 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px; /* Reduced gap */
-  padding: 12px 8px; /* Reduced padding */
-  border-radius: 12px;
+  gap: 8px;
+  padding: 15px 10px;
+  border-radius: 15px;
   cursor: pointer;
   font-weight: 800;
   color: #FF5EA0;
   transition: all 0.2s ease;
   text-align: center;
-  width: 120px; /* Slightly reduced width */
-  height: 100px; /* Reduced height */
+  width: 122px;
+  height: 119px;
   border: none;
   background: rgba(255, 255, 255, 0.4);
   font-family: 'Sansita', sans-serif;
-  font-size: 13px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-size: 14px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
   border: 2px solid transparent;
 }
 
 
-.nav-item.active {
-  background: #FFC2DB;
-  box-shadow: 0 8px 25px rgba(255, 107, 171, 0.4); /* Enhanced shadow */
+.nav-item:hover { 
+  background: #FFC2DB; 
   transform: translateY(-2px);
-  border: 2px solid #ff6bab;
-  position: relative;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
 }
 
 /* Add a stronger shadow effect on click */
-.nav-item:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 15px rgba(255, 107, 171, 0.6);
+.nav-item.active {
+  background: #FFC2DB;
+  box-shadow: 0 5px 18px rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+  border: 2px solid #ff6bab;
+}
+
+.nav-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.nav-label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.2;
+  white-space: normal;
+  max-width: 100px;
 }
 
 /* Optional: Add a subtle glow effect */
@@ -247,21 +345,15 @@ body {
   max-width: 90px;
 }
 
-/* Remove the sidebar logo if it's pushing content down */
-.sidebar .logo {
-  display: none; /* Remove the logo from sidebar */
-}
-
-/* Update main content to account for moved-up sidebar */
+/* Update main content to account for compressed topbar */
 .main {
   flex: 1;
   min-width: 320px;
   padding: 18px;
-  height: calc(100vh - 66px);
-  min-height: calc(100vh - 66px);
-  overflow-y: auto; /* Changed back to auto for scrolling content */
-  margin-left: 160px;
-  padding-top: 0; /* Remove padding-top since sidebar handles spacing */
+  height: calc(100vh - 50px); /* Updated for compressed topbar */
+  overflow-y: auto;
+  margin-left: 160px; /* Sidebar width */
+  padding-top: 50px; /* Updated for compressed topbar */
 }
 
 .section-title {
@@ -279,7 +371,7 @@ body {
 
 .category-subtitle {
   color: #ff2b87;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 800;
   margin-bottom: 15px;
   border-bottom: 2px solid #F9A8C9;
@@ -527,13 +619,13 @@ body {
   display: none;
 }
 
-/* Billing Panel */
+/* Update billing panel position */
 .billing-panel {
   position: fixed;
   right: -420px;
-  top: 66px; /* Align with topbar */
+  top: 50px; /* Updated for compressed topbar */
   width: 360px;
-  height: calc(100vh - 66px); /* Full height minus topbar */
+  height: calc(100vh - 50px); /* Updated for compressed topbar */
   background: linear-gradient(180deg,#ffb6db,#ff93cc);
   border-radius: 12px 0 0 12px;
   padding: 18px;
@@ -587,6 +679,161 @@ body {
 }
 .process { width:100%; padding:12px; border-radius:30px; border:none; font-weight:900; cursor:pointer; background:#fff; color:#ff2b87; }
 
+
+.process-order {
+    width: 100%;
+    padding: 15px;
+    border-radius: 30px;
+    border: none;
+    font-weight: 900;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ff7bbd, #fd2a80);
+    color: white;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(253, 42, 128, 0.3);
+}
+
+.process-order:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(253, 42, 128, 0.4);
+    background: linear-gradient(135deg, #ff8bc6, #ff3a90);
+}
+
+.process-order:active {
+    transform: translateY(0);
+}
+
+
+/* Quantity Controls Styling - Like the image */
+.b-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px 12px;
+    border-radius: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 2px solid #ffd6ea;
+}
+
+.quantity-btn {
+    background: #fd2a80;
+    color: white;
+    border: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(253, 42, 128, 0.3);
+}
+
+.quantity-btn:hover {
+    background: #ff3a90;
+    transform: scale(1.1);
+    box-shadow: 0 3px 6px rgba(253, 42, 128, 0.4);
+}
+
+.quantity-btn:active {
+    transform: scale(0.95);
+}
+
+.quantity-btn.minus {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.quantity-btn.plus {
+    font-size: 16px;
+}
+
+.quantity-display {
+    font-weight: 800;
+    color: #333;
+    min-width: 30px;
+    text-align: center;
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Remove item button */
+.remove-item {
+    background: #ff4444;
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+    box-shadow: 0 2px 4px rgba(255, 68, 68, 0.3);
+}
+
+.remove-item:hover {
+    background: #cc0000;
+    transform: scale(1.1);
+    box-shadow: 0 3px 6px rgba(255, 68, 68, 0.4);
+}
+
+/* Billing item layout adjustments */
+.b-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.b-desc {
+    flex: 1;
+}
+
+.b-title {
+    font-weight: 800;
+    color: #3b0b2b;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.b-meta {
+    font-size: 12px;
+    color: #7b7b7b;
+    font-family: 'Inter', sans-serif;
+}
+
+.b-price {
+    font-weight: 800;
+    color: #3b0b2b;
+    font-size: 14px;
+    min-width: 80px;
+    text-align: right;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Make the quantity controls stand out more */
+.b-item-controls {
+    background: linear-gradient(135deg, #fff5f9, #ffe6f6);
+    border: 2px solid #ffb6db;
+}
+
 /* Remove item button in billing panel */
 .remove-item {
     background: #ff4444;
@@ -631,6 +878,30 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .topbar {
+    height: 45px; /* Slightly smaller on mobile */
+    padding: 4px 12px;
+  }
+  
+  .topbar .logo {
+    width: 120px;
+    height: 70px;
+  }
+  
+  .topbar-center h1 {
+    font-size: 16px;
+  }
+  
+  .orders-btn {
+    top: 55px; /* Adjusted for mobile */
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  
+  .app {
+    height: calc(100vh - 45px); /* Updated for mobile */
+  }
+  
   .sidebar {
     width: 100%;
     height: auto; /* Auto height on mobile */
@@ -642,7 +913,6 @@ body {
     padding: 10px;
     border-right: none;
     border-bottom: 3px solid #ff8bbd;
-
   }
   
   .sidebar nav ul {
@@ -671,8 +941,8 @@ body {
   .main {
     margin-left: 0;
     padding: 12px;
-    height: auto;
-    min-height: auto;
+    height: calc(100vh - 45px); /* Updated for mobile */
+    padding-top: 45px; /* Updated for mobile */
   }
   
   .app {
@@ -681,14 +951,7 @@ body {
   }
   
   .billing-panel {
-    top: 66px;
-    height: calc(100vh - 66px);
-  }
-  
-  .orders-btn {
-    position: absolute;
-    top: 78px;
+    top: 45px; /* Updated for mobile */
+    height: calc(100vh - 45px); /* Updated for mobile */
   }
 }
-
-  
