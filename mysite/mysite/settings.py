@@ -37,7 +37,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'hello' / 'templates',  # Correct folder name
+            BASE_DIR / 'templates',  # Points to your main templates folder
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -49,8 +49,6 @@ TEMPLATES = [
         },
     },
 ]
-
-
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
@@ -70,19 +68,34 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Language and timezone settings
+# Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Manila'
 USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 
-# Update static file directories
+# Static files directories
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'motherjulie/static'),
-    BASE_DIR / 'hello' / 'static',  # Ensure this points to your static directory
+    BASE_DIR / 'static',  # Points to your main static folder
 ]
 
-# D
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'noreply.motherjulie@gmail.com'
+EMAIL_HOST_PASSWORD = 'motherjulie24'  # From noreply account
+DEFAULT_FROM_EMAIL = 'Mother Julie <noreply.motherjulie@gmail.com>'
+
+# Admin error reporting
+ADMINS = [
+    ('Iyo Adidey', 'iyoadidey11@gmail.com'),
+]
+SERVER_EMAIL = 'noreply.motherjulie@gmail.com'  # Sends error reports to ADMINS

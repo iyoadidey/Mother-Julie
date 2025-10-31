@@ -26,10 +26,23 @@
                 <li><a href="{% url 'orders_menu' %}">ORDERS</a></li>
                 <li><a href="#">OUR MENU</a></li>
             </ul>
-            <a href="#" class="username">
-                USERNAME
-                <img src="{% static 'user-icon.png' %}" alt="User Account" class="user-icon">
-            </a>
+            <div class="user-section">
+            {% if user.is_authenticated %}
+                <div class="user-info">
+                    <span class="user-welcome">{{ user.username }}</span>
+                    <img src="{% static 'user-icon.png' %}" alt="User Account" class="user-icon">
+                    <form method="POST" action="{% url 'logout' %}" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">LOGOUT</button>
+                    </form>
+                </div>
+            {% else %}
+                <a href="{% url 'signin' %}" class="username">
+                    Sign In
+                    <img src="{% static 'user-icon.png' %}" alt="User Account" class="user-icon">
+                </a>
+            {% endif %}
+        </div>
         </nav>
     </header>
 
@@ -80,23 +93,31 @@
 
     <!-- Footer with Navigation -->
     <footer>
-        <div class="footer-container">
-            
-            <nav class="footer-nav">
-                <ul>
-                <span>ADDRESS:</span>
-                <li><a href="https://maps.app.goo.gl/JipXk6gC6BM9dFnDA">Mother Julie</a></li>
-                <span>EMAIL:</span>
-                <li><a href="mailto:contact.motherjulie@gmail.com">contact.motherjulie@gmail.com</a></li>
-                </ul>
-            </nav>
-            <div class="footer-social">
-                <span>Follow us on:</span>
-                <a href="https://www.facebook.com/motherjulie.products" class="social-icon" target="_blank">Facebook</a> |
-                <a href="https://www.instagram.com/mother.julie?utm_source=ig_web_button_share_sheet&igsh=MXYzcDBibmRid3d0bg==" class="social-icon" target="_blank">Instagram</a>
-            </div>
+    <div class="footer-container">
+        <nav class="footer-nav">
+            <ul>
+                <li class="contact-item">
+                    <img src="{% static 'mapsicon.png' %}" alt="Maps" width="20" height="20">
+                    <a href="https://maps.app.goo.gl/JipXk6gC6BM9dFnDA">Mother Julie</a>
+                </li>
+                <li class="contact-item">
+                    <img src="{% static 'gmailicon.png' %}" alt="Gmail" width="20" height="20">
+                    <span></span>
+                    <a href="mailto:contact.motherjulie@gmail.com">contact.motherjulie@gmail.com</a>
+                </li>
+            </ul>
+        </nav>
+        <div class="footer-social">
+            <span>Follow us on:</span>
+            <a href="https://www.facebook.com/motherjulie.products" class="social-icon" target="_blank">
+            <img src="{% static 'fbicon.png' %}" alt="Gmail" width="20" height="20">
+            <span class="separator">|</span>
+            <a href="https://www.instagram.com/mother.julie?utm_source=ig_web_button_share_sheet&igsh=MXYzcDBibmRid3d0bg==" class="social-icon" target="_blank">
+                <img src="{% static 'igicon.png' %}" alt="Instagram" width="20" height="20">
+            </a>
         </div>
-    </footer>
+    </div>
+</footer>
 
 
 </body>
