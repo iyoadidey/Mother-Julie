@@ -42,7 +42,7 @@ header nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 95px;
+    height: 100px;
     background-color: var(--brand-pink);
     padding: 0 40px;
     font-family: 'Poppins', sans-serif;
@@ -81,7 +81,61 @@ nav ul li a:hover {
     opacity: 0.8;
 }
 
-/* Right side (username + icon) */
+/* ======================= USER SECTION STYLES ======================= */
+.user-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 8px 15px;
+}
+
+.user-welcome {
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+}
+
+.user-icon {
+    height: 30px;
+    width: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Logout Button Styles */
+.logout-form {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.logout-btn {
+    color: #FD007A;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logout-btn:hover {
+    background: #F465A0;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .username {
     display: flex;
     align-items: center;
@@ -89,11 +143,16 @@ nav ul li a:hover {
     color: white;
     font-size: 0.9rem;
     font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
-.user-icon {
-    height: 35px;
-    width: 35px;
+.username:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* ======================= HERO SECTION ======================= */
@@ -258,57 +317,67 @@ footer {
 }
 
 .footer-container {
-    max-width: 1200px;
+    max-width: 600px;
     margin: 0 auto;
     padding: 0 20px;
-}
-
-.footer-logo img {
-    margin-bottom: 20px;
+    text-align: center;
 }
 
 .footer-nav ul {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0 0 15px 0;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 30px; /* Space between the two items */
+    flex-wrap: nowrap; /* Prevent wrapping to new line */
 }
 
-.footer-nav ul li {
-    display: inline-block;
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap; /* Keep each item on one line */
 }
 
-.footer-nav ul li a {
-    color: rgb(255, 255, 255);
-    font-weight: 600;
-    font-size: 1rem;
-}
-
-.footer-social {
-    margin-top: 20px;
-}
-
-.footer-social span {
-    color: rgb(255, 255, 255);
-    font-weight: 500;
-    margin: 0 10px;
-    font-size: 1rem;
-    display: inline-block;
-}
-
-/* Social Media Links */
-.footer-social .social-icon {
-    color: rgb(255, 255, 255);
-    font-weight: 600;
-    font-size: 1rem;
+.contact-item a {
+    color: white;
     text-decoration: none;
-    display: inline-block;
-    margin: 0 10px;
+    font-weight: 600;
+    font-size: 1rem;
     transition: color 0.3s ease;
 }
 
-.footer-social .social-icon:hover {
+.contact-item a:hover {
     color: #ff5ea0;
+}
+
+.footer-social {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.follow-text {
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px; /* Match icon height */
+}
+
+.social-icon img {
+    transition: transform 0.3s ease;
+    display: block; /* Removes extra space below image */
+}
+
+.footer-social span.separator {
+    margin: 0 5px;/* Adds space on both sides of the "|" */
+    color: white;
 }

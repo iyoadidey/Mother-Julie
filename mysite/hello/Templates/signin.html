@@ -23,24 +23,20 @@
         {% if messages %}
           <div class="messages-container">
             {% for message in messages %}
-              <p>{{ message }}</p>
+              <div class="alert alert-{{ message.tags }}">{{ message }}</div>
             {% endfor %}
           </div>
         {% endif %}
 
+        <!-- Single form for signin -->
         <form id="signin-form" action="{% url 'signin' %}" method="POST">
           {% csrf_token %}
-          <input name="email" type="email" class="desktop1-input" placeholder="Email" required />
+          <input name="username" type="text" class="desktop1-input" placeholder="Username" required />
           <input name="password" type="password" class="desktop1-input" placeholder="Password" required />
 
-        <form method="post" action="{% url 'dashboard' %}">
-  {% csrf_token %}
-  <button type="submit" class="desktop1-button" aria-label="Sign In">
-    <span class="desktop1-text7">Sign In</span>
-  </button>
-</form>
-
-
+          <button type="submit" class="desktop1-button" aria-label="Sign In">
+            <span class="desktop1-text7">Sign In</span>
+          </button>
 
           <p class="desktop1-bottom-link">
             Don't have an account?
