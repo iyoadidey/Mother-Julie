@@ -5,8 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mother Julie - Order Menu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sansita:wght@400;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'orders_menu.css' %}" />
 </head>
 <body>
@@ -16,13 +19,13 @@
             <div class="topbar-left">
                 <div class="location">
                     <span class="pin">📍</span>
-                    <span class="loc-text">Manila  </span>
-                    <button class="location-search">CHANGE</button>
+                    <span class="loc-text">Manila</span>
+                    <button class="location-search" id="locationSearchBtn">CHANGE</button>
                 </div>
             </div>
             
             <div class="topbar-center">
-                <img class="title-logo" src="{% static 'menu.png' %}" alt="All Menu">                
+                <img class="title-logo" src="{% static 'orders_menupics/menu.png' %}" alt="All Menu">                
                 <h1>ALL MENU</h1>
             </div>
             
@@ -30,7 +33,7 @@
                 {% if user.is_authenticated %}
                     <div class="user-info">
                         <span class="user-welcome">{{ user.username }}</span>
-                        <img src="{% static 'user-icon.png' %}" alt="User Account" class="user-icon">
+                        <img src="{% static 'orders_menupics/user-icon.png' %}" alt="User Account" class="user-icon">
                         <form method="POST" action="{% url 'logout' %}" class="logout-form">
                             {% csrf_token %}
                             <button type="submit" class="logout-btn">LOGOUT</button>
@@ -39,7 +42,7 @@
                 {% else %}
                     <a href="{% url 'signin' %}" class="username">
                         Sign In
-                        <img src="{% static 'user-icon.png' %}" alt="User Account" class="user-icon">
+                        <img src="{% static 'orders_menupics/user-icon.png' %}" alt="User Account" class="user-icon">
                     </a>
                 {% endif %}
             </div>
@@ -54,38 +57,40 @@
         <div class="app">
             <!-- Sidebar -->
             <aside class="sidebar" aria-label="Main navigation">
-            <img class="logo" src="{% static 'motherjulie.png' %}" alt="Mother Julie logo" onclick="redirectToDashboard()"><nav>
+                <a href="{% url 'dashboard' %}" class="logo-link">
+                <img class="logo" src="{% static 'orders_menupics/motherjulie.png' %}" alt="Mother Julie logo" id="dashboardLogo">
+                </a>
+                <nav>
                     <ul>
-                        <li class="nav-item" data-target="all">
-                            <img class="nav-logo" src="{% static 'menu.png' %}" alt="All Menu">
+                        <li class="nav-item active" data-target="all">
+                            <img class="nav-logo" src="{% static 'orders_menupics/menu.png' %}" alt="All Menu">
                             <span class="nav-label">All Menu</span>
                         </li>
                         <li class="nav-item" data-target="desserts">
-                            <img class="nav-logo" src="{% static 'dessert.png' %}" alt="Desserts">
+                            <img class="nav-logo" src="{% static 'orders_menupics/dessert.png' %}" alt="Desserts">
                             <span class="nav-label">Desserts</span>
                         </li>
                         <li class="nav-item" data-target="spuds">
-                            <img class="nav-logo" src="{% static 'spud.png' %}" alt="Spuds">
+                            <img class="nav-logo" src="{% static 'orders_menupics/spud.png' %}" alt="Spuds">
                             <span class="nav-label">Spuds</span>
                         </li>
                         <li class="nav-item" data-target="pasta">
-                            <img class="nav-logo" src="{% static 'pasta.png' %}" alt="Pasta / Bread">
+                            <img class="nav-logo" src="{% static 'orders_menupics/pasta.png' %}" alt="Pasta / Bread">
                             <span class="nav-label">Pasta / Bread</span>
                         </li>
                         <li class="nav-item" data-target="wrap">
-                            <img class="nav-logo" src="{% static 'wrap.png' %}" alt="Wrap">
+                            <img class="nav-logo" src="{% static 'orders_menupics/wrap.png' %}" alt="Wrap">
                             <span class="nav-label">Wrap</span>
                         </li>
                         <li class="nav-item" data-target="appetizers">
-                            <img class="nav-logo" src="{% static 'nachos.png' %}" alt="Appetizers">
+                            <img class="nav-logo" src="{% static 'orders_menupics/nachos.png' %}" alt="Appetizers">
                             <span class="nav-label">Appetizers</span>
                         </li>
                     </ul>
                 </nav>
             </aside>
 
-            <!-- Main Content -->
-            <div class="main">
+<div class="main">
                 <!-- ALL MENU Section -->
                 <div class="category active" id="all">                    
                     <!-- DESSERTS Category -->
@@ -94,7 +99,7 @@
                         <div class="menu-grid">
                             <!-- Mais Con Yelo -->
                             <div class="card">
-                                <img src="{% static 'mais_conyelo.png' %}" alt="Mais Con Yelo">
+                                <img src="{% static 'orders_menupics/mais_conyelo.png' %}" alt="Mais Con Yelo">
                                 <div class="card-body">
                                     <h3>Mais Con Yelo</h3>
                                     <div class="availability">Available</div>
@@ -108,7 +113,9 @@
                                     </div>
                                     <div class="price">Php 130 (L) • Php 110 (M)</div>
                                 </div>
-                                <button class="add-to-cart"></button>
+                                <button class="add-to-cart">
+                                <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                            
                             </div>
 
                             <!-- Biscoff Classic -->
@@ -127,8 +134,9 @@
                                     </div>
                                     <div class="price">Php 200 (L) • Php 175 (M)</div>
                                 </div>
-                                <button class="add-to-cart"></button>
-                            </div>
+                                <button class="add-to-cart">
+                                <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                            </div>
 
                             <!-- Buko Pandan -->
                             <div class="card">
@@ -146,9 +154,10 @@
                                     </div>
                                     <div class="price">Php 120 (L) • Php 100 (M)</div>
                                 </div>
-                                <button class="add-to-cart"></button>
-                            </div>
-                        </div>
+                                <button class="add-to-cart">
+                                <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                        
+        </div>
                     </div>
 
                     <!-- SPUDS Category -->
@@ -163,8 +172,9 @@
                                     <div class="availability">Available</div>
                                     <div class="price">Php 159</div>
                                 </div>
-                                <button class="add-to-cart"></button>
-                            </div>
+                                <button class="add-to-cart">
+                                <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                            </div>
 
                             <!-- Chili Con Carne -->
                             <div class="card">
@@ -174,49 +184,50 @@
                                     <div class="availability">Available</div>
                                     <div class="price">Php 179</div>
                                 </div>
-                                <button class="add-to-cart"></button>
+                                <button class="add-to-cart">
+                                <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                            
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Individual Category Sections -->
-                <div class="category" id="desserts">
-                    <h2 class="section-title">DESSERTS</h2>
-                    <div class="menu-grid">
-                        <!-- Dessert items will be populated here -->
-                    </div>
-                </div>
-
-                <div class="category" id="spuds">
-                    <h2 class="section-title">SPUDS</h2>
-                    <div class="menu-grid">
-                        <!-- Spud items will be populated here -->
-                    </div>
-                </div>
-
-                <div class="category" id="pasta">
-                    <h2 class="section-title">PASTA / BREAD</h2>
-                    <div class="menu-grid">
-                        <!-- Pasta items will be populated here -->
-                    </div>
-                </div>
-
-                <div class="category" id="wrap">
-                    <h2 class="section-title">WRAP</h2>
-                    <div class="menu-grid">
-                        <!-- Wrap items will be populated here -->
-                    </div>
-                </div>
-
-                <div class="category" id="appetizers">
-                    <h2 class="section-title">APPETIZERS</h2>
-                    <div class="menu-grid">
-                        <!-- Appetizer items will be populated here -->
-                    </div>
-                </div>
-            </div>
+    <!-- Individual Category Sections (Hidden by default) -->
+    <div class="category" id="desserts">
+        <h2 class="section-title">DESSERTS</h2>
+        <div class="menu-grid" id="dessertsCategoryGrid">
+            <!-- Dessert items will be populated here when category is clicked -->
         </div>
+    </div>
+
+    <div class="category" id="spuds">
+        <h2 class="section-title">SPUDS</h2>
+        <div class="menu-grid" id="spudsCategoryGrid">
+            <!-- Spud items will be populated here when category is clicked -->
+        </div>
+    </div>
+
+    <div class="category" id="pasta">
+        <h2 class="section-title">PASTA / BREAD</h2>
+        <div class="menu-grid" id="pastaCategoryGrid">
+            <!-- Pasta items will be populated here when category is clicked -->
+        </div>
+    </div>
+
+    <div class="category" id="wrap">
+        <h2 class="section-title">WRAP</h2>
+        <div class="menu-grid" id="wrapCategoryGrid">
+            <!-- Wrap items will be populated here when category is clicked -->
+        </div>
+    </div>
+
+    <div class="category" id="appetizers">
+        <h2 class="section-title">APPETIZERS</h2>
+        <div class="menu-grid" id="appetizersCategoryGrid">
+            <!-- Appetizer items will be populated here when category is clicked -->
+        </div>
+    </div>
+</div>
 
         <!-- Location Modal -->
         <div class="location-modal" id="locationModal">
@@ -224,82 +235,214 @@
                 <div class="modal-header">
                     <div>
                         <h3>Set Your Location</h3>
-                        <div class="modal-subtitle">Philippines Only</div>
+                        <div class="modal-subtitle">Metro Manila Only</div>
                     </div>
                     <button class="modal-close" id="modalClose">&times;</button>
                 </div>
                 
                 <div class="search-box">
-                    <input type="text" id="locationInput" placeholder="Search cities in Philippines...">
+                    <input type="text" id="locationInput" placeholder="Search cities in Metro Manila...">
                     <button class="search-btn" id="searchBtn">Search</button>
                 </div>
                 
                 <div class="suggestions" id="suggestions"></div>
-                
+
                 <div class="current-location">
                     <button class="current-location-btn" id="currentLocationBtn">
                         📍 Use Current Location
                     </button>
                     <div class="location-error" id="locationError">
-                        Location outside Philippines. Please search for Philippine locations only.
+                        Location outside Metro Manila. Please search for Metro Manila locations only.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Billing Panel -->
-        <div class="billing-panel" id="billingPanel">
-            <div class="billing-header">
-                <h2>Your Order</h2>
-                <button class="billing-close" id="billingClose">✕</button>
+            
+           <!-- Billing Panel -->
+<div class="billing-panel" id="billingPanel">
+    <div class="billing-header">
+        <h2>Your Order</h2>
+        <button class="billing-close" id="billingClose">✕</button>
+    </div>
+    
+    <div class="billing-items" id="billingItems">
+        <!-- Order items will appear here -->
+        <div class="empty-cart-message">
+            <div class="empty-icon">🛒</div>
+            <p>No items in cart</p>
+            <small>Add some delicious items to get started!</small>
+        </div>
+    </div>
+    
+    <div class="billing-summary">
+        <div class="summary-row">
+            <span>Subtotal:</span>
+            <span class="subtotal" id="subtotalAmount">Php 0.00</span>
+        </div>
+        <div class="summary-row delivery-fee-row" style="display: none;">
+            <span>Delivery Fee:</span>
+            <span class="delivery-charge" id="deliveryFee">Php 50.00</span>
+        </div>
+        <div class="summary-row total-row">
+            <span>Total:</span>
+            <span class="total" id="totalAmount">Php 0.00</span>
+        </div>
+    </div>
+    
+    <div class="order-type">
+        <button class="order-btn active" data-type="dine-in">Dine-in</button>
+        <button class="order-btn" data-type="pickup">Pickup</button>
+        <button class="order-btn" data-type="delivery">Delivery</button>
+    </div>
+    
+    <!-- Payment Method Section -->
+    <div class="payment-method">
+        <h3>Payment Method</h3>
+        <div class="payment-options">
+            <button class="payment-btn cash active" data-method="cash">
+                <span class="payment-icon">💵</span>
+                <span>Cash</span>
+            </button>
+            <button class="payment-btn gcash" data-method="gcash">
+                <span class="payment-icon">📱</span>
+                <span>GCash</span>
+            </button>
+            <button class="payment-btn bank" data-method="bank">
+                <span class="payment-icon">🏦</span>
+                <span>Bank Transfer</span>
+            </button>
+        </div>
+        
+        <!-- Payment Details -->
+        <div class="payment-details">
+            <!-- Cash Payment Note -->
+            <div class="payment-note cash-note active">
+                Pay with cash at the counter
             </div>
             
-            <div class="billing-items" id="billingItems">
-                <!-- Order items will appear here -->
-                <div class="empty-cart-message">
-                    <div class="empty-icon">🛒</div>
-                    <p>Your cart is empty</p>
-                    <small>Add some delicious items to get started!</small>
+            <!-- GCash Payment Form -->
+            <div class="payment-form gcash-form">
+                <h4>GCash Payment</h4>
+                <div class="form-group">
+                    <label for="gcashNumber">GCash Mobile Number</label>
+                    <input type="tel" id="gcashNumber" placeholder="09XX XXX XXXX" maxlength="11">
                 </div>
+                <div class="form-group">
+                    <label for="gcashName">Account Holder Name</label>
+                    <input type="text" id="gcashName" placeholder="Enter full name">
+                </div>
+                <div class="gcash-qr">
+                    <div class="qr-placeholder">
+                        <div class="qr-code">📱</div>
+                        <p>Scan to Pay with GCash</p>
+                        <small>Amount: <span id="gcashAmount">Php 0.00</span></small>
+                    </div>
+                </div>
+                <button class="verify-payment" id="verifyGCash">Verify Payment</button>
             </div>
             
-            <div class="billing-summary">
-                <div class="summary-row">
-                    <span>Subtotal:</span>
-                    <span class="subtotal">Php 0.00</span>
+            <!-- Bank Transfer Form -->
+            <div class="payment-form bank-form">
+                <h4>Bank Transfer</h4>
+                <div class="bank-options">
+                    <div class="bank-option active" data-bank="bpi">
+                        <span class="bank-icon">🏦</span>
+                        <span>BPI</span>
+                    </div>
+                    <div class="bank-option" data-bank="bdo">
+                        <span class="bank-icon">🏦</span>
+                        <span>BDO</span>
+                    </div>
+                    <div class="bank-option" data-bank="metrobank">
+                        <span class="bank-icon">🏦</span>
+                        <span>Metrobank</span>
+                    </div>
                 </div>
-                <div class="summary-row delivery-fee-row" style="display: none;">
-                    <span>Delivery Fee:</span>
-                    <span class="delivery-charge">Php 50.00</span>
+                
+                <div class="bank-details">
+                    <div class="bank-info active" data-bank="bpi">
+                        <h5>BPI Account Details</h5>
+                        <p><strong>Account Name:</strong> Mother Julie Food Hub</p>
+                        <p><strong>Account Number:</strong> 1234 5678 9012</p>
+                        <p><strong>Branch:</strong> Makati Main</p>
+                    </div>
+                    <div class="bank-info" data-bank="bdo">
+                        <h5>BDO Account Details</h5>
+                        <p><strong>Account Name:</strong> Mother Julie Food Hub</p>
+                        <p><strong>Account Number:</strong> 0987 6543 2109</p>
+                        <p><strong>Branch:</strong> Greenbelt</p>
+                    </div>
+                    <div class="bank-info" data-bank="metrobank">
+                        <h5>Metrobank Account Details</h5>
+                        <p><strong>Account Name:</strong> Mother Julie Food Hub</p>
+                        <p><strong>Account Number:</strong> 5678 9012 3456</p>
+                        <p><strong>Branch:</strong> Ayala Center</p>
+                    </div>
                 </div>
-                <div class="summary-row total-row">
-                    <span>Total:</span>
-                    <span class="total">Php 0.00</span>
+                
+                <div class="form-group">
+                    <label for="referenceNumber">Reference Number</label>
+                    <input type="text" id="referenceNumber" placeholder="Enter transaction reference">
                 </div>
+                <div class="form-group">
+                    <label for="senderName">Sender Name</label>
+                    <input type="text" id="senderName" placeholder="Enter your name as in bank account">
+                </div>
+                <button class="verify-payment" id="verifyBank">Verify Payment</button>
             </div>
-            
-            <div class="order-type">
-                <button class="order-btn active">Dine-in</button>
-                <button class="order-btn">Pickup</button>
-                <button class="order-btn">Delivery</button>
-            </div>
-            
-            <button class="process-order">Place Order</button>
         </div>
     </div>
 
-<script>
-    // Define static URLs for JavaScript
-    const STATIC_URLS = {
-        menu: "{% static 'menu.png' %}",
-        dessert: "{% static 'dessert.png' %}",
-        spud: "{% static 'spud.png' %}",
-        pasta: "{% static 'pasta.png' %}",
-        wrap: "{% static 'wrap.png' %}",
-        nachos: "{% static 'nachos.png' %}"
-    };
-</script>
+    <!-- PLACE ORDER BUTTON -->
+    <button class="process-order">Place Order</button>
 
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" style="display: none;"></div>
+
+        <!-- Order Success Modal -->
+        <div id="orderSuccessModal" class="order-success-modal">
+            <div class="success-content">
+                <div class="success-icon">✓</div>
+                <h3>Order Placed Successfully!</h3>
+                <div class="order-details">
+                    <p><strong>Order Type:</strong> <span id="successOrderType"></span></p>
+                    <p><strong>Total:</strong> <span id="successTotal"></span></p>
+                </div>
+                <p class="thank-you">Thank you for your order!</p>
+                <button class="close-success-btn" id="closeSuccessBtn">Continue Shopping</button>
+            </div>
+        </div>
+
+        <!-- Add to Cart Toast Notification -->
+        <div id="addToCartToast" class="add-to-cart-toast">
+            <div class="toast-content">
+                <div class="toast-icon">✓</div>
+                <div class="toast-message">Item added to cart!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define static URLs for JavaScript
+        const STATIC_URLS = {
+            menu: "{% static 'orders_menupics/menu.png' %}",
+            dessert: "{% static 'orders_menupics/dessert.png' %}",
+            spud: "{% static 'orders_menupics/spud.png' %}",
+            pasta: "{% static 'orders_menupics/pasta.png' %}",
+            wrap: "{% static 'orders_menupics/wrap.png' %}",
+            nachos: "{% static 'orders_menupics/nachos.png' %}",
+            addToCart: "{% static 'orders_menupics/addtocart.png' %}"
+        };
+    </script>
+
+    <!-- Include shared data library first, then orders menu -->
+    <script src="{% static 'shared_data.js' %}"></script>
     <script src="{% static 'orders_menu.js' %}"></script>
+
+    
+
 </body>
 </html>

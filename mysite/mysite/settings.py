@@ -91,7 +91,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'noreply.motherjulie@gmail.com'
-EMAIL_HOST_PASSWORD = 'motherjulie24'  # From noreply account
+EMAIL_HOST_PASSWORD = 'rkuljmuknxlszfyi'  # From noreply account
 DEFAULT_FROM_EMAIL = 'Mother Julie <noreply.motherjulie@gmail.com>'
 
 # Admin error reporting

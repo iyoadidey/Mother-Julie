@@ -1,49 +1,246 @@
 <!DOCTYPE html>
-<html lang="english">
-  <head>
+<html lang="en">
+<head>
     <title>Mother Julie — Sign In</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="utf-8" />
-    <meta property="twitter:card" content="summary_large_image" />
-
-    <link rel="stylesheet" href="https://unpkg.com/animate.css@4.1.1/animate.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     {% load static %}
+    
+    <link rel="stylesheet" href="https://unpkg.com/animate.css@4.1.1/animate.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" />
     <link href="{% static 'signin.css' %}" rel="stylesheet" />
-  </head>
+</head>
 
-  <body>
+<body>
     <div class="desktop1-container1">
-      <div class="desktop1-desktop1">
-        <img src="{% static 'motherjulie.png' %}" alt="Mother Julie Logo" class="motherjulielogo" />
-        <span class="desktop1-text3">SIGN IN</span>
+        <div class="desktop1-desktop1">
+            <img src="{% static 'motherjulie.png' %}" alt="Mother Julie Logo" class="motherjulielogo" />
+            <h1 class="desktop1-text3">SIGN IN</h1>
 
-        <!-- Django messages -->
-        {% if messages %}
-          <div class="messages-container">
-            {% for message in messages %}
-              <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
+            <!-- Django Messages -->
+            {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
-        <!-- Single form for signin -->
-        <form id="signin-form" action="{% url 'signin' %}" method="POST">
-          {% csrf_token %}
-          <input name="username" type="text" class="desktop1-input" placeholder="Username" required />
-          <input name="password" type="password" class="desktop1-input" placeholder="Password" required />
+            <!-- Sign In Form -->
+            <form method="POST" action="{% url 'signin' %}" id="signin-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username" class="sr-only">Username</label>
+                    <input id="username" name="username" type="text" class="desktop1-input" placeholder="Username" required />
+                </div>
+                <div class="form-group">
+                    <label for="password" class="sr-only">Password</label>
+                    <input id="password" name="password" type="password" class="desktop1-input" placeholder="Password" required />
+                </div>
 
-          <button type="submit" class="desktop1-button" aria-label="Sign In">
-            <span class="desktop1-text7">Sign In</span>
-          </button>
+                <button type="submit" class="desktop1-button">
+                    <span class="desktop1-text7">Sign In</span>
+                </button>
 
-          <p class="desktop1-bottom-link">
-            Don't have an account?
-            <a href="{% url 'signup' %}" class="desktop1-link">Sign Up</a>
-          </p>
-        </form>
-      </div>
+                <div class="forgot-password-container">
+                    <a href="#" class="forgot-password-link" id="forgotPasswordLink">Forgot Password?</a>
+                </div>
+
+                <p class="desktop1-bottom-link">
+                    Don't have an account?
+                    <a href="{% url 'signup' %}" class="desktop1-link">Sign Up</a>
+                </p>
+            </form>
+        </div>
     </div>
-  </body>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="alert" aria-live="polite" aria-atomic="true" style="display: none;">
+        <div class="toast-content">
+            <div class="toast-icon" id="toastIcon"></div>
+            <div class="toast-message" id="toastMessage"></div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetPasswordModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Reset Your Password</h2>
+            <p>Enter your email address and we'll send you a link to reset your password.</p>
+            
+            <form id="requestResetForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="reset-email" class="sr-only">Email</label>
+                    <input id="reset-email" type="email" name="email" class="desktop1-input" placeholder="Enter your email" required />
+                </div>
+                <button type="submit" class="desktop1-button" id="resetSubmitButton">
+                    <span>Send Reset Link</span>
+                </button>
+            </form>
+            
+            <p class="modal-footer-text" style="margin-top: 20px; font-size: 0.9rem; color: #666;">
+                Remember your password? 
+                <a href="#" id="backToSignIn" style="color: #ff5b89; text-decoration: none; font-weight: 500;">Back to Sign In</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+    // Toast Notification
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastIcon = document.getElementById('toastIcon');
+
+        const styles = {
+            success: { background: '#4CAF50', icon: '✓' },
+            error: { background: '#f44336', icon: '✕' }
+        };
+
+        const style = styles[type] || styles.success;
+        toast.style.background = style.background;
+        toastIcon.textContent = style.icon;
+        toastMessage.textContent = message;
+        toast.style.display = 'block';
+
+        setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
+    // Validate Email
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    // Sign In Form
+    function setupSignInForm() {
+        const form = document.getElementById('signin-form');
+        if (!form) return;
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+
+            if (!username || !password) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+
+            submitButton.innerHTML = 'Signing In...';
+            submitButton.disabled = true;
+
+            try {
+                const formData = new FormData(form);
+                const csrfToken = formData.get('csrfmiddlewaretoken');
+
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Login successful! Redirecting...', 'success');
+                    setTimeout(() => { window.location.href = data.redirect_url || '/orders_menu/'; }, 1000);
+                } else {
+                    showToast(data.message || 'Login failed', 'error');
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast('Network error. Please try again.', 'error');
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        });
+    }
+
+    // Reset Password Form
+    function setupResetForm() {
+        const form = document.getElementById('requestResetForm');
+        if (!form) return;
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = form.querySelector('#reset-email').value;
+            if (!validateEmail(email)) {
+                showToast('Please enter a valid email', 'error');
+                return;
+            }
+
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = 'Sending...';
+            submitButton.disabled = true;
+
+            try {
+                const formData = new FormData(form);
+                const csrfToken = formData.get('csrfmiddlewaretoken');
+
+                const response = await fetch("{% url 'request_password_reset' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    form.reset();
+                    setTimeout(() => { document.getElementById('resetPasswordModal').style.display = 'none'; }, 2000);
+                } else {
+                    showToast(data.message, 'error');
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast('An error occurred. Please try again.', 'error');
+            } finally {
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        });
+    }
+
+    // Modal Setup
+    function setupModal() {
+        const modal = document.getElementById('resetPasswordModal');
+        const open = document.getElementById('forgotPasswordLink');
+        const close = document.querySelector('.close');
+        const back = document.getElementById('backToSignIn');
+
+        if (open) open.addEventListener('click', e => { e.preventDefault(); modal.style.display = 'block'; });
+        if (close) close.addEventListener('click', () => modal.style.display = 'none');
+        if (back) back.addEventListener('click', e => { e.preventDefault(); modal.style.display = 'none'; });
+
+        window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.style.display = 'none'; });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setupSignInForm();
+        setupResetForm();
+        setupModal();
+    });
+    </script>
+</body>
 </html>
