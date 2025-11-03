@@ -37,6 +37,14 @@ body {
   text-align: center;
 }
 
+
+.desktop1-bottom-link {
+    margin-top: 25px;
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
+}
+
 .motherjulielogo {
   width: 150px;
   margin: 0 auto 20px;

@@ -82,6 +82,16 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Points to your main static folder
 ]
 
+# Add to your settings.py
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+# Ensure cookies work properly
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SECURE = False     # Set to True in production with HTTPS
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

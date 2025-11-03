@@ -355,7 +355,7 @@ body {
 
 .section-title {
     color: #ff2b87;
-    font-size: 18px;
+    font-size: 30px;
     font-weight: 800;
     margin-bottom: 12px;
     margin-top: 0;
@@ -482,6 +482,7 @@ body {
     display: block; 
 }
 
+/* ========== ADD TO CART BUTTON FIX ========== */
 .add-to-cart {
     background: #ff7bbd;
     border: none;
@@ -498,6 +499,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
+    overflow: hidden; /* Important: prevents image overflow */
 }
 
 .add-to-cart:hover:not(:disabled) {
@@ -513,10 +516,13 @@ body {
 }
 
 .cart-icon {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
+    width: 20px !important;/* Square dimensions work better */
+    height: 20px !important;
+    object-fit: contain; /* This maintains aspect ratio */
+    display: block;
 }
+
+/* Remove the !important unless necessary, and remove transform: scale */
 
 /* ========== LOCATION MODAL ========== */
 .location-modal {
@@ -1253,43 +1259,36 @@ body {
 /* ========== TOAST NOTIFICATIONS ========== */
 #toastContainer {
     position: fixed;
-    top: 50%;
+    top: 100px; /* Position below the header */
     left: 50%;
-    transform: translate(-50%, -50%);
+    width: 100%;
     z-index: 10000;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     pointer-events: none;
 }
 
 .toast {
-    background: #4CAF50;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    transform: translateY(-20px);
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-100px);
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s ease;
     font-family: 'Inter', sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
-    max-width: 320px;
+    max-width: 300px;
     text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
     margin-bottom: 10px;
 }
 
 .toast.show {
     transform: translateY(0);
     opacity: 1;
-}
-
-.toast.success {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
 }
 
 .toast.error {
@@ -1303,6 +1302,7 @@ body {
 .toast.info {
     background: linear-gradient(135deg, #2196F3, #1976d2);
 }
+
 
 /* ========== MODALS & NOTIFICATIONS ========== */
 .order-success-modal {
@@ -1475,4 +1475,36 @@ body {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         gap: 10px;
     }
+}
+
+/* ========== PAYMENT METHOD RESTRICTIONS ========== */
+.payment-method .disclaimer-box {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-left: 4px solid #6c757d;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-top: 15px;
+    font-size: 12px;
+    color: #495057;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.payment-method .disclaimer-box strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+.payment-method .disclaimer-box.warning {
+    border-left-color: #ffc107;
+    background: #fff3cd;
+    color: #856404;
+}
+
+.payment-method .disclaimer-box.info {
+    border-left-color: #17a2b8;
+    background: #d1ecf1;
+    color: #0c5460;
 }

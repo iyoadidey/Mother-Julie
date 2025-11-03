@@ -17,22 +17,22 @@ const elements = {
 };
 
 // ========== TOAST NOTIFICATIONS ==========
-function showToast(message, type = 'success', duration = 3000) {
+function showToast(message, type = 'success', duration = 3000, orderDetails = null) {
     // Create or get toast container
     if (!elements.toastContainer) {
         elements.toastContainer = document.createElement('div');
         elements.toastContainer.id = 'toastContainer';
         elements.toastContainer.style.cssText = `
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 120px;
+            left: 48%;
+            transform: translateX(-50%);
             z-index: 10000;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             pointer-events: none;
+            width: 100%;
         `;
         document.body.appendChild(elements.toastContainer);
     }
@@ -44,17 +44,34 @@ function showToast(message, type = 'success', duration = 3000) {
     }
 
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
+    
+    if (orderDetails) {
+        toast.className = `toast order-success`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <div class="toast-icon">✓</div>
+                <div class="toast-message">
+                    <h4>Order Successful!</h4>
+                    <p>Your order has been placed successfully</p>
+                    <div class="order-details-toast">
+                        <p><strong>Type:</strong> ${orderDetails.orderType}</p>
+                        <p><strong>Payment:</strong> ${orderDetails.paymentMethod}</p>
+                        <p><strong>Total:</strong> ${orderDetails.total}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+    }
 
     elements.toastContainer.appendChild(toast);
 
-    // Animate in
     setTimeout(() => {
         toast.classList.add('show');
     }, 50);
 
-    // Auto remove
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => {
@@ -69,6 +86,42 @@ function showAddToCartToast(itemName) {
     showToast(`✓ ${itemName} added to cart!`, 'success', 2000);
 }
 
+function showOrderSuccessToast(orderDetails) {
+    showToast('', 'success', 5000, orderDetails);
+}
+
+// ========== PAYMENT METHOD RESTRICTIONS ==========
+function updatePaymentMethodsBasedOnOrderType() {
+    const orderType = document.querySelector('.order-btn.active').textContent;
+    const cashPaymentBtn = document.querySelector('.payment-btn.cash');
+    const paymentMethodSection = document.querySelector('.payment-method');
+    
+    const existingMessages = paymentMethodSection.querySelectorAll('.disclaimer-box');
+    existingMessages.forEach(message => message.remove());
+    
+    if (orderType === 'Pickup' || orderType === 'Delivery') {
+        cashPaymentBtn.classList.add('disabled');
+        cashPaymentBtn.disabled = true;
+        
+        const message = document.createElement('div');
+        message.className = 'disclaimer-box warning';
+        message.innerHTML = `<strong>Payment Notice:</strong> Online payment (GCash or Bank Transfer) is required for ${orderType.toLowerCase()} orders. Cash payment is only available for dine-in orders.`;
+        paymentMethodSection.appendChild(message);
+        
+        if (selectedPaymentMethod === 'cash') {
+            selectPaymentMethod('gcash');
+        }
+    } else {
+        cashPaymentBtn.classList.remove('disabled');
+        cashPaymentBtn.disabled = false;
+        
+        const message = document.createElement('div');
+        message.className = 'disclaimer-box info';
+        message.innerHTML = `<strong>Payment Notice:</strong> Cash payment is available for dine-in orders.`;
+        paymentMethodSection.appendChild(message);
+    }
+}
+
 // ========== LOCATION FUNCTIONS ==========
 function initializeLocationModal() {
     const locationModal = document.getElementById('locationModal');
@@ -78,7 +131,6 @@ function initializeLocationModal() {
     const currentLocationBtn = document.getElementById('currentLocationBtn');
     const locationError = document.getElementById('locationError');
 
-    // Metro Manila locations only
     const metroManilaLocations = [
         "Manila", "Quezon City", "Makati", "Taguig", "Pasig", 
         "Mandaluyong", "San Juan", "Pasay", "Parañaque", 
@@ -86,19 +138,16 @@ function initializeLocationModal() {
         "Valenzuela", "Malabon", "Navotas"
     ];
 
-    // Open location modal
     document.querySelector('.location-search').addEventListener('click', () => {
         locationModal.style.display = 'flex';
         locationInput.focus();
     });
 
-    // Close modal
     elements.modalClose.addEventListener('click', () => {
         locationModal.style.display = 'none';
         clearError();
     });
 
-    // Close modal when clicking outside
     locationModal.addEventListener('click', (e) => {
         if (e.target === locationModal) {
             locationModal.style.display = 'none';
@@ -139,7 +188,6 @@ function initializeLocationModal() {
         showToast(`Location set to ${location}`, 'success');
     }
 
-    // Current location button
     currentLocationBtn.addEventListener('click', () => {
         if (!navigator.geolocation) {
             showToast('Geolocation is not supported by your browser', 'error');
@@ -176,23 +224,68 @@ function initializeLocationModal() {
     });
 
     function isInMetroManila(lat, lng) {
-        // Metro Manila approximate bounds
         const metroBounds = { 
-            north: 14.8, 
-            south: 14.3, 
-            west: 120.9, 
-            east: 121.2 
+            north: 14.85,
+            south: 14.35,
+            west: 120.90,
+            east: 121.20
         };
         return lat >= metroBounds.south && lat <= metroBounds.north && 
                lng >= metroBounds.west && lng <= metroBounds.east;
     }
 
     function getNearestCity(lat, lng) {
-        // Simple approximation for Metro Manila cities
-        if (lat > 14.6 && lng > 121.0) return "Pasig";
-        if (lat > 14.55 && lng < 121.0) return "Manila";
-        if (lat < 14.5) return "Muntinlupa";
-        return "Makati";
+        if (lat >= 14.50 && lat <= 14.70 && lng >= 120.90 && lng <= 121.10) {
+            if (lat >= 14.55 && lat <= 14.68 && lng >= 120.95 && lng <= 121.05) {
+                return "Manila";
+            }
+            if (lat > 14.65 && lng > 121.03) {
+                return "Quezon City";
+            }
+            if (lat > 14.63 && lng > 121.08) {
+                return "Marikina";
+            }
+            return "Manila";
+        }
+        
+        const cities = [
+            { name: "Manila", lat: 14.5995, lng: 120.9842, priority: 1.2 },
+            { name: "Quezon City", lat: 14.6760, lng: 121.0437 },
+            { name: "Makati", lat: 14.5547, lng: 121.0244 },
+            { name: "Taguig", lat: 14.5176, lng: 121.0509 },
+            { name: "Pasig", lat: 14.5764, lng: 121.0851 },
+            { name: "Mandaluyong", lat: 14.5794, lng: 121.0359 },
+            { name: "San Juan", lat: 14.6019, lng: 121.0355 },
+            { name: "Pasay", lat: 14.5378, lng: 121.0014 },
+            { name: "Parañaque", lat: 14.4793, lng: 121.0198 },
+            { name: "Las Piñas", lat: 14.4446, lng: 120.9936 },
+            { name: "Muntinlupa", lat: 14.4081, lng: 121.0405 },
+            { name: "Marikina", lat: 14.6507, lng: 121.1029 },
+            { name: "Caloocan", lat: 14.6542, lng: 120.9829 },
+            { name: "Valenzuela", lat: 14.7004, lng: 120.9830 },
+            { name: "Malabon", lat: 14.6626, lng: 120.9562 },
+            { name: "Navotas", lat: 14.6661, lng: 120.9440 }
+        ];
+
+        let closestCity = cities[0];
+        let shortestDistance = calculateDistance(lat, lng, cities[0].lat, cities[0].lng) * (cities[0].priority || 1);
+
+        for (let i = 1; i < cities.length; i++) {
+            const priority = cities[i].priority || 1;
+            const distance = calculateDistance(lat, lng, cities[i].lat, cities[i].lng) * priority;
+            if (distance < shortestDistance) {
+                shortestDistance = distance;
+                closestCity = cities[i];
+            }
+        }
+
+        return closestCity.name;
+    }
+
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+        const latDiff = lat1 - lat2;
+        const lngDiff = lng1 - lng2;
+        return Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
     }
 
     function showError(message) {
@@ -204,7 +297,6 @@ function initializeLocationModal() {
         locationError.style.display = 'none';
     }
 
-    // Event listeners for location modal
     searchBtn.addEventListener('click', searchLocations);
     locationInput.addEventListener('input', searchLocations);
     locationInput.addEventListener('keypress', (e) => {
@@ -214,17 +306,15 @@ function initializeLocationModal() {
 
 // ========== PAYMENT FUNCTIONS ==========
 function initializePaymentMethods() {
-    console.log('Initializing payment methods...');
-    
-    // Payment method selection
     document.querySelectorAll('.payment-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const method = this.getAttribute('data-method');
-            selectPaymentMethod(method);
+            if (!this.disabled) {
+                const method = this.getAttribute('data-method');
+                selectPaymentMethod(method);
+            }
         });
     });
 
-    // Bank selection
     document.querySelectorAll('.bank-option').forEach(option => {
         option.addEventListener('click', function() {
             const bank = this.getAttribute('data-bank');
@@ -232,19 +322,16 @@ function initializePaymentMethods() {
         });
     });
 
-    // GCash verification
     const verifyGCashBtn = document.getElementById('verifyGCash');
     if (verifyGCashBtn) {
         verifyGCashBtn.addEventListener('click', verifyGCashPayment);
     }
     
-    // Bank transfer verification
     const verifyBankBtn = document.getElementById('verifyBank');
     if (verifyBankBtn) {
         verifyBankBtn.addEventListener('click', verifyBankPayment);
     }
     
-    // Initialize with cash payment
     selectPaymentMethod('cash');
     selectBank('bpi');
 }
@@ -252,24 +339,21 @@ function initializePaymentMethods() {
 function selectPaymentMethod(method) {
     selectedPaymentMethod = method;
     
-    // Update UI
     document.querySelectorAll('.payment-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
     const activeBtn = document.querySelector(`.payment-btn[data-method="${method}"]`);
-    if (activeBtn) {
+    if (activeBtn && !activeBtn.disabled) {
         activeBtn.classList.add('active');
     }
     
-    // Update payment forms
     updatePaymentForms();
 }
 
 function selectBank(bank) {
     selectedBank = bank;
     
-    // Update UI
     document.querySelectorAll('.bank-option').forEach(option => {
         option.classList.remove('active');
     });
@@ -279,7 +363,6 @@ function selectBank(bank) {
         activeOption.classList.add('active');
     }
     
-    // Show corresponding bank details
     document.querySelectorAll('.bank-info').forEach(info => {
         info.style.display = 'none';
     });
@@ -291,12 +374,10 @@ function selectBank(bank) {
 }
 
 function updatePaymentForms() {
-    // Hide all payment forms and notes
     document.querySelectorAll('.payment-note, .payment-form').forEach(element => {
         element.classList.remove('active');
     });
     
-    // Show selected payment method
     switch(selectedPaymentMethod) {
         case 'cash':
             document.querySelector('.cash-note').classList.add('active');
@@ -367,7 +448,6 @@ function addToCart(cardElement) {
     const itemName = cardElement.querySelector('h3').textContent;
     const itemImage = cardElement.querySelector('img').src;
 
-    // Get selected size and price
     let selectedSize = '';
     let price = 0;
     
@@ -389,7 +469,6 @@ function addToCart(cardElement) {
         price = priceMatch ? parseInt(priceMatch[1]) : 0;
     }
     
-    // Check if item already exists in cart
     const existingItemIndex = cart.findIndex(item => 
         item.name === itemName && item.size === selectedSize
     );
@@ -410,7 +489,6 @@ function addToCart(cardElement) {
     updateOrdersCount();
     updateBillingPanel();
     
-    // Show add to cart toast
     showAddToCartToast(itemName);
 }
 
@@ -477,7 +555,6 @@ function updateBillingPanel() {
     
     elements.billingItems.innerHTML = '';
     
-    // Show/hide delivery fee based on order type
     if (orderType === 'Delivery') {
         deliveryFeeRow.style.display = 'flex';
     } else {
@@ -512,21 +589,79 @@ function updateBillingPanel() {
                 <div class="item-price">Php ${item.price.toFixed(2)} each</div>
             </div>
             <div class="item-controls">
-                <button class="quantity-btn minus" onclick="updateQuantity(${index}, -1)">-</button>
+                <button class="quantity-btn minus" data-index="${index}" data-change="-1">-</button>
                 <span class="quantity-display">${item.quantity}</span>
-                <button class="quantity-btn plus" onclick="updateQuantity(${index}, 1)">+</button>
-                <button class="remove-btn" onclick="removeFromCart(${index})">✕</button>
+                <button class="quantity-btn plus" data-index="${index}" data-change="1">+</button>
+                <button class="remove-btn" data-index="${index}">✕</button>
             </div>
         `;
         elements.billingItems.appendChild(itemElement);
     });
     
-    // Apply delivery fee only for delivery orders
     const fee = orderType === 'Delivery' ? deliveryCharge : 0;
     const total = subtotal + fee;
     
     subtotalElement.textContent = `Php ${subtotal.toFixed(2)}`;
     totalElement.textContent = `Php ${total.toFixed(2)}`;
+    
+    // Add event listeners to the new quantity buttons
+    initializeBillingPanelEvents();
+}
+
+// ========== BILLING PANEL EVENT HANDLERS ==========
+function initializeBillingPanelEvents() {
+    // Remove any existing event listeners first to prevent duplicates
+    const newBillingItems = elements.billingItems.cloneNode(true);
+    elements.billingItems.parentNode.replaceChild(newBillingItems, elements.billingItems);
+    elements.billingItems = newBillingItems;
+    
+    // Add event delegation for quantity buttons and remove buttons
+    elements.billingItems.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent event from bubbling up
+        
+        const target = e.target;
+        
+        // Handle quantity buttons
+        if (target.classList.contains('quantity-btn')) {
+            const index = parseInt(target.getAttribute('data-index'));
+            const change = parseInt(target.getAttribute('data-change'));
+            updateQuantity(index, change);
+        }
+        
+        // Handle remove buttons
+        if (target.classList.contains('remove-btn')) {
+            const index = parseInt(target.getAttribute('data-index'));
+            removeFromCart(index);
+        }
+    });
+}
+
+// Update your updateQuantity and removeFromCart functions to remove the onclick attributes
+function updateQuantity(index, change) {
+    if (cart[index]) {
+        cart[index].quantity += change;
+        
+        if (cart[index].quantity <= 0) {
+            removeFromCart(index);
+        } else {
+            orderCount += change;
+            updateOrdersCount();
+            updateBillingPanel(); // This will re-render the panel
+        }
+    }
+}
+
+function removeFromCart(index) {
+    if (cart[index]) {
+        orderCount -= cart[index].quantity;
+        cart.splice(index, 1);
+        
+        if (cart.length === 0) orderCount = 0;
+        
+        updateOrdersCount();
+        updateBillingPanel(); // This will re-render the panel
+        showToast('Item removed from cart', 'warning');
+    }
 }
 
 // ========== ORDER PROCESSING ==========
@@ -551,10 +686,14 @@ function processOrder() {
         paymentDetails = 'Cash';
     }
     
-    // Show success message
-    showToast(`Order placed successfully! Order Type: ${orderType}, Payment: ${paymentDetails}, Total: ${total}`, 'success', 5000);
+    const orderDetails = {
+        orderType: orderType,
+        paymentMethod: selectedPaymentMethod,
+        total: total
+    };
     
-    // Clear cart and reset
+    showOrderSuccessToast(orderDetails);
+    
     cart = [];
     orderCount = 0;
     updateOrdersCount();
@@ -562,21 +701,329 @@ function processOrder() {
     closeBillingPanel();
 }
 
-// ========== INITIALIZATION ==========
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize location modal
-    initializeLocationModal();
+// ========== SIDEBAR NAVIGATION ==========
+function initializeSidebarNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const categories = document.querySelectorAll('.category');
     
-    // Initialize payment methods
-    initializePaymentMethods();
-    
-    // Add to cart events
-    document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', function() {
-            const card = this.closest('.card');
-            addToCart(card);
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            
+            // Remove active class from all nav items
+            navItems.forEach(navItem => navItem.classList.remove('active'));
+            
+            // Add active class to clicked nav item
+            this.classList.add('active');
+            
+            // Hide all categories
+            categories.forEach(category => category.classList.remove('active'));
+            
+            // Show target category
+            const targetCategory = document.getElementById(targetId);
+            if (targetCategory) {
+                targetCategory.classList.add('active');
+                
+                // Update header logo and title
+                updateHeaderForCategory(targetId);
+                
+                // If it's a specific category (not "all"), populate it
+                if (targetId !== 'all') {
+                    populateCategory(targetId);
+                }
+            }
         });
     });
+}
+
+// ========== UPDATE HEADER LOGO AND TITLE ==========
+function updateHeaderForCategory(categoryId) {
+    const titleLogo = document.getElementById('titleLogo');
+    const pageTitle = document.getElementById('pageTitle');
+    
+    // Map category IDs to their respective logos and titles
+    const categoryData = {
+        'all': {
+            logo: STATIC_URLS.menu,
+            title: 'ALL MENU'
+        },
+        'desserts': {
+            logo: STATIC_URLS.dessert,
+            title: 'DESSERTS'
+        },
+        'spuds': {
+            logo: STATIC_URLS.spud,
+            title: 'SPUDS'
+        },
+        'pasta': {
+            logo: STATIC_URLS.pasta,
+            title: 'PASTA / BREAD'
+        },
+        'wrap': {
+            logo: STATIC_URLS.wrap,
+            title: 'WRAP'
+        },
+        'appetizers': {
+            logo: STATIC_URLS.nachos,
+            title: 'APPETIZERS'
+        }
+    };
+    
+    const category = categoryData[categoryId];
+    if (category) {
+        titleLogo.src = category.logo;
+        titleLogo.alt = category.title;
+        pageTitle.textContent = category.title;
+    }
+}
+
+// ========== SIDEBAR NAVIGATION ==========
+function initializeSidebarNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const categories = document.querySelectorAll('.category');
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            
+            // Remove active class from all nav items
+            navItems.forEach(navItem => navItem.classList.remove('active'));
+            
+            // Add active class to clicked nav item
+            this.classList.add('active');
+            
+            // Hide all categories
+            categories.forEach(category => category.classList.remove('active'));
+            
+            // Show target category
+            const targetCategory = document.getElementById(targetId);
+            if (targetCategory) {
+                targetCategory.classList.add('active');
+                
+                // Update header logo and title
+                updateHeaderForCategory(targetId);
+                
+                // If it's a specific category (not "all"), populate it
+                if (targetId !== 'all') {
+                    populateCategory(targetId);
+                }
+            }
+        });
+    });
+}
+
+function populateCategory(categoryId) {
+    const categoryGrid = document.getElementById(categoryId + 'CategoryGrid');
+    
+    if (!categoryGrid) return;
+    
+    categoryGrid.innerHTML = '';
+    
+    const categoryItems = getCategoryItems(categoryId);
+    
+    categoryItems.forEach(item => {
+        const card = createMenuItemCard(item);
+        categoryGrid.appendChild(card);
+    });
+}
+
+function getCategoryItems(categoryId) {
+    const menuData = {
+        desserts: [
+            {
+                name: "Mais Con Yelo",
+                image: STATIC_URLS.maisConYelo,
+                price: "Php 110 (M) • Php 130 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 110, checked: true },
+                    { value: "L", price: 130, checked: false }
+                ]
+            },
+            {
+                name: "Biscoff Classic",
+                image: STATIC_URLS.biscoffClassic,
+                price: "Php 175 (M) • Php 200 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 175, checked: true },
+                    { value: "L", price: 200, checked: false }
+                ]
+            },
+            {
+                name: "Buko Pandan",
+                image: STATIC_URLS.bukoPandan,
+                price: "Php 100 (M) • Php 120 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 100, checked: true },
+                    { value: "L", price: 120, checked: false }
+                ]
+            },
+            {
+                name: "Mango Graham",
+                image: STATIC_URLS.mangoGraham,
+                price: "Php 150 (M) • Php 180 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 150, checked: true },
+                    { value: "L", price: 180, checked: false }
+                ]
+            },
+            {
+                name: "Ube Macapuno",
+                image: STATIC_URLS.ubeMacapuno,
+                price: "Php 130 (M) • Php 160 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 130, checked: true },
+                    { value: "L", price: 160, checked: false }
+                ]
+            },
+            {
+                name: "Rocky Road",
+                image: STATIC_URLS.rockyRoad,
+                price: "Php 140 (M) • Php 170 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 140, checked: true },
+                    { value: "L", price: 170, checked: false }
+                ]
+            },
+            {
+                name: "Coffee Jelly",
+                image: STATIC_URLS.coffeeJelly,
+                price: "Php 115 (M) • Php 140 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 115, checked: true },
+                    { value: "L", price: 140, checked: false }
+                ]
+            },
+            {
+                name: "Cookie Monster",
+                image: STATIC_URLS.cookieMonster,
+                price: "Php 160 (M) • Php 190 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 160, checked: true },
+                    { value: "L", price: 190, checked: false }
+                ]
+            }
+        ],
+        spuds: [
+            {
+                name: "Cheesy Bacon",
+                image: STATIC_URLS.cheesyBacon,
+                price: "Php 159",
+                hasSizes: false
+            },
+            {
+                name: "Chili Con Carne",
+                image: STATIC_URLS.chiliConCarne,
+                price: "Php 179",
+                hasSizes: false
+            }
+        ],
+        pasta: [
+            {
+                name: "Lasagna",
+                image: STATIC_URLS.lasagna,
+                price: "Php 250",
+                hasSizes: false
+            },
+            {
+                name: "Garlic Bread",
+                image: STATIC_URLS.garlicBread,
+                price: "Php 99",
+                hasSizes: false
+            }
+        ],
+        wrap: [
+            {
+                name: "Chicken Wrap",
+                image: STATIC_URLS.chickenWrap,
+                price: "Php 169",
+                hasSizes: false
+            },
+            {
+                name: "Veggie Wrap",
+                image: STATIC_URLS.veggieWrap,
+                price: "Php 139",
+                hasSizes: false
+            }
+        ],
+        appetizers: [
+            {
+                name: "Chicken Poppers",
+                image: STATIC_URLS.chickenPoppers,
+                price: "Php 149",
+                hasSizes: false
+            }
+        ]
+    };
+    
+    return menuData[categoryId] || [];
+}
+
+function createMenuItemCard(item) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    
+    let sizesHtml = '';
+    if (item.hasSizes) {
+        sizesHtml = `
+            <div class="size-select">
+                ${item.sizes.map((size, index) => `
+                    <label>
+                        <input type="radio" name="${item.name.toLowerCase().replace(/\s+/g, '-')}-size" 
+                               value="${size.value}" ${size.checked ? 'checked' : ''}>
+                        ${size.value}
+                    </label>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    card.innerHTML = `
+        <img src="${item.image}" alt="${item.name}">
+        <div class="card-body">
+            <h3>${item.name}</h3>
+            <div class="availability">Available</div>
+            ${sizesHtml}
+            <div class="price">${item.price}</div>
+        </div>
+        <button class="add-to-cart" data-item-id="${item.name.toLowerCase().replace(/\s+/g, '-')}">
+            <img src="${STATIC_URLS.addToCart}" alt="Add to Cart" class="cart-icon">
+        </button>
+    `;
+    
+    return card;
+}
+
+// ========== EVENT DELEGATION FOR ADD TO CART ==========
+function initializeAddToCartDelegation() {
+    // Use event delegation on the document level
+    document.addEventListener('click', function(e) {
+        const addToCartBtn = e.target.closest('.add-to-cart');
+        if (addToCartBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const card = addToCartBtn.closest('.card');
+            if (card) {
+                addToCart(card);
+            }
+        }
+    });
+}
+
+// ========== INITIALIZATION ==========
+document.addEventListener('DOMContentLoaded', function() {
+    initializeLocationModal();
+    initializePaymentMethods();
+    initializeSidebarNavigation();
+    initializeAddToCartDelegation(); // ONLY this handles add to cart
 
     // Orders button
     if (elements.ordersButton) {
@@ -590,13 +1037,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Close billing panel when clicking outside
+// Close billing panel when clicking outside (but not on quantity/remove buttons)
     document.addEventListener('click', function(e) {
         if (elements.billingPanel.classList.contains('open') && 
-            !elements.billingPanel.contains(e.target) && 
-            e.target !== elements.ordersButton) {
-            closeBillingPanel();
-        }
-    });
+        !elements.billingPanel.contains(e.target) && 
+        e.target !== elements.ordersButton &&
+        !e.target.closest('.quantity-btn') && // Add this line
+        !e.target.closest('.remove-btn')) {   // Add this line
+        closeBillingPanel();
+    }
+});
 
     // Order type selection
     document.querySelectorAll('.order-btn').forEach(button => {
@@ -604,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.order-btn').forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             updateBillingPanel();
+            updatePaymentMethodsBasedOnOrderType();
         });
     });
 
@@ -615,4 +1066,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Set default order type
     document.querySelector('.order-btn[data-type="dine-in"]').classList.add('active');
+    
+    // Initialize payment restrictions
+    updatePaymentMethodsBasedOnOrderType();
 });
