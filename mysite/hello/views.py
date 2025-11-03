@@ -19,6 +19,17 @@ from .models import SignupEvent, PasswordResetToken
 
 
 def signin(request):
+    # Clear any payment notice messages when arriving at signin page
+    storage = messages.get_messages(request)
+    for message in storage:
+        # Keep only non-payment notice messages
+        if "Payment Notice" not in str(message):
+            # Re-add the message if it's not a payment notice
+            if "logged out" in str(message) or "Invalid username" in str(message):
+                # These are the only messages we want to keep on signin page
+                pass
+            # All other messages (including payment notice) will be cleared
+    
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -27,18 +38,11 @@ def signin(request):
 
         if user is not None:
             login(request, user)
-            
-            # ✅ Everyone goes to orders menu (or regular dashboard)
             return redirect("orders_menu")
-
         else:
             messages.error(request, "Invalid username or password")
 
     return render(request, "signin.html")
-
-
-
-
 
 def signup_view(request):
     """Handle user registration"""
@@ -63,10 +67,9 @@ def signup_view(request):
             errors.append('Username already taken.')
 
         if errors:
-            return JsonResponse({
-                'success': False,
-                'message': ' '.join(errors)
-            })
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'signup.html')
 
         try:
             user = User.objects.create_user(
@@ -84,27 +87,36 @@ def signup_view(request):
                 last_name=last_name
             )
 
-            login(request, user)
-            return JsonResponse({
-                'success': True,
-                'message': 'Account created successfully!',
-                'redirect_url': '/orders_menu/'
-            })
+            messages.success(request, 'Account created successfully! Please sign in.')
+            return redirect('signin')
 
         except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'An error occurred during signup: {str(e)}'
-            })
+            messages.error(request, f'An error occurred during signup: {str(e)}')
+            return render(request, 'signup.html')
 
     return render(request, 'signup.html')
 
 
 def logout_view(request):
     """Handle user logout"""
+    # Clear payment notice messages before logging out
+    storage = messages.get_messages(request)
+    messages_to_keep = []
+    for message in storage:
+        if "Payment Notice" not in str(message):
+            messages_to_keep.append(message)
+    
+    # Clear all messages
+    storage.used = True
+    
+    # Re-add only non-payment notice messages
+    for message in messages_to_keep:
+        if "logged out" not in str(message):  # Don't re-add existing logout messages
+            messages.add_message(request, message.level, message.message)
+    
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
-    return redirect('signin')
+    return redirect('dashboard')  # Changed from 'signin' to 'dashboard'
 
 
 def terms_view(request):
@@ -112,19 +124,9 @@ def terms_view(request):
     return render(request, 'Terms&Conditions.html')
 
 
-@login_required
 def dashboard_view(request):
-    """Regular user dashboard"""
+    """Dashboard page - accessible to everyone (logged in or not)"""
     return render(request, 'dashboard.html')
-
-
-@login_required
-def orders_menu_view(request):
-    """Orders menu for customers"""
-    return render(request, 'orders_menu.html')
-
-
-
 
 
 @login_required
@@ -137,6 +139,13 @@ def delivery_view(request):
 def pickup_view(request):
     """Pickup page"""
     return render(request, 'pick_up.html')
+
+
+@login_required
+def orders_menu_view(request):
+    """Orders menu for customers"""
+    # Payment notice has been removed as requested
+    return render(request, 'orders_menu.html')
 
 
 @csrf_exempt
@@ -254,8 +263,8 @@ def upload_product_image(request):
 
     return JsonResponse({'success': False, 'error': 'No image provided'})
 
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
     return render(request, 'admin_dashboard.html')
-

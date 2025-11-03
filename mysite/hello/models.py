@@ -25,11 +25,8 @@ User._meta.get_field('email')._unique = True
 
 class PasswordResetToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    token = models.CharField(max_length=100, unique=True)
+    token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Reset token for {self.user.email}"
-    
-    class Meta:
-        db_table = 'password_reset_tokens'
+        return f"Password reset for {self.user.username}"
