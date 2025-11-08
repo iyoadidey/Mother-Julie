@@ -11,36 +11,44 @@ from django.urls import reverse
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render, redirect
 
 import os
 import time
 
-from .models import SignupEvent, PasswordResetToken
+from .models import SignupEvent, PasswordResetToken, Product, Order, OrderItem
+from django.db import transaction
+from django.db.models import F
 
 
 def signin(request):
-    # Clear any payment notice messages when arriving at signin page
+    # Clear irrelevant messages
     storage = messages.get_messages(request)
     for message in storage:
-        # Keep only non-payment notice messages
         if "Payment Notice" not in str(message):
-            # Re-add the message if it's not a payment notice
             if "logged out" in str(message) or "Invalid username" in str(message):
-                # These are the only messages we want to keep on signin page
-                pass
-            # All other messages (including payment notice) will be cleared
-    
+                pass  # keep these
+            # everything else is ignored
+
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-        
         user = authenticate(request, username=username, password=password)
 
-        if user is not None:
-            login(request, user)
-            return redirect("orders_menu")
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            # AJAX request
+            if user is not None:
+                login(request, user)
+                return JsonResponse({"success": True, "redirect_url": "/dashboard/"})
+            else:
+                return JsonResponse({"success": False, "message": "Invalid username or password"})
         else:
-            messages.error(request, "Invalid username or password")
+            # Normal form submission fallback
+            if user is not None:
+                login(request, user)
+                return redirect("dashboard")
+            else:
+                messages.error(request, "Invalid username or password")
 
     return render(request, "signin.html")
 
@@ -144,8 +152,15 @@ def pickup_view(request):
 @login_required
 def orders_menu_view(request):
     """Orders menu for customers"""
-    # Payment notice has been removed as requested
-    return render(request, 'orders_menu.html')
+    # Show only products flagged for All Menu and active
+    visible_product_names = list(
+        Product.objects.filter(show_in_all_menu=True, is_active=True)
+        .order_by('name')
+        .values_list('name', flat=True)
+    )
+    return render(request, 'orders_menu.html', {
+        'visible_product_names': visible_product_names,
+    })
 
 
 @csrf_exempt
@@ -268,3 +283,64 @@ def upload_product_image(request):
 @user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
     return render(request, 'admin_dashboard.html')
+
+
+@csrf_exempt
+def api_create_order(request):
+    """Create an order from frontend JSON; stores in DB for admin history."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+    try:
+        import json
+        data = json.loads(request.body.decode('utf-8'))
+
+        items = data.get('items', [])
+        total_amount = data.get('totalAmount', 0)
+        order_type = data.get('orderType', '')
+        # Prefer the authenticated user's username as the customer name
+        customer_name = request.user.username if request.user.is_authenticated else data.get('customerName', '')
+
+        with transaction.atomic():
+            order = Order.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                customer_name=customer_name,
+                order_type=order_type,
+                total_amount=total_amount,
+                status='pending'
+            )
+
+            for item in items:
+                name = item.get('name', '')
+                qty = int(item.get('quantity', 1))
+                unit_price = item.get('price', 0)
+                total_price = item.get('total', 0)
+
+                # Save order line
+                OrderItem.objects.create(
+                    order=order,
+                    product_name=name,
+                    quantity=qty,
+                    unit_price=unit_price,
+                    total_price=total_price
+                )
+
+                # Decrement stock on matching Product by name
+                try:
+                    product = Product.objects.select_for_update().get(name=name)
+                    # Use F expression for race-safe decrement
+                    product.stock_quantity = F('stock_quantity') - qty
+                    product.save(update_fields=['stock_quantity'])
+                    product.refresh_from_db(fields=['stock_quantity'])
+                    if product.stock_quantity <= 0:
+                        product.stock_quantity = 0
+                        product.show_in_all_menu = False
+                        product.is_active = False
+                        product.save(update_fields=['stock_quantity', 'show_in_all_menu', 'is_active'])
+                except Product.DoesNotExist:
+                    # If no product matches, skip stock updates
+                    pass
+
+        return JsonResponse({'success': True, 'orderId': order.id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

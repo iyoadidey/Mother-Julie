@@ -15,6 +15,34 @@ body {
   box-sizing: border-box;
 }
 
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 45px; /* space for icon */
+}
+
+.password-wrapper .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;   /* adjust size */
+    height: 24px;  /* adjust size */
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.7;
+    transition: 0.2s;
+}
+
+.password-wrapper .toggle-password:hover {
+    opacity: 1;
+}
+
 /* Container */
 .desktop1-container1 {
   width: 100%;
@@ -288,5 +316,39 @@ body {
     border: 0;
 }
 
-/* Remove duplicate styles */
-/* All duplicate .modal, .modal-content, .toast styles have been removed */
+/* Centered Toast Notification */
+    #toast {
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        min-width: 280px;
+        max-width: 350px;
+        background: #333;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        display: none;
+        z-index: 9999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-family: 'Inter', sans-serif;
+        text-align: center;
+        animation: fadeIn 0.3s ease;
+    }
+
+    #toast.toast-success { background: #4CAF50; }
+    #toast.toast-error { background: #f44336; }
+
+    #toast .toast-message {
+        font-size: 1rem;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, -60%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translate(-50%, -50%); }
+        to { opacity: 0; transform: translate(-50%, -60%); }
+    }

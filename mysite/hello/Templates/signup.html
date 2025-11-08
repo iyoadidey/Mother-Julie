@@ -63,8 +63,8 @@
 
       <!-- FORM WITH CSRF TOKEN -->
       <form id="signup-form" action="{% url 'signup' %}" method="POST">
-        {% csrf_token %}  <!-- THIS IS CRITICAL -->
-        
+        {% csrf_token %}
+
         <div class="input-container">
           <input type="text" placeholder="First Name" name="first_name" required />
           <input type="text" placeholder="Last Name" name="last_name" required />
@@ -72,8 +72,17 @@
 
         <input name="username" type="text" class="desktop1-input" placeholder="Username" required />
         <input name="email" type="email" class="desktop1-input" placeholder="Email" required />
-        <input name="password1" type="password" class="desktop1-input" placeholder="Password" required />
-        <input name="password2" type="password" class="desktop1-input" placeholder="Confirm password" required />
+
+        <div class="password-wrapper">
+          <input name="password1" type="password" class="desktop1-input" placeholder="Password" id="password1" required />
+            <img src="{% static 'eye-open.png' %}" class="toggle-password" data-target="password1" alt="Show Password" />
+        </div>
+
+        <div class="password-wrapper">
+          <input name="password2" type="password" class="desktop1-input" placeholder="Confirm password" id="password2" required />
+            <img src="{% static 'eye-open.png' %}" class="toggle-password" data-target="password2" alt="Show Password" />
+        </div>
+
 
         <!-- Heart Checkbox Agreement -->
         <div class="desktop1-agreement-row">
@@ -100,18 +109,18 @@
           <span class="desktop1-text7">Sign Up</span>
         </button>
 
-      <!-- Already have an account section -->
-      <p class="desktop1-bottom-link">
+        <!-- Already have an account section -->
+        <p class="desktop1-bottom-link">
           Already have an account?
-      <a href="{% url 'signin' %}" class="desktop1-link">Sign In</a>
-    </p>
+          <a href="{% url 'signin' %}" class="desktop1-link">Sign In</a>
+        </p>
       </form>
-
     </div>
   </div>
 
   <script src="{% static 'password_validation.js' %}"></script>
 
+  <!-- Username validation script -->
   <script>
   document.addEventListener('DOMContentLoaded', function() {
       const signupForm = document.getElementById('signup-form');
@@ -158,5 +167,24 @@
       }
   });
   </script>
+
+  <script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".toggle-password").forEach(function(icon) {
+    icon.addEventListener("click", function() {
+      const input = document.getElementById(this.dataset.target);
+
+      if (input.type === "password") {
+        input.type = "text";
+        this.src = "{% static 'eye-closed.png' %}"; // switch to closed eye
+      } else {
+        input.type = "password";
+        this.src = "{% static 'eye-open.png' %}"; // switch to open eye
+      }
+    });
+  });
+});
+</script>
+
 </body>
 </html>
