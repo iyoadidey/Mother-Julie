@@ -3,7 +3,7 @@ from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
-    path('', views.signin, name='root'),
+    path('', views.dashboard_view, name='root'),
     path('signin/', views.signin, name='signin'),
     path('login/', RedirectView.as_view(pattern_name='signin', permanent=False)),
     path('signup/', views.signup_view, name='signup'),
@@ -16,4 +16,6 @@ urlpatterns = [
     path('request-password-reset/', views.request_password_reset, name='request_password_reset'),
     path('reset-password/<str:token>/', views.reset_password_confirm, name='reset_password_confirm'),
     path('upload-product-image/', views.upload_product_image, name='upload_product_image'),
+    path('api/orders/', views.api_create_order, name='api_create_order'),
+    path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard')
 ]

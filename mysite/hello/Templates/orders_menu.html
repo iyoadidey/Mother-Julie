@@ -10,8 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Sansita:wght@400;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="{% static 'orders_menu.css' %}" />
 </head>
+<!-- Leaflet CSS & JS (required for the map) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <body>
     <div id="root">
         <!-- Topbar -->
@@ -83,7 +88,7 @@
                             <span class="nav-label">Wrap</span>
                         </li>
                         <li class="nav-item" data-target="appetizers">
-                            <img class="nav-logo" src="{% static 'orders_menupics/nachos.png' %}" alt="Appetizers">
+                            <img class="nav-logo" src="{% static 'orders_menupics/appetizer.png' %}" alt="Appetizers">
                             <span class="nav-label">Appetizers</span>
                         </li>
                     </ul>
@@ -91,149 +96,183 @@
             </aside>
 
             <div class="main">
-    <!-- ALL MENU Section -->
-    <div class="category active" id="all">                    
-        <!-- DESSERTS Category -->
-        <div class="category-section">
-            <h3 class="category-subtitle">DESSERTS</h3>
-            <div class="menu-grid">
-                <!-- Mais Con Yelo -->
-                <div class="card">
-                    <img src="{% static 'orders_menupics/mais.png' %}" alt="Mais Con Yelo">
-                    <div class="card-body">
-                        <h3>Mais Con Yelo</h3>
-                        <div class="availability">Available</div>
-                        <div class="size-select">
-                            <label><input type="radio" name="mais-size" value="M" checked> M</label>
-                            <label><input type="radio" name="mais-size" value="L"> L</label>
-                        </div>
-                        <div class="price">Php 110 (M) • Php 130 (L)</div>
-                    </div>
-                    <button class="add-to-cart" data-item-id="mais-con-yelo">
-                        <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
-                    </button>
-                </div>
+                <!-- ALL MENU Section -->
+                <div class="category active" id="all">                    
+                    <!-- DESSERTS Category -->
+                    <div class="category-section">
+                        <h3 class="category-subtitle">DESSERTS</h3>
+                        <div class="menu-grid">
+                            <!-- Mais Con Yelo -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/mais.png' %}" alt="Mais Con Yelo">
+                                <div class="card-body">
+                                    <h3>Mais Con Yelo</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="mais-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="mais-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 110 (M) • Php 130 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="mais-con-yelo">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
 
-                <!-- Biscoff Classic -->
-                <div class="card">
-                    <img src="{% static 'orders_menupics/biscoff.png' %}" alt="Biscoff Classic">
-                    <div class="card-body">
-                        <h3>Biscoff Classic</h3>
-                        <div class="availability">Available</div>
-                        <div class="size-select">
-                            <label><input type="radio" name="biscoff-size" value="M" checked> M</label>
-                            <label><input type="radio" name="biscoff-size" value="L"> L</label>
-                        </div>
-                        <div class="price">Php 175 (M) • Php 200 (L)</div>
-                    </div>
-                    <button class="add-to-cart" data-item-id="biscoff-classic">
-                        <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
-                    </button>                           
-                </div>
+                            <!-- Biscoff Classic -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/biscoff.png' %}" alt="Biscoff Classic">
+                                <div class="card-body">
+                                    <h3>Biscoff Classic</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="biscoff-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="biscoff-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 175 (M) • Php 200 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="biscoff-classic">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                           
+                            </div>
 
-                <!-- Buko Pandan -->
-                <div class="card">
-                    <img src="{% static 'orders_menupics/buko.png' %}" alt="Buko Pandan">
-                    <div class="card-body">
-                        <h3>Buko Pandan</h3>
-                        <div class="availability">Available</div>
-                        <div class="size-select">
-                            <label><input type="radio" name="buko-size" value="M" checked> M</label>
-                            <label><input type="radio" name="buko-size" value="L"> L</label>
-                        </div>
-                        <div class="price">Php 100 (M) • Php 120 (L)</div>
-                    </div>
-                    <button class="add-to-cart" data-item-id="buko-pandan">
-                        <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
-                    </button>                        
-                </div>
+                            <!-- Buko Pandan -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/buko.png' %}" alt="Buko Pandan">
+                                <div class="card-body">
+                                    <h3>Buko Pandan</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="buko-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="buko-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 100 (M) • Php 120 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="buko-pandan">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                        
+                            </div>
 
-                <!-- Mango Graham -->
-                <div class="card">
-                    <img src="{% static 'orders_menupics/mango_graham.png' %}" alt="Mango Graham">
-                    <div class="card-body">
-                        <h3>Mango Graham</h3>
-                        <div class="availability">Available</div>
-                        <div class="size-select">
-                            <label><input type="radio" name="mango-size" value="M" checked> M</label>
-                            <label><input type="radio" name="mango-size" value="L"> L</label>
-                        </div>
-                        <div class="price">Php 150 (M) • Php 180 (L)</div>
-                    </div>
-                    <button class="add-to-cart" data-item-id="mango-graham">
-                        <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
-                    </button>
-                </div>
+                            <!-- Mango Graham -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/mango_graham.png' %}" alt="Mango Graham">
+                                <div class="card-body">
+                                    <h3>Mango Graham</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="mango-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="mango-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 150 (M) • Php 180 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="mango-graham">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
 
-                <!-- Ube Macapuno -->
-                <div class="card">
-                    <img src="{% static 'orders_menupics/ube_macapuno.png' %}" alt="Ube Macapuno">
-                    <div class="card-body">
-                        <h3>Ube Macapuno</h3>
-                        <div class="availability">Available</div>
-                        <div class="size-select">
-                            <label><input type="radio" name="ube-size" value="M" checked> M</label>
-                            <label><input type="radio" name="ube-size" value="L"> L</label>
-                        </div>
-                        <div class="price">Php 130 (M) • Php 160 (L)</div>
-                    </div>
-                    <button class="add-to-cart" data-item-id="ube-macapuno">
-                        <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
-                    </button>
-                </div>
+                            <!-- Ube Macapuno -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/ube_macapuno.png' %}" alt="Ube Macapuno">
+                                <div class="card-body">
+                                    <h3>Ube Macapuno</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="ube-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="ube-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 130 (M) • Php 160 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="ube-macapuno">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
 
-                <!-- Rocky Road -->
-                <div class="card">
-                    <img src="{% static 'orders_menupics/rocky_road.png' %}" alt="Rocky Road">
-                    <div class="card-body">
-                        <h3>Rocky Road</h3>
-                        <div class="availability">Available</div>
-                        <div class="size-select">
-                            <label><input type="radio" name="rocky-size" value="M" checked> M</label>
-                            <label><input type="radio" name="rocky-size" value="L"> L</label>
-                        </div>
-                        <div class="price">Php 140 (M) • Php 170 (L)</div>
-                    </div>
-                    <button class="add-to-cart" data-item-id="rocky-road">
-                        <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
-                    </button>
-                </div>
+                            <!-- Rocky Road -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/rocky_road.png' %}" alt="Rocky Road">
+                                <div class="card-body">
+                                    <h3>Rocky Road</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="rocky-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="rocky-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 140 (M) • Php 170 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="rocky-road">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
 
-                <!-- Coffee Jelly -->
-                <div class="card">
-                    <img src="{% static 'orders_menupics/coffee_jelly.png' %}" alt="Coffee Jelly">
-                    <div class="card-body">
-                        <h3>Coffee Jelly</h3>
-                        <div class="availability">Available</div>
-                        <div class="size-select">
-                            <label><input type="radio" name="coffee-size" value="M" checked> M</label>
-                            <label><input type="radio" name="coffee-size" value="L"> L</label>
-                        </div>
-                        <div class="price">Php 115 (M) • Php 140 (L)</div>
-                    </div>
-                    <button class="add-to-cart" data-item-id="coffee-jelly">
-                        <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
-                    </button>
-                </div>
+                            <!-- Coffee Jelly -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/coffee_jelly.png' %}" alt="Coffee Jelly">
+                                <div class="card-body">
+                                    <h3>Coffee Jelly</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="coffee-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="coffee-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 115 (M) • Php 140 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="coffee-jelly">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
 
-                <!-- Cookie Monster -->
-                <div class="card">
-                    <img src="{% static 'orders_menupics/cookie_monster.png' %}" alt="Cookie Monster">
-                    <div class="card-body">
-                        <h3>Cookie Monster</h3>
-                        <div class="availability">Available</div>
-                        <div class="size-select">
-                            <label><input type="radio" name="cookie-size" value="M" checked> M</label>
-                            <label><input type="radio" name="cookie-size" value="L"> L</label>
+                            <!-- Cookie Monster -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/cookie_monster.png' %}" alt="Cookie Monster">
+                                <div class="card-body">
+                                    <h3>Cookie Monster</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="cookie-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="cookie-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 160 (M) • Php 190 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="cookie-monster">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
+
+                            <!-- Dulce de Leche -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/dulce_de_leche.png' %}" alt="Dulce de Leche">
+                                <div class="card-body">
+                                    <h3>Dulce de Leche</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="dulce-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="dulce-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 160 (M) • Php 190 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="dulce-de-leche">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
+
+                            <!-- Choco-Peanut Banana -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/choco_peanut_banana.png' %}" alt="Choco-Peanut Banana">
+                                <div class="card-body">
+                                    <h3>Choco-Peanut Banana</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="size-select">
+                                        <label><input type="radio" name="choco-size" value="M" checked> M</label>
+                                        <label><input type="radio" name="choco-size" value="L"> L</label>
+                                    </div>
+                                    <div class="price">Php 160 (M) • Php 190 (L)</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="choco-peanut-banana">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
                         </div>
-                        <div class="price">Php 160 (M) • Php 190 (L)</div>
                     </div>
-                    <button class="add-to-cart" data-item-id="cookie-monster">
-                        <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
-                    </button>
-                </div>
-            </div>
-        </div>
 
                     <!-- SPUDS Category -->
                     <div class="category-section">
@@ -247,7 +286,7 @@
                                     <div class="availability">Available</div>
                                     <div class="price">Php 159</div>
                                 </div>
-                                <button class="add-to-cart" data-item-id="cheesy_bacon">
+                                <button class="add-to-cart" data-item-id="cheesy-bacon"> <!-- FIXED: consistent naming -->
                                     <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
                                 </button>                            
                             </div>
@@ -260,20 +299,46 @@
                                     <div class="availability">Available</div>
                                     <div class="price">Php 179</div>
                                 </div>
-                                <button class="add-to-cart" data-item-id="chili_con_carne">
+                                <button class="add-to-cart" data-item-id="chili-con-carne"> <!-- FIXED: consistent naming -->
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                            
+                            </div>
+
+                            <!-- Triple Cheese -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/triple_cheese.png' %}" alt="Triple Cheese">
+                                <div class="card-body">
+                                    <h3>Triple Cheese</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="price">Php 179</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="triple-cheese"> <!-- FIXED: consistent naming -->
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>                            
+                            </div>
+
+                            <!-- Lasagna Jacket -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/lasagna_jacket.png' %}" alt="Lasagna Jacket">
+                                <div class="card-body">
+                                    <h3>Lasagna Jacket</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="price">Php 129</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="lasagna-jacket">
                                     <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
                                 </button>                            
                             </div>
                         </div>
                     </div>
 
-                    <!-- PASTA/BREAD Category -->
+                    <!-- BREAD Category -->
                     <div class="category-section">
-                        <h3 class="category-subtitle">PASTA / BREAD</h3>
+                        <h3 class="category-subtitle">PASTA/BREAD</h3>
                         <div class="menu-grid">
                             <!-- Lasagna -->
                             <div class="card">
-                                <img src="{% static 'orders_menupics/lasagna.jpg' %}" alt="Lasagna">
+                                <img src="{% static 'orders_menupics/lasagna.png' %}" alt="Lasagna">
                                 <div class="card-body">
                                     <h3>Lasagna</h3>
                                     <div class="availability">Available</div>
@@ -286,11 +351,11 @@
 
                             <!-- Garlic Bread -->
                             <div class="card">
-                                <img src="{% static 'orders_menupics/garlic_bread.jpg' %}" alt="Garlic Bread">
+                                <img src="{% static 'orders_menupics/garlic_bread.png' %}" alt="Garlic Bread">
                                 <div class="card-body">
                                     <h3>Garlic Bread</h3>
                                     <div class="availability">Available</div>
-                                    <div class="price">Php 99</div>
+                                    <div class="price">Php 69</div>
                                 </div>
                                 <button class="add-to-cart" data-item-id="garlic-bread">
                                     <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
@@ -305,7 +370,7 @@
                         <div class="menu-grid">
                             <!-- Chicken Wrap -->
                             <div class="card">
-                                <img src="{% static 'orders_menupics/chicken_wrap.png' %}" alt="Chicken Wrap">
+                                <img src="{% static 'orders_menupics/hongar_chicken_wrap.png' %}" alt="Chicken Wrap">
                                 <div class="card-body">
                                     <h3>Chicken Wrap</h3>
                                     <div class="availability">Available</div>
@@ -320,11 +385,24 @@
                             <div class="card">
                                 <img src="{% static 'orders_menupics/beef_wrap.png' %}" alt="Beef Wrap">
                                 <div class="card-body">
-                                    <h3>Veggie Wrap</h3>
+                                    <h3>Beef Wrap</h3>
                                     <div class="availability">Available</div>
                                     <div class="price">Php 139</div>
                                 </div>
-                                <button class="add-to-cart" data-item-id="veggie-wrap">
+                                <button class="add-to-cart" data-item-id="beef-wrap">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
+
+                            <!-- Kesodilla -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/kesodilla.png' %}" alt="Kesodilla">
+                                <div class="card-body">
+                                    <h3>Kesodilla</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="price">Php 99</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="kesodilla">
                                     <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
                                 </button>
                             </div>
@@ -343,12 +421,25 @@
                                     <div class="availability">Available</div>
                                     <div class="price">Php 149</div>
                                 </div>
-                                <button class="add-to-cart" data-item-id="chicken-poppers-appetizer">
+                                <button class="add-to-cart" data-item-id="chicken-poppers">
+                                    <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
+                                </button>
+                            </div>
+
+                            <!-- Nachos -->
+                            <div class="card">
+                                <img src="{% static 'orders_menupics/nachos.png' %}" alt="Nachos">
+                                <div class="card-body">
+                                    <h3>Nachos</h3>
+                                    <div class="availability">Available</div>
+                                    <div class="price">Php 129</div>
+                                </div>
+                                <button class="add-to-cart" data-item-id="nachos">
                                     <img src="{% static 'orders_menupics/addtocart.png' %}" alt="Add to Cart" class="cart-icon">
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </div> <!-- FIXED: Added missing closing div -->
                 </div>
 
                 <!-- Individual Category Sections (Hidden by default) -->
@@ -380,33 +471,59 @@
         </div>
 
         <!-- Location Modal -->
-        <div class="location-modal" id="locationModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div>
-                        <h3>Set Your Location</h3>
-                        <div class="modal-subtitle">Metro Manila Only</div>
-                    </div>
-                    <button class="modal-close" id="modalClose">&times;</button>
-                </div>
-                
-                <div class="search-box">
-                    <input type="text" id="locationInput" placeholder="Search cities in Metro Manila...">
-                    <button class="search-btn" id="searchBtn">Search</button>
-                </div>
-                
-                <div class="suggestions" id="suggestions"></div>
+<div class="location-modal" id="locationModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h3>Set Your Location</h3>
+                <div class="modal-subtitle">Metro Manila Only</div>
+            </div>
+            <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="locationInput" placeholder="Search for your exact address...">
+            <button class="search-btn" id="searchBtn">Search</button>
+        </div>
+        
+        <div class="suggestions" id="suggestions"></div>
 
-                <div class="current-location">
-                    <button class="current-location-btn" id="currentLocationBtn">
-                        📍 Use Current Location
-                    </button>
-                    <div class="location-error" id="locationError">
-                        Location outside Metro Manila. Please search for Metro Manila locations only.
-                    </div>
-                </div>
+        <!-- Selected Location Display -->
+        <div class="selected-location" id="selectedLocationDisplay">
+            <!-- This will be populated dynamically -->
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container" id="mapContainer">
+            <div id="map"></div>
+            <div class="map-instructions">
+                <p>📍 Click anywhere on the map to set your exact location</p>
             </div>
         </div>
+
+        <div class="location-actions">
+            <button class="current-location-btn" id="currentLocationBtn">
+                📍 Use Current Location
+            </button>
+            <button class="show-map-btn" id="showMapBtn">
+                🗺️ Show Map
+            </button>
+        </div>
+
+        <div class="location-error" id="locationError">
+            <!-- Error messages will appear here -->
+        </div>
+
+        <div class="confirmation-buttons">
+            <button class="confirm-location" id="confirmLocationBtn" disabled>
+                ✅ Confirm Location
+            </button>
+            <button class="cancel-location" id="cancelLocationBtn">
+                ❌ Cancel
+            </button>
+        </div>
+    </div>
+</div>
 
         <!-- Billing Panel -->
         <div class="billing-panel" id="billingPanel">
@@ -565,47 +682,72 @@
     </div>
 
     <script>
-        // Define static URLs for JavaScript
         const STATIC_URLS = {
-    menu: "{% static 'orders_menupics/menu.png' %}",
-    dessert: "{% static 'orders_menupics/dessert.png' %}",
-    spud: "{% static 'orders_menupics/spud.png' %}",
-    pasta: "{% static 'orders_menupics/pasta.png' %}",
-    wrap: "{% static 'orders_menupics/wrap.png' %}",
-    nachos: "{% static 'orders_menupics/nachos.png' %}",
-    addToCart: "{% static 'orders_menupics/addtocart.png' %}",
-    
-    // Desserts
-    maisConYelo: "{% static 'orders_menupics/mais.png' %}",
-    biscoffClassic: "{% static 'orders_menupics/biscoff.png' %}",
-    bukoPandan: "{% static 'orders_menupics/buko.png' %}",
-    mangoGraham: "{% static 'orders_menupics/mango_graham.png' %}",
-    ubeMacapuno: "{% static 'orders_menupics/ube_macapuno.png' %}",
-    rockyRoad: "{% static 'orders_menupics/rocky_road.png' %}",
-    coffeeJelly: "{% static 'orders_menupics/coffee_jelly.png' %}",
-    cookieMonster: "{% static 'orders_menupics/cookie_monster.png' %}",
-    
-    // Spuds
-    cheesyBacon: "{% static 'orders_menupics/cheesy_bacon.png' %}",
-    chiliConCarne: "{% static 'orders_menupics/chili_con_carne.png' %}",
-    
-    // Pasta/Bread
-    lasagna: "{% static 'orders_menupics/lasagna.jpg' %}",
-    garlicBread: "{% static 'orders_menupics/garlic_bread.jpg' %}",
-    
-    // Wrap
-    chickenWrap: "{% static 'orders_menupics/chicken_wrap.png' %}",
-    veggieWrap: "{% static 'orders_menupics/beef_wrap.png' %}",
-    
-    // Appetizers
-    chickenPoppers: "{% static 'orders_menupics/chicken_poppers.png' %}"
-};
+            menu: "{% static 'orders_menupics/menu.png' %}",
+            dessert: "{% static 'orders_menupics/dessert.png' %}",
+            spud: "{% static 'orders_menupics/spud.png' %}",
+            pasta: "{% static 'orders_menupics/pasta.png' %}",
+            wrap: "{% static 'orders_menupics/wrap.png' %}",
+            appetizer: "{% static 'orders_menupics/appetizer.png' %}",
+            addToCart: "{% static 'orders_menupics/addtocart.png' %}",
             
+            // Desserts
+            maisConYelo: "{% static 'orders_menupics/mais.png' %}",
+            biscoffClassic: "{% static 'orders_menupics/biscoff.png' %}",
+            bukoPandan: "{% static 'orders_menupics/buko.png' %}",
+            mangoGraham: "{% static 'orders_menupics/mango_graham.png' %}",
+            ubeMacapuno: "{% static 'orders_menupics/ube_macapuno.png' %}",
+            rockyRoad: "{% static 'orders_menupics/rocky_road.png' %}",
+            coffeeJelly: "{% static 'orders_menupics/coffee_jelly.png' %}",
+            cookieMonster: "{% static 'orders_menupics/cookie_monster.png' %}",
+            dulce_de_Leche: "{% static 'orders_menupics/dulce_de_leche.png' %}",
+            choco_peanut_Banana: "{% static 'orders_menupics/choco_peanut_banana.png' %}",
 
+            // Spuds
+            cheesyBacon: "{% static 'orders_menupics/cheesy_bacon.png' %}",
+            chiliConCarne: "{% static 'orders_menupics/chili_con_carne.png' %}",
+            tripleCheese: "{% static 'orders_menupics/triple_cheese.png' %}",
+            lasagnaJacket: "{% static 'orders_menupics/lasagna_jacket.png' %}",
+            
+            // Pasta/Bread
+            lasagna: "{% static 'orders_menupics/lasagna.png' %}",
+            garlicBread: "{% static 'orders_menupics/garlic_bread.png' %}",
+            
+            // Wrap
+            chickenWrap: "{% static 'orders_menupics/hongar_chicken_wrap.png' %}",
+            beefWrap: "{% static 'orders_menupics/beef_wrap.png' %}",
+            kesodilla: "{% static 'orders_menupics/kesodilla.png' %}",
+            
+            // Appetizers
+            chickenPoppers: "{% static 'orders_menupics/chicken_poppers.png' %}",
+            nachos: "{% static 'orders_menupics/nachos.png' %}"
+        };
     </script>
 
     <!-- Include shared data library first, then orders menu -->
     <script src="{% static 'shared_data.js' %}"></script>
     <script src="{% static 'orders_menu.js' %}"></script>
+
+    {# Backend-controlled visibility: hide cards not in visible_product_names #}
+    {{ visible_product_names|json_script:"visible-products" }}
+    <script>
+        (function(){
+            try {
+                //var visible = JSON.parse(document.getElementById('visible-products').textContent);
+                //var allowed = new Set(visible);
+                //document.querySelectorAll('.card .card-body h3').forEach(function(title){
+                    //var name = (title.textContent || '').trim();
+                    //if (!allowed.has(name)) {
+                        //var card = title.closest('.card');
+                        //if (card) {
+                            //card.style.display = 'none';
+                        //}
+                    //}
+                //});
+            } catch (e) {
+                console.error('Failed to apply product visibility from backend:', e);
+            }
+        })();
+    </script>
 </body>
 </html>

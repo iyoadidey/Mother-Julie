@@ -1,8 +1,8 @@
 // Order Management System
-let cart = [];
-let orderCount = 0;
+let cart = JSON.parse(localStorage.getItem('motherJulieCart')) || [];
+let orderCount = cart.reduce((total, item) => total + item.quantity, 0) || 0;
 const deliveryCharge = 50;
-let selectedPaymentMethod = 'cash';
+let selectedPaymentMethod = 'Cash';
 let selectedBank = 'bpi';
 
 // DOM Elements
@@ -16,6 +16,28 @@ const elements = {
     toastContainer: null
 };
 
+// ========== CART PERSISTENCE FUNCTIONS ==========
+function saveCartToStorage() {
+    localStorage.setItem('motherJulieCart', JSON.stringify(cart));
+}
+
+function loadCartFromStorage() {
+    const savedCart = localStorage.getItem('motherJulieCart');
+    if (savedCart) {
+        cart = JSON.parse(savedCart);
+        orderCount = cart.reduce((total, item) => total + item.quantity, 0);
+        updateOrdersCount();
+    }
+}
+
+function clearCartFromStorage() {
+    localStorage.removeItem('motherJulieCart');
+    cart = [];
+    orderCount = 0;
+    updateOrdersCount();
+    updateBillingPanel();
+}
+
 // ========== TOAST NOTIFICATIONS ==========
 function showToast(message, type = 'success', duration = 3000, orderDetails = null) {
     // Create or get toast container
@@ -24,8 +46,8 @@ function showToast(message, type = 'success', duration = 3000, orderDetails = nu
         elements.toastContainer.id = 'toastContainer';
         elements.toastContainer.style.cssText = `
             position: fixed;
-            top: 120px;
-            left: 48%;
+            top: 100px;
+            left: 50%;
             transform: translateX(-50%);
             z-index: 10000;
             display: flex;
@@ -46,6 +68,7 @@ function showToast(message, type = 'success', duration = 3000, orderDetails = nu
     const toast = document.createElement('div');
     
     if (orderDetails) {
+        // Order success toast with organized layout
         toast.className = `toast order-success`;
         toast.innerHTML = `
             <div class="toast-content">
@@ -54,16 +77,44 @@ function showToast(message, type = 'success', duration = 3000, orderDetails = nu
                     <h4>Order Successful!</h4>
                     <p>Your order has been placed successfully</p>
                     <div class="order-details-toast">
-                        <p><strong>Type:</strong> ${orderDetails.orderType}</p>
-                        <p><strong>Payment:</strong> ${orderDetails.paymentMethod}</p>
-                        <p><strong>Total:</strong> ${orderDetails.total}</p>
+                        <div class="order-details-row">
+                            <span class="order-details-label">Type:</span>
+                            <span class="order-details-value">${orderDetails.orderType}</span>
+                        </div>
+                        <div class="order-details-row">
+                            <span class="order-details-label">Payment:</span>
+                            <span class="order-details-value">${orderDetails.paymentMethod}</span>
+                        </div>
+                        <div class="order-details-row">
+                            <span class="order-details-label">Total:</span>
+                            <span class="order-details-value">${orderDetails.total}</span>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     } else {
+        // Regular toast messages
         toast.className = `toast ${type}`;
-        toast.textContent = message;
+        if (type === 'success') {
+            toast.innerHTML = `
+                <div class="order-success-box">
+                    <strong>Order Successful:</strong> ${message}
+                </div>
+            `;
+        } else if (type === 'error') {
+            toast.innerHTML = `
+                <div class="disclaimer-box warning">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        } else {
+            toast.innerHTML = `
+                <div class="disclaimer-box info">
+                    <strong>Info:</strong> ${message}
+                </div>
+            `;
+        }
     }
 
     elements.toastContainer.appendChild(toast);
@@ -82,12 +133,62 @@ function showToast(message, type = 'success', duration = 3000, orderDetails = nu
     }, duration);
 }
 
-function showAddToCartToast(itemName) {
-    showToast(`✓ ${itemName} added to cart!`, 'success', 2000);
-}
-
 function showOrderSuccessToast(orderDetails) {
     showToast('', 'success', 5000, orderDetails);
+}
+
+function showAddToCartToast(itemName) {
+    showCartToast(`${itemName} added to cart`, 'add-to-cart-toast');
+}
+
+function showRemoveBtnToast(itemName) {
+    showCartToast(`${itemName} removed`, 'remove-btn-toast');
+}
+
+function showCartToast(message, type) {
+    // Create or get toast container
+    if (!elements.toastContainer) {
+        elements.toastContainer = document.createElement('div');
+        elements.toastContainer.id = 'toastContainer';
+        elements.toastContainer.style.cssText = `
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            width: 100%;
+        `;
+        document.body.appendChild(elements.toastContainer);
+    }
+
+    // Remove existing toast if any
+    const existingToast = elements.toastContainer.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    elements.toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 50);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 2000);
 }
 
 // ========== PAYMENT METHOD RESTRICTIONS ==========
@@ -108,7 +209,7 @@ function updatePaymentMethodsBasedOnOrderType() {
         message.innerHTML = `<strong>Payment Notice:</strong> Online payment (GCash or Bank Transfer) is required for ${orderType.toLowerCase()} orders. Cash payment is only available for dine-in orders.`;
         paymentMethodSection.appendChild(message);
         
-        if (selectedPaymentMethod === 'cash') {
+        if (selectedPaymentMethod === 'Cash') {
             selectPaymentMethod('gcash');
         }
     } else {
@@ -122,186 +223,224 @@ function updatePaymentMethodsBasedOnOrderType() {
     }
 }
 
-// ========== LOCATION FUNCTIONS ==========
+// ========== LOCATION FUNCTIONS (Leaflet + OpenStreetMap Version) ==========
 function initializeLocationModal() {
     const locationModal = document.getElementById('locationModal');
     const locationInput = document.getElementById('locationInput');
     const searchBtn = document.getElementById('searchBtn');
     const suggestions = document.getElementById('suggestions');
     const currentLocationBtn = document.getElementById('currentLocationBtn');
+    const showMapBtn = document.getElementById('showMapBtn');
+    const mapContainer = document.getElementById('mapContainer');
     const locationError = document.getElementById('locationError');
+    const confirmLocationBtn = document.getElementById('confirmLocationBtn');
+    const selectedLocationDisplay = document.getElementById('selectedLocationDisplay');
 
-    const metroManilaLocations = [
-        "Manila", "Quezon City", "Makati", "Taguig", "Pasig", 
-        "Mandaluyong", "San Juan", "Pasay", "Parañaque", 
-        "Las Piñas", "Muntinlupa", "Marikina", "Caloocan", 
-        "Valenzuela", "Malabon", "Navotas"
-    ];
+    let map = null;
+    let marker = null;
+    let isMapVisible = false;
+    let selectedLocation = null;
 
+    // Open modal
     document.querySelector('.location-search').addEventListener('click', () => {
         locationModal.style.display = 'flex';
         locationInput.focus();
     });
 
-    elements.modalClose.addEventListener('click', () => {
-        locationModal.style.display = 'none';
-        clearError();
-    });
+    const modalClose = document.getElementById('modalClose');
+    const cancelLocationBtn = document.getElementById('cancelLocationBtn');
+
+    modalClose.addEventListener('click', () => closeModal());
+    cancelLocationBtn.addEventListener('click', () => closeModal());
 
     locationModal.addEventListener('click', (e) => {
-        if (e.target === locationModal) {
-            locationModal.style.display = 'none';
-            clearError();
+        if (e.target === locationModal) closeModal();
+    });
+
+    function closeModal() {
+        locationModal.style.display = 'none';
+        resetModal();
+    }
+
+    // Show/Hide Map
+    showMapBtn.addEventListener('click', () => {
+        isMapVisible = !isMapVisible;
+        mapContainer.classList.toggle('active', isMapVisible);
+
+        if (isMapVisible) {
+            showMapBtn.classList.add("active");
+            showMapBtn.textContent = "🗺️ Hide Map";
+            if (!map) initMap();
+        } else {
+            showMapBtn.classList.remove("active");
+            showMapBtn.textContent = "🗺️ Show Map";
         }
     });
 
-    function searchLocations() {
-        const query = locationInput.value.toLowerCase().trim();
-        suggestions.innerHTML = '';
-        
-        if (query.length === 0) return;
-        
-        const filtered = metroManilaLocations.filter(location => 
-            location.toLowerCase().includes(query)
-        );
-        
-        if (filtered.length === 0) {
-            suggestions.innerHTML = '<div class="suggestion-item">No locations found in Metro Manila</div>';
-            return;
-        }
-        
-        filtered.forEach(location => {
-            const div = document.createElement('div');
-            div.className = 'suggestion-item';
-            div.textContent = location;
-            div.addEventListener('click', () => selectLocation(location));
-            suggestions.appendChild(div);
+    // Initialize Map (Leaflet)
+    function initMap() {
+        const defaultLocation = [14.5995, 120.9842]; // Metro Manila center
+        map = L.map('map').setView(defaultLocation, 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: "© OpenStreetMap contributors"
+        }).addTo(map);
+
+        map.on('click', (e) => {
+            placeMarker(e.latlng.lat, e.latlng.lng);
+            reverseGeocode(e.latlng.lat, e.latlng.lng).then(address => {
+                setSelectedLocation(address);
+            });
         });
     }
 
-    function selectLocation(location) {
-        document.querySelector('.location .loc-text').textContent = location;
-        locationModal.style.display = 'none';
-        locationInput.value = '';
-        suggestions.innerHTML = '';
-        clearError();
-        showToast(`Location set to ${location}`, 'success');
+    function placeMarker(lat, lng) {
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        } else {
+            marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+            marker.on("dragend", () => {
+                const pos = marker.getLatLng();
+                reverseGeocode(pos.lat, pos.lng).then(address => {
+                    setSelectedLocation(address);
+                });
+            });
+        }
+        map.setView([lat, lng], 15);
     }
 
-    currentLocationBtn.addEventListener('click', () => {
-        if (!navigator.geolocation) {
-            showToast('Geolocation is not supported by your browser', 'error');
-            return;
-        }
-        
-        currentLocationBtn.textContent = '📍 Getting Location...';
-        currentLocationBtn.disabled = true;
-        
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                
-                if (isInMetroManila(lat, lng)) {
-                    const city = getNearestCity(lat, lng);
-                    document.querySelector('.location .loc-text').textContent = city;
-                    locationModal.style.display = 'none';
-                    clearError();
-                    showToast(`Location set to ${city} using GPS`, 'success');
-                } else {
-                    showToast('Location outside Metro Manila. Please search for Metro Manila locations only.', 'error');
-                }
-                
-                currentLocationBtn.textContent = '📍 Use Current Location';
-                currentLocationBtn.disabled = false;
-            },
-            (error) => {
-                showToast('Unable to retrieve your location. Please search manually.', 'error');
-                currentLocationBtn.textContent = '📍 Use Current Location';
-                currentLocationBtn.disabled = false;
+    // Reverse Geocode to Address
+    function reverseGeocode(lat, lng) {
+        return fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+            .then(res => res.json())
+            .then(data => data.display_name || "Pinned Location")
+            .catch(() => "Unknown Location");
+    }
+
+    // ------- KEY FIX: Universal function for A, B, C -------
+    function setSelectedLocation(address) {
+        selectedLocation = address;
+        updateSelectedLocationDisplay(address);
+        confirmLocationBtn.disabled = false; // ✅ Always enable confirm button
+    }
+
+    // Search Autocomplete (Photon Free API)
+    function searchLocations() {
+        const query = locationInput.value.trim();
+        if (!query) return suggestions.classList.remove('active');
+
+        fetch(`https://photon.komoot.io/api/?q=${query}&limit=5`)
+            .then(res => res.json())
+            .then(data => {
+                suggestions.innerHTML = "";
+                suggestions.classList.add('active');
+
+                data.features.forEach(loc => {
+                    const place = document.createElement('div');
+                    place.className = "suggestion-item";
+
+                    const name = loc.properties.name || "";
+                    const city = loc.properties.city || "";
+                    const country = loc.properties.country || "";
+                    const finalName = `${name}, ${city}, ${country}`.replace(/, ,/g, ",");
+
+                    place.textContent = finalName;
+
+                    place.addEventListener('click', () => {
+                        const lat = loc.geometry.coordinates[1];
+                        const lng = loc.geometry.coordinates[0];
+                        placeMarker(lat, lng);
+
+                        reverseGeocode(lat, lng).then(address => {
+                            locationInput.value = address;
+                            setSelectedLocation(address); // ✅ Key fix for Search B
+                        });
+
+                        suggestions.classList.remove('active');
+                    });
+
+                    suggestions.appendChild(place);
+                });
+            });
+    }
+
+    currentLocationBtn.addEventListener("click", () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            // Reverse geocode GPS coordinates to address
+            const address = await reverseGeocode(lat, lon);
+
+            selectedLocation = address;
+            updateSelectedLocationDisplay(selectedLocation);
+
+            // Enable confirm button
+            confirmLocationBtn.disabled = false;
+
+            // Show map if hidden
+            mapContainer.style.display = "block";
+            showMapBtn.style.display = "none";
+
+            // Set / move map
+            if (!map) {
+                map = L.map("map").setView([lat, lon], 17);
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {}).addTo(map);
+            } else {
+                map.setView([lat, lon], 17);
             }
-        );
+
+            // Set / move marker
+            if (marker) map.removeLayer(marker);
+            marker = L.marker([lat, lon]).addTo(map);
+
+        }, () => {
+            alert("Failed to get current location.");
+        });
+    } else {
+        alert("Geolocation is not supported by your browser.");
+    }
+});
+
+    // Confirm Button
+    confirmLocationBtn.addEventListener('click', () => {
+        if (!selectedLocation) return showError("Select location first");
+        document.querySelector('.location .loc-text').textContent = selectedLocation;
+        closeModal();
+        showToast(`Location set to ${selectedLocation}`, "success");
     });
-
-    function isInMetroManila(lat, lng) {
-        const metroBounds = { 
-            north: 14.85,
-            south: 14.35,
-            west: 120.90,
-            east: 121.20
-        };
-        return lat >= metroBounds.south && lat <= metroBounds.north && 
-               lng >= metroBounds.west && lng <= metroBounds.east;
-    }
-
-    function getNearestCity(lat, lng) {
-        if (lat >= 14.50 && lat <= 14.70 && lng >= 120.90 && lng <= 121.10) {
-            if (lat >= 14.55 && lat <= 14.68 && lng >= 120.95 && lng <= 121.05) {
-                return "Manila";
-            }
-            if (lat > 14.65 && lng > 121.03) {
-                return "Quezon City";
-            }
-            if (lat > 14.63 && lng > 121.08) {
-                return "Marikina";
-            }
-            return "Manila";
-        }
-        
-        const cities = [
-            { name: "Manila", lat: 14.5995, lng: 120.9842, priority: 1.2 },
-            { name: "Quezon City", lat: 14.6760, lng: 121.0437 },
-            { name: "Makati", lat: 14.5547, lng: 121.0244 },
-            { name: "Taguig", lat: 14.5176, lng: 121.0509 },
-            { name: "Pasig", lat: 14.5764, lng: 121.0851 },
-            { name: "Mandaluyong", lat: 14.5794, lng: 121.0359 },
-            { name: "San Juan", lat: 14.6019, lng: 121.0355 },
-            { name: "Pasay", lat: 14.5378, lng: 121.0014 },
-            { name: "Parañaque", lat: 14.4793, lng: 121.0198 },
-            { name: "Las Piñas", lat: 14.4446, lng: 120.9936 },
-            { name: "Muntinlupa", lat: 14.4081, lng: 121.0405 },
-            { name: "Marikina", lat: 14.6507, lng: 121.1029 },
-            { name: "Caloocan", lat: 14.6542, lng: 120.9829 },
-            { name: "Valenzuela", lat: 14.7004, lng: 120.9830 },
-            { name: "Malabon", lat: 14.6626, lng: 120.9562 },
-            { name: "Navotas", lat: 14.6661, lng: 120.9440 }
-        ];
-
-        let closestCity = cities[0];
-        let shortestDistance = calculateDistance(lat, lng, cities[0].lat, cities[0].lng) * (cities[0].priority || 1);
-
-        for (let i = 1; i < cities.length; i++) {
-            const priority = cities[i].priority || 1;
-            const distance = calculateDistance(lat, lng, cities[i].lat, cities[i].lng) * priority;
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                closestCity = cities[i];
-            }
-        }
-
-        return closestCity.name;
-    }
-
-    function calculateDistance(lat1, lng1, lat2, lng2) {
-        const latDiff = lat1 - lat2;
-        const lngDiff = lng1 - lng2;
-        return Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
-    }
-
-    function showError(message) {
-        locationError.textContent = message;
-        locationError.style.display = 'block';
-    }
-
-    function clearError() {
-        locationError.style.display = 'none';
-    }
 
     searchBtn.addEventListener('click', searchLocations);
     locationInput.addEventListener('input', searchLocations);
-    locationInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') searchLocations();
-    });
+
+    function updateSelectedLocationDisplay(location) {
+        selectedLocationDisplay.innerHTML = `<p><strong>Selected:</strong> ${location}</p>`;
+        selectedLocationDisplay.classList.add('active');
+    }
+
+    function showError(msg) {
+        locationError.textContent = msg;
+        locationError.classList.add('active');
+    }
+
+    function resetModal() {
+        selectedLocation = null;
+        suggestions.classList.remove('active');
+        locationInput.value = "";
+        confirmLocationBtn.disabled = true;
+        selectedLocationDisplay.classList.remove('active');
+    }
+
+    function isInMetroManila(lat, lng) {
+        return lat >= 14.35 && lat <= 14.85 && lng >= 120.90 && lng <= 121.20;
+    }
+}
+
+async function reverseGeocode(lat, lon) {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const data = await response.json();
+    return data.display_name;
 }
 
 // ========== PAYMENT FUNCTIONS ==========
@@ -488,6 +627,7 @@ function addToCart(cardElement) {
     orderCount += 1;
     updateOrdersCount();
     updateBillingPanel();
+    saveCartToStorage(); // Save to localStorage
     
     showAddToCartToast(itemName);
 }
@@ -502,12 +642,14 @@ function updateQuantity(index, change) {
             orderCount += change;
             updateOrdersCount();
             updateBillingPanel();
+            saveCartToStorage(); // Save to localStorage
         }
     }
 }
 
 function removeFromCart(index) {
     if (cart[index]) {
+        const itemName = cart[index].name;
         orderCount -= cart[index].quantity;
         cart.splice(index, 1);
         
@@ -515,7 +657,8 @@ function removeFromCart(index) {
         
         updateOrdersCount();
         updateBillingPanel();
-        showToast('Item removed from cart', 'warning');
+        saveCartToStorage(); // Save to localStorage
+        showRemoveBtnToast(itemName);
     }
 }
 
@@ -636,34 +779,6 @@ function initializeBillingPanelEvents() {
     });
 }
 
-// Update your updateQuantity and removeFromCart functions to remove the onclick attributes
-function updateQuantity(index, change) {
-    if (cart[index]) {
-        cart[index].quantity += change;
-        
-        if (cart[index].quantity <= 0) {
-            removeFromCart(index);
-        } else {
-            orderCount += change;
-            updateOrdersCount();
-            updateBillingPanel(); // This will re-render the panel
-        }
-    }
-}
-
-function removeFromCart(index) {
-    if (cart[index]) {
-        orderCount -= cart[index].quantity;
-        cart.splice(index, 1);
-        
-        if (cart.length === 0) orderCount = 0;
-        
-        updateOrdersCount();
-        updateBillingPanel(); // This will re-render the panel
-        showToast('Item removed from cart', 'warning');
-    }
-}
-
 // ========== ORDER PROCESSING ==========
 function processOrder() {
     if (cart.length === 0) {
@@ -692,12 +807,33 @@ function processOrder() {
         total: total
     };
     
+    // Persist to backend for order history
+    try {
+        const itemsPayload = cart.map(it => ({
+            name: it.name,
+            quantity: it.quantity,
+            price: it.price,
+            total: it.price * it.quantity,
+        }));
+        const totalNumber = parseFloat(total.replace(/[^0-9.]/g, '')) || 0;
+        const payload = {
+            items: itemsPayload,
+            totalAmount: totalNumber,
+            orderType: orderType,
+            paymentMethod: selectedPaymentMethod,
+            customerName: (window.currentUsername || ''),
+        };
+        fetch('/api/orders/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        }).then(function(){ /* ignore errors for UX */ }).catch(function(){});
+    } catch (e) { /* ignore */ }
+
     showOrderSuccessToast(orderDetails);
     
-    cart = [];
-    orderCount = 0;
-    updateOrdersCount();
-    updateBillingPanel();
+    // Clear cart after successful order
+    clearCartFromStorage();
     closeBillingPanel();
 }
 
@@ -775,41 +911,6 @@ function updateHeaderForCategory(categoryId) {
         titleLogo.alt = category.title;
         pageTitle.textContent = category.title;
     }
-}
-
-// ========== SIDEBAR NAVIGATION ==========
-function initializeSidebarNavigation() {
-    const navItems = document.querySelectorAll('.nav-item');
-    const categories = document.querySelectorAll('.category');
-    
-    navItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            
-            // Remove active class from all nav items
-            navItems.forEach(navItem => navItem.classList.remove('active'));
-            
-            // Add active class to clicked nav item
-            this.classList.add('active');
-            
-            // Hide all categories
-            categories.forEach(category => category.classList.remove('active'));
-            
-            // Show target category
-            const targetCategory = document.getElementById(targetId);
-            if (targetCategory) {
-                targetCategory.classList.add('active');
-                
-                // Update header logo and title
-                updateHeaderForCategory(targetId);
-                
-                // If it's a specific category (not "all"), populate it
-                if (targetId !== 'all') {
-                    populateCategory(targetId);
-                }
-            }
-        });
-    });
 }
 
 function populateCategory(categoryId) {
@@ -909,6 +1010,26 @@ function getCategoryItems(categoryId) {
                     { value: "M", price: 160, checked: true },
                     { value: "L", price: 190, checked: false }
                 ]
+            },
+            {
+                name: "Dulce de Leche",
+                image: STATIC_URLS.dulce_de_Leche,
+                price: "Php 160 (M) • Php 190 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 160, checked: true },
+                    { value: "L", price: 190, checked: false }
+                ]
+            },
+            {
+                name: "Choco-Peanut Banana",
+                image: STATIC_URLS.choco_peanut_Banana,
+                price: "Php 160 (M) • Php 190 (L)",
+                hasSizes: true,
+                sizes: [
+                    { value: "M", price: 160, checked: true },
+                    { value: "L", price: 190, checked: false }
+                ]
             }
         ],
         spuds: [
@@ -923,6 +1044,18 @@ function getCategoryItems(categoryId) {
                 image: STATIC_URLS.chiliConCarne,
                 price: "Php 179",
                 hasSizes: false
+            },
+            {
+                name: "Triple Cheese",
+                image: STATIC_URLS.tripleCheese,
+                price: "Php 129",
+                hasSizes: false
+            },
+            {
+                name: "Lasagna Jacket",
+                image: STATIC_URLS.lasagnaJacket,
+                price: "Php 129",
+                hasSizes: false
             }
         ],
         pasta: [
@@ -935,7 +1068,7 @@ function getCategoryItems(categoryId) {
             {
                 name: "Garlic Bread",
                 image: STATIC_URLS.garlicBread,
-                price: "Php 99",
+                price: "Php 69",
                 hasSizes: false
             }
         ],
@@ -947,9 +1080,15 @@ function getCategoryItems(categoryId) {
                 hasSizes: false
             },
             {
-                name: "Veggie Wrap",
-                image: STATIC_URLS.veggieWrap,
+                name: "Beef Wrap",
+                image: STATIC_URLS.beefWrap,
                 price: "Php 139",
+                hasSizes: false
+            },
+            {
+                name: "Kesodilla",
+                image: STATIC_URLS.kesodilla,
+                price: "Php 99",
                 hasSizes: false
             }
         ],
@@ -958,6 +1097,12 @@ function getCategoryItems(categoryId) {
                 name: "Chicken Poppers",
                 image: STATIC_URLS.chickenPoppers,
                 price: "Php 149",
+                hasSizes: false
+            },
+            {
+                name: "Nachos",
+                image: STATIC_URLS.nachos,
+                price: "Php 129",
                 hasSizes: false
             }
         ]
@@ -1020,10 +1165,13 @@ function initializeAddToCartDelegation() {
 
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', function() {
+    // Load cart from localStorage when page loads
+    loadCartFromStorage();
+    
     initializeLocationModal();
     initializePaymentMethods();
     initializeSidebarNavigation();
-    initializeAddToCartDelegation(); // ONLY this handles add to cart
+    initializeAddToCartDelegation();
 
     // Orders button
     if (elements.ordersButton) {
@@ -1037,16 +1185,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Close billing panel when clicking outside
-// Close billing panel when clicking outside (but not on quantity/remove buttons)
     document.addEventListener('click', function(e) {
         if (elements.billingPanel.classList.contains('open') && 
-        !elements.billingPanel.contains(e.target) && 
-        e.target !== elements.ordersButton &&
-        !e.target.closest('.quantity-btn') && // Add this line
-        !e.target.closest('.remove-btn')) {   // Add this line
-        closeBillingPanel();
-    }
-});
+            !elements.billingPanel.contains(e.target) && 
+            e.target !== elements.ordersButton &&
+            !e.target.closest('.quantity-btn') &&
+            !e.target.closest('.remove-btn')) {
+            closeBillingPanel();
+        }
+    });
 
     // Order type selection
     document.querySelectorAll('.order-btn').forEach(button => {

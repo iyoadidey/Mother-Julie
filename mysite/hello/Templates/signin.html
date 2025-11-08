@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://unpkg.com/animate.css@4.1.1/animate.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" />
     <link href="{% static 'signin.css' %}" rel="stylesheet" />
+
 </head>
 
 <body>
@@ -18,25 +19,16 @@
             <img src="{% static 'motherjulie.png' %}" alt="Mother Julie Logo" class="motherjulielogo" />
             <h1 class="desktop1-text3">SIGN IN</h1>
 
-            <!-- Django Messages -->
-            {% if messages %}
-            <div class="messages-container">
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
             <!-- Sign In Form -->
             <form method="POST" action="{% url 'signin' %}" id="signin-form">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="username" class="sr-only">Username</label>
                     <input id="username" name="username" type="text" class="desktop1-input" placeholder="Username" required />
                 </div>
-                <div class="form-group">
-                    <label for="password" class="sr-only">Password</label>
+                
+                <div class="form-group password-wrapper">
                     <input id="password" name="password" type="password" class="desktop1-input" placeholder="Password" required />
+                    <img src="{% static 'eye-open.png' %}" class="toggle-password" data-target="password" alt="Show Password" style="cursor:pointer;" />
                 </div>
 
                 <button type="submit" class="desktop1-button">
@@ -56,11 +48,8 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="toast" role="alert" aria-live="polite" aria-atomic="true" style="display: none;">
-        <div class="toast-content">
-            <div class="toast-icon" id="toastIcon"></div>
-            <div class="toast-message" id="toastMessage"></div>
-        </div>
+    <div id="toast" role="alert" aria-live="polite" aria-atomic="true">
+        <div class="toast-message" id="toastMessage"></div>
     </div>
 
     <!-- Reset Password Modal -->
@@ -73,7 +62,6 @@
             <form id="requestResetForm">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="reset-email" class="sr-only">Email</label>
                     <input id="reset-email" type="email" name="email" class="desktop1-input" placeholder="Enter your email" required />
                 </div>
                 <button type="submit" class="desktop1-button" id="resetSubmitButton">
@@ -93,36 +81,39 @@
     function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
-        const toastIcon = document.getElementById('toastIcon');
-
-        const styles = {
-            success: { background: '#4CAF50', icon: '✓' },
-            error: { background: '#f44336', icon: '✕' }
-        };
-
-        const style = styles[type] || styles.success;
-        toast.style.background = style.background;
-        toastIcon.textContent = style.icon;
         toastMessage.textContent = message;
+        toast.className = ''; // reset classes
+        toast.classList.add(type === 'success' ? 'toast-success' : 'toast-error');
         toast.style.display = 'block';
 
-        setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        // fade out after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => { toast.style.display = 'none'; toast.style.animation = ''; }, 500);
+        }, 3000);
     }
 
-    // Validate Email
-    function validateEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
+    // Toggle password visibility
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".toggle-password").forEach(function(icon) {
+            icon.addEventListener("click", function() {
+                const input = document.getElementById(this.dataset.target);
+                if (input.type === "password") {
+                    input.type = "text";
+                    this.src = "{% static 'eye-closed.png' %}";
+                } else {
+                    input.type = "password";
+                    this.src = "{% static 'eye-open.png' %}";
+                }
+            });
+        });
 
-    // Sign In Form
-    function setupSignInForm() {
+        // Sign In AJAX
         const form = document.getElementById('signin-form');
-        if (!form) return;
-
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
             const submitButton = form.querySelector('button[type="submit"]');
             const originalText = submitButton.innerHTML;
 
@@ -147,17 +138,12 @@
                     }
                 });
 
-                if (response.redirected) {
-                    window.location.href = response.url;
-                    return;
-                }
-
                 const data = await response.json();
                 if (data.success) {
                     showToast('Login successful! Redirecting...', 'success');
-                    setTimeout(() => { window.location.href = data.redirect_url || '/orders_menu/'; }, 1000);
+                    setTimeout(() => { window.location.href = data.redirect_url || "{% url 'dashboard' %}"; }, 1000);
                 } else {
-                    showToast(data.message || 'Login failed', 'error');
+                    showToast(data.message || 'Invalid username or password', 'error');
                     submitButton.innerHTML = originalText;
                     submitButton.disabled = false;
                 }
@@ -169,60 +155,8 @@
                 submitButton.disabled = false;
             }
         });
-    }
 
-    // Reset Password Form
-    function setupResetForm() {
-        const form = document.getElementById('requestResetForm');
-        if (!form) return;
-
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = form.querySelector('#reset-email').value;
-            if (!validateEmail(email)) {
-                showToast('Please enter a valid email', 'error');
-                return;
-            }
-
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            submitButton.innerHTML = 'Sending...';
-            submitButton.disabled = true;
-
-            try {
-                const formData = new FormData(form);
-                const csrfToken = formData.get('csrfmiddlewaretoken');
-
-                const response = await fetch("{% url 'request_password_reset' %}", {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': csrfToken
-                    }
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    form.reset();
-                    setTimeout(() => { document.getElementById('resetPasswordModal').style.display = 'none'; }, 2000);
-                } else {
-                    showToast(data.message, 'error');
-                }
-
-            } catch (err) {
-                console.error(err);
-                showToast('An error occurred. Please try again.', 'error');
-            } finally {
-                submitButton.innerHTML = originalText;
-                submitButton.disabled = false;
-            }
-        });
-    }
-
-    // Modal Setup
-    function setupModal() {
+        // Modal setup
         const modal = document.getElementById('resetPasswordModal');
         const open = document.getElementById('forgotPasswordLink');
         const close = document.querySelector('.close');
@@ -234,12 +168,6 @@
 
         window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.style.display = 'none'; });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        setupSignInForm();
-        setupResetForm();
-        setupModal();
     });
     </script>
 </body>
