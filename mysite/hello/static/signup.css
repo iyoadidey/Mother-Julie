@@ -26,6 +26,37 @@ body {
   overflow-y: auto;
 }
 
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 45px; /* space for icon */
+}
+
+.password-wrapper .toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;   /* adjust size */
+  height: 24px;  /* adjust size */
+  cursor: pointer;
+  user-select: none;
+  opacity: 0.7;
+  transition: 0.2s;
+}
+
+.password-wrapper .toggle-password:hover {
+  opacity: 1;
+}
+
+
+
+
 /* Form Container */
 .desktop1-container1 {
   width: 100%;
@@ -35,6 +66,14 @@ body {
   border-radius: 25px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   text-align: center;
+}
+
+
+.desktop1-bottom-link {
+    margin-top: 25px;
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
 }
 
 .motherjulielogo {
