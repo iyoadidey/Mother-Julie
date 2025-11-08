@@ -1,0 +1,1318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mother Julie - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sansita:ital,wght@0,400;0,700;0,800;0,900;1,400;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(to bottom right, #FFD7D7, #FF87B8);
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            font-family: 'Sansita', sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: #FF5C9D;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            font-size: 28px;
+        }
+        
+        .welcome {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .nav-section {
+            margin-bottom: 25px;
+        }
+        
+        .nav-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .nav-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 92, 157, 0.1);
+        }
+        
+        .nav-item.active {
+            background: rgba(255, 92, 157, 0.2);
+            font-weight: bold;
+            color: #FF5C9D;
+        }
+        
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .logout-btn {
+            padding: 12px 15px;
+            margin-top: auto;
+            border-radius: 8px;
+            cursor: pointer;
+            background: rgba(244, 67, 54, 0.1);
+            color: #F44336;
+            text-align: center;
+            font-weight: bold;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        
+        .logout-btn i {
+            margin-right: 8px;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 260px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .page-title {
+            font-family: 'Sansita', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+            color: #333;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background: #FFD7D7;
+        }
+        
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: bold;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .card-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header i {
+            color: #FF5C9D;
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .metric-change {
+            font-size: 14px;
+            color: #4CAF50;
+            display: flex;
+            align-items: center;
+        }
+        
+        .metric-change.negative {
+            color: #F44336;
+        }
+        
+        .metric-change i {
+            margin-right: 5px;
+        }
+        
+        /* Orders Table */
+        .orders-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        
+        .orders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .orders-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .orders-count {
+            background: #FF5C9D;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .orders-table th {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #888;
+            font-weight: 600;
+        }
+        
+        .orders-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-preparing {
+            background: #FFF3E0;
+            color: #EF6C00;
+        }
+        
+        .status-pending {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+        
+        .status-completed {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        
+        .status-paid {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        
+        .status-unpaid {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+        
+        /* Product Management */
+        .product-management {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        
+        .management-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-family: 'Sansita', sans-serif;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        input.error {
+            border-color: #F44336;
+        }
+        
+        .error-message {
+            color: #F44336;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #FF5C9D;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #ff4a8a;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #F44336;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+        
+        /* Category Section */
+        .category-section {
+            margin-bottom: 30px;
+        }
+        
+        .category-title {
+            font-family: 'Sansita', sans-serif;
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #FF5C9D;
+            border-bottom: 2px solid #FFD7D7;
+            padding-bottom: 5px;
+        }
+        
+        .category-products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .category-product {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .product-name-price {
+            flex: 1;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .product-price {
+            color: #FF5C9D;
+            font-weight: bold;
+        }
+        
+        .product-stock {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #4CAF50;
+        }
+        
+        .toast.error {
+            background: #F44336;
+        }
+        
+        .toast.warning {
+            background: #FF9800;
+        }
+        
+        .toast i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        /* Page Management */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* Order Management Styles */
+        .order-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-controls select {
+            width: auto;
+            min-width: 150px;
+        }
+        
+        .order-card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid #FF5C9D;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .order-id {
+            font-weight: bold;
+            color: #FF5C9D;
+        }
+        
+        .order-date {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .order-details {
+            margin-bottom: 15px;
+        }
+        
+        .order-details div {
+            margin-bottom: 5px;
+        }
+        
+        .order-items ul {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+        
+        .order-items li {
+            margin-bottom: 3px;
+        }
+        
+        .order-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .order-status label {
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        
+        .order-status select {
+            width: auto;
+            min-width: 180px;
+        }
+        
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .no-orders {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            font-style: italic;
+        }
+        
+        .tracking-link {
+            color: #FF5C9D;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .tracking-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* New Order Card Styles */
+        .order-details-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .order-details-section h3 {
+            font-family: 'Sansita', sans-serif;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .tracking-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .tracking-section h3 {
+            font-family: 'Sansita', sans-serif;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .tracking-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .tracking-step {
+            padding: 10px;
+            border-left: 3px solid #dee2e6;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        .tracking-step.active {
+            border-left-color: #FF5C9D;
+            background: #fff5f7;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .tracking-step.active .step-title {
+            color: #FF5C9D;
+        }
+        
+        .status-indicator {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        
+        .status-title {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .current-status {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF5C9D;
+            margin-bottom: 8px;
+        }
+        
+        .status-details {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .order-management {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .order-management .order-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+        
+        .order-management .order-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 0;
+        }
+        
+        /* Button Colors for Product Management */
+        .btn-edit {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        .btn-delete {
+            background: #F44336;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-title {
+            font-family: 'Sansita', sans-serif;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                padding: 20px 10px;
+            }
+            
+            .logo span, .welcome, .nav-title, .logout-btn span {
+                display: none;
+            }
+            
+            .logo i {
+                margin-right: 0;
+                font-size: 24px;
+            }
+            
+            .nav-item {
+                justify-content: center;
+                padding: 15px 0;
+            }
+            
+            .nav-item i {
+                margin-right: 0;
+                font-size: 18px;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .order-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-controls {
+                width: 100%;
+            }
+            
+            .filter-controls select {
+                flex: 1;
+            }
+            
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .order-status {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .order-status select {
+                width: 100%;
+            }
+            
+            .order-management {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .order-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+    
+    <!-- Add Order Modal -->
+    <div class="modal" id="addOrderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Order</h2>
+                <button class="close-modal" id="closeOrderModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="orderCustomerName">Customer Name</label>
+                        <input type="text" id="orderCustomerName" placeholder="Enter customer name">
+                        <div class="error-message" id="customerNameError">Customer name is required</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="orderType">Order Type</label>
+                        <select id="orderType">
+                            <option value="delivery">Delivery</option>
+                            <option value="pickup">Pickup</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="addressGroup">
+                    <label for="orderAddress">Delivery Address</label>
+                    <input type="text" id="orderAddress" placeholder="Enter delivery address">
+                </div>
+                
+                <div class="form-group">
+                    <label>Order Items</label>
+                    <div id="orderItemsContainer">
+                        <div class="order-item">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Item</label>
+                                    <select class="item-select" onchange="updateItemPrice(this)">
+                                        <option value="">Select an item</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Quantity</label>
+                                    <input type="number" class="item-quantity" placeholder="Qty" min="1" value="1" onchange="calculateTotal()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Price</label>
+                                    <input type="number" class="item-price" placeholder="Price" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="addItemBtn">Add Item</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="orderTotal">Total Amount</label>
+                    <input type="number" id="orderTotal" placeholder="0.00" readonly>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelOrder">Cancel</button>
+                <button class="btn btn-primary" id="saveOrder">Save Order</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-store"></i>
+            <span>Mother Julie</span>
+        </div>
+        <div class="welcome">Welcome Back!</div>
+        
+        <div class="nav-section">
+            <div class="nav-title">Dashboard</div>
+            <div class="nav-item active" data-page="dashboard">
+                <i class="fas fa-chart-pie"></i>
+                <span>Analytics</span>
+            </div>
+            <div class="nav-item" data-page="products">
+                <i class="fas fa-box-open"></i>
+                <span>Products</span>
+            </div>
+            <div class="nav-item" data-page="orders">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+            </div>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-title">Reports</div>
+            <div class="nav-item" data-page="daily">
+                <i class="fas fa-calendar-day"></i>
+                <span>Daily</span>
+            </div>
+            <div class="nav-item" data-page="weekly">
+                <i class="fas fa-calendar-week"></i>
+                <span>Weekly</span>
+            </div>
+            <div class="nav-item" data-page="monthly">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Monthly</span>
+            </div>
+            <div class="nav-item" data-page="yearly">
+                <i class="fas fa-calendar"></i>
+                <span>Yearly</span>
+            </div>
+        </div>
+        
+        <div class="logout-btn" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </div>
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Dashboard Page -->
+        <div class="page active" id="dashboard">
+            <div class="header">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="user-info">
+                    <div class="user-avatar"></div>
+                    <div class="user-details">
+                        <div class="user-name">Admin User</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Total Sales</span>
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="metric-value" id="totalSales">P 0.00</div>
+                    <div class="metric-change" id="salesChange">
+                        <i class="fas fa-minus"></i>
+                        0%
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span>Total Product Sold</span>
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="metric-value" id="totalProductSold">0</div>
+                    <div class="metric-change" id="productSoldChange">
+                        <i class="fas fa-minus"></i>
+                        0%
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Statistics Table -->
+            <div class="orders-card">
+                <div class="orders-header">
+                    <div class="orders-title">Order Statistics</div>
+                    <div class="orders-count" id="orderStatsCount">0 Orders</div>
+                </div>
+                
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Order Type</th>
+                            <th>Order Placed</th>
+                            <th>Delivery/Pickup Date</th>
+                            <th>No. of Items</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderStatsTable">
+                        <!-- Order statistics will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Product Management Page -->
+        <div class="page" id="products">
+            <div class="header">
+                <h1 class="page-title">Product Management</h1>
+                <div class="user-info">
+                    <div class="user-avatar"></div>
+                    <div class="user-details">
+                        <div class="user-name">Admin User</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add New Product Section -->
+            <div class="product-management">
+                <div class="management-header">
+                    <h2 class="section-title">Add New Product</h2>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productName">Product Name</label>
+                        <input type="text" id="productName" placeholder="Enter product name">
+                        <div class="error-message" id="nameError">Product name is required</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productPrice">Price</label>
+                        <input type="number" id="productPrice" placeholder="Enter price" min="1" step="1">
+                        <div class="error-message" id="priceError">Price must be a positive whole number</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productCategory">Category</label>
+                        <select id="productCategory">
+                            <option value="">Select category</option>
+                            <option value="spud">Spud</option>
+                            <option value="appetizers">Appetizers</option>
+                            <option value="wrap">Wrap</option>
+                            <option value="pasta_bread">Pasta/Bread</option>
+                            <option value="desserts">Desserts</option>
+                        </select>
+                        <div class="error-message" id="categoryError">Please select a category</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productStock">Stock</label>
+                        <input type="number" id="productStock" placeholder="Enter stock quantity" min="0">
+                        <div class="error-message" id="stockError">Stock must be a positive number</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="productImage">Product Image</label>
+                    <input type="file" id="productImage" accept="image/*">
+                    <div class="image-preview" id="imagePreview">
+                        <span>No image selected</span>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="addProduct">Add Product</button>
+                <button class="btn btn-secondary" id="updateProduct" style="display:none;">Update Product</button>
+                <button class="btn btn-secondary" id="cancelEdit" style="display:none;">Cancel</button>
+            </div>
+            
+            <!-- Display All Products by Category -->
+            <div id="allProductsContainer">
+                <!-- Products will be populated here by category -->
+            </div>
+        </div>
+        
+        <!-- Order Management Page -->
+        <div class="page" id="orders">
+            <div class="header">
+                <h1 class="page-title">Order Management</h1>
+                <div class="user-info">
+                    <div class="user-avatar"></div>
+                    <div class="user-details">
+                        <div class="user-name">Admin User</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="orders-card">
+                <div class="orders-header">
+                    <div class="orders-title">Active Orders</div>
+                    <div class="orders-count" id="activeOrderCount">0 Active Orders</div>
+                </div>
+                
+                <div class="order-controls">
+                    <button class="btn btn-primary" id="addOrderBtn">
+                        <i class="fas fa-plus"></i> Add New Order
+                    </button>
+                    <div class="filter-controls">
+                        <select id="orderTypeFilter">
+                            <option value="all">All Order Types</option>
+                            <option value="delivery">Delivery</option>
+                            <option value="pickup">Pickup</option>
+                        </select>
+                        <select id="statusFilter">
+                            <option value="all">All Statuses</option>
+                            <option value="order_placed">Order Placed</option>
+                            <option value="preparing">Preparing</option>
+                            <option value="out_for_delivery">Out for Delivery</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="ready_for_pickup">Ready for Pickup</option>
+                            <option value="picked_up">Picked Up</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="ordersContainer">
+                    <!-- Orders will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Other Report Pages -->
+        <div class="page" id="daily">
+            <div class="header">
+                <h1 class="page-title">Daily Reports</h1>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Sales Volume</span>
+                    </div>
+                    <div class="metric-value" id="dailySales">P 0.00</div>
+                    <div class="metric-change" id="dailyChange">0%</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Product Sold</span>
+                    </div>
+                    <div class="metric-value" id="dailyProductSold">0</div>
+                    <div class="metric-change" id="dailyProductChange">0%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="page" id="weekly">
+            <div class="header">
+                <h1 class="page-title">Weekly Reports</h1>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Sales Volume</span>
+                    </div>
+                    <div class="metric-value" id="weeklySales">P 0.00</div>
+                    <div class="metric-change" id="weeklyChange">0%</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Product Sold</span>
+                    </div>
+                    <div class="metric-value" id="weeklyProductSold">0</div>
+                    <div class="metric-change" id="weeklyProductChange">0%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="page" id="monthly">
+            <div class="header">
+                <h1 class="page-title">Monthly Reports</h1>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Sales Volume</span>
+                    </div>
+                    <div class="metric-value" id="monthlySales">P 0.00</div>
+                    <div class="metric-change" id="monthlyChange">0%</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Product Sold</span>
+                    </div>
+                    <div class="metric-value" id="monthlyProductSold">0</div>
+                    <div class="metric-change" id="monthlyProductChange">0%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="page" id="yearly">
+            <div class="header">
+                <h1 class="page-title">Yearly Reports</h1>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Sales Volume</span>
+                    </div>
+                    <div class="metric-value" id="yearlySales">P 0.00</div>
+                    <div class="metric-change" id="yearlyChange">0%</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Product Sold</span>
+                    </div>
+                    <div class="metric-value" id="yearlyProductSold">0</div>
+                    <div class="metric-change" id="yearlyProductChange">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+            <script src="{% static 'admin_dashboard.js' %}"></script>
+</body>
+</html>

@@ -15,6 +15,34 @@ body {
   box-sizing: border-box;
 }
 
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 45px; /* space for icon */
+}
+
+.password-wrapper .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;   /* adjust size */
+    height: 24px;  /* adjust size */
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.7;
+    transition: 0.2s;
+}
+
+.password-wrapper .toggle-password:hover {
+    opacity: 1;
+}
+
 /* Container */
 .desktop1-container1 {
   width: 100%;
@@ -42,14 +70,15 @@ body {
   letter-spacing: 1px;
 }
 
-/* Inputs */
+/* Inputs - Reduced gaps */
 .desktop1-input {
   width: 100%;
   padding: 12px 16px;
-  margin: 8px 0;
+  margin: 5px 0; /* Reduced from 8px to 5px */
   border: 1.5px solid #ccc;
   border-radius: 10px;
   font-size: 1rem;
+  transition: all 0.3s ease;
 }
 
 .desktop1-input:focus {
@@ -58,11 +87,16 @@ body {
   outline: none;
 }
 
+/* Form groups - Reduced spacing */
+.form-group {
+  margin-bottom: 12px; /* Reduced from 20px */
+}
+
 /* Button */
 .desktop1-button {
   width: 100%;
   padding: 12px;
-  margin-top: 25px;
+  margin-top: 20px; /* Reduced from 25px */
   background-color: #ff5b89;
   color: #fff;
   border: none;
@@ -71,18 +105,18 @@ body {
   font-weight: 600;
   transition: 0.3s;
   box-shadow: 0 4px 15px rgba(255, 91, 137, 0.4);
-  cursor: pointer; /* Add pointer cursor to indicate it's clickable */
+  cursor: pointer;
 }
 
 .desktop1-button:hover {
   background-color: #ff3e70;
-  transform: translateY(-2px); /* Slightly lift the button on hover */
+  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 91, 137, 0.6);
 }
 
 .desktop1-button:focus {
-  outline: none; /* Removes focus border */
-  box-shadow: 0 0 6px rgba(255, 91, 137, 0.7); /* Focus state */
+  outline: none;
+  box-shadow: 0 0 6px rgba(255, 91, 137, 0.7);
 }
 
 /* Ensure that the text inside the button is styled */
@@ -90,11 +124,15 @@ body {
   font-size: 1rem;
   font-weight: 600;
 }
+
 /* Bottom Link */
 .desktop1-bottom-link {
   margin-top: 20px;
   font-size: 0.95rem;
   color: #333;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+
 }
 
 .desktop1-link {
@@ -118,3 +156,199 @@ body {
   border: 1px solid rgba(255, 91, 137, 0.2);
   color: #dc3c6e;
 }
+
+/* Forgot Password Link */
+.forgot-password-container {
+  text-align: center;
+  margin: 12px 0; /* Reduced from 15px */
+}
+
+.forgot-password-link {
+  color: #ff5b89;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+  color: #dc3c6e;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 25px; /* Reduced from 30px */
+    border-radius: 20px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.close:hover {
+    color: #ff5b89;
+    background: rgba(255, 91, 137, 0.1);
+}
+
+.modal-content h2 {
+    color: #ff5b89;
+    margin-bottom: 12px; /* Reduced from 15px */
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.modal-content p {
+    color: #666;
+    margin-bottom: 15px; /* Reduced from 20px */
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+}
+
+/* Modal form groups - Reduced spacing */
+.modal .form-group {
+    margin-bottom: 15px; /* Reduced from 20px */
+}
+
+/* Toast Notification Styles */
+.toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #4CAF50;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    min-width: 300px;
+    max-width: 90%;
+    backdrop-filter: blur(10px);
+}
+
+.toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toast-icon {
+    font-size: 18px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.toast-message {
+    font-size: 14px;
+    font-weight: 500;
+    flex: 1;
+    text-align: left;
+}
+
+/* Screen reader only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Centered Toast Notification */
+    #toast {
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        min-width: 280px;
+        max-width: 350px;
+        background: #333;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        display: none;
+        z-index: 9999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-family: 'Inter', sans-serif;
+        text-align: center;
+        animation: fadeIn 0.3s ease;
+    }
+
+    #toast.toast-success { background: #4CAF50; }
+    #toast.toast-error { background: #f44336; }
+
+    #toast .toast-message {
+        font-size: 1rem;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, -60%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translate(-50%, -50%); }
+        to { opacity: 0; transform: translate(-50%, -60%); }
+    }

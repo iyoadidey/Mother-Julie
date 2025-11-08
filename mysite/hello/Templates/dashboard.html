@@ -19,18 +19,18 @@
     <header>
         <nav class="container">
             <a href="{% url 'dashboard' %}" class="logo">
-                <img src="{% static 'motherjulie.png' %}" alt="Mother Julie Logo">
+                <img src="{% static 'dashboardpics/motherjulie.png' %}" alt="Mother Julie Logo">
             </a>
             <ul>
                 <li><a href="#">ABOUT US</a></li>
-                <li><a href="{% url 'orders_menu' %}">ORDERS</a></li>
-                <li><a href="#">OUR MENU</a></li>
+                <li><a href="#">ORDERS</a></li>
+                <li><a href="{% url 'orders_menu' %}">OUR MENU</a></li>
             </ul>
             <div class="user-section">
             {% if user.is_authenticated %}
                 <div class="user-info">
                     <span class="user-welcome">{{ user.username }}</span>
-                    <img src="{% static 'user-icon.png' %}" alt="User Account" class="user-icon">
+                    <img src="{% static 'dashboardpics/user-icon.png' %}" alt="User Account" class="user-icon">
                     <form method="POST" action="{% url 'logout' %}" class="logout-form">
                         {% csrf_token %}
                         <button type="submit" class="logout-btn">LOGOUT</button>
@@ -39,7 +39,7 @@
             {% else %}
                 <a href="{% url 'signin' %}" class="username">
                     Sign In
-                    <img src="{% static 'user-icon.png' %}" alt="User Account" class="user-icon">
+                    <img src="{% static 'dashboardpics/user-icon.png' %}" alt="User Account" class="user-icon">
                 </a>
             {% endif %}
         </div>
@@ -50,7 +50,7 @@
         <section class="hero">
             <div class="container hero-content">
                 <div class="hero-illustration">
-                    <img src="{% static 'coffee-cup.png' %}" alt="Coffee Cup">
+                    <img src="{% static 'dashboardpics/coffee-cup.png' %}" alt="Coffee Cup">
                 </div>
                 <div class="hero-text">
                     <h1>Mabuhay, Food Lovers!</h1>
@@ -65,22 +65,22 @@
                 <h2>FEATURED ITEMS</h2>
                 <div class="items-grid">
                     <div class="item-card">
-                        <img src="{% static 'avocado_moto.png' %}" alt="Avocado Moto Drink">
+                        <img src="{% static 'dashboardpics/avocado_moto.png' %}" alt="Avocado Moto Drink">
                         
                     </div>
 
                     <div class="item-card">
-                        <img src="{% static 'mais_conyelo.png' %}" alt="Mais Con Yelo Drink">
+                        <img src="{% static 'dashboardpics/mais_conyelo.png' %}" alt="Mais Con Yelo Drink">
                         <div class="card-overlay-text mais-title">
                         </div>
                     </div>
 
                     <div class="item-card">
-                        <img src="{% static 'biscoff.png' %}" alt="Biscoff Drink">
+                        <img src="{% static 'dashboardpics/biscoff.png' %}" alt="Biscoff Drink">
                     </div>
 
                     <div class="item-card">
-                        <img src="{% static 'best_sellers.png' %}" alt="Best Sellers of the Week">
+                        <img src="{% static 'dashboardpics/best_sellers.png' %}" alt="Best Sellers of the Week">
                     </div>
 
                 </div>
@@ -97,11 +97,11 @@
         <nav class="footer-nav">
             <ul>
                 <li class="contact-item">
-                    <img src="{% static 'mapsicon.png' %}" alt="Maps" width="20" height="20">
+                    <img src="{% static 'dashboardpics/mapsicon.png' %}" alt="Maps" width="20" height="20">
                     <a href="https://maps.app.goo.gl/JipXk6gC6BM9dFnDA">Mother Julie</a>
                 </li>
                 <li class="contact-item">
-                    <img src="{% static 'gmailicon.png' %}" alt="Gmail" width="20" height="20">
+                    <img src="{% static 'dashboardpics/gmailicon.png' %}" alt="Gmail" width="20" height="20">
                     <span></span>
                     <a href="mailto:contact.motherjulie@gmail.com">contact.motherjulie@gmail.com</a>
                 </li>
@@ -110,10 +110,10 @@
         <div class="footer-social">
             <span>Follow us on:</span>
             <a href="https://www.facebook.com/motherjulie.products" class="social-icon" target="_blank">
-            <img src="{% static 'fbicon.png' %}" alt="Gmail" width="20" height="20">
+            <img src="{% static 'dashboardpics/fbicon.png' %}" alt="Gmail" width="20" height="20">
             <span class="separator">|</span>
             <a href="https://www.instagram.com/mother.julie?utm_source=ig_web_button_share_sheet&igsh=MXYzcDBibmRid3d0bg==" class="social-icon" target="_blank">
-                <img src="{% static 'igicon.png' %}" alt="Instagram" width="20" height="20">
+                <img src="{% static 'dashboardpics/igicon.png' %}" alt="Instagram" width="20" height="20">
             </a>
         </div>
     </div>
