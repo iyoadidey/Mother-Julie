@@ -15,7 +15,22 @@
 
 </head>
 <body>
-
+<!-- Messages/Notifications - Toast Style -->
+{% if messages %}
+<div class="toast-container">
+    {% for message in messages %}
+    <div class="toast toast-{{ message.tags }}">
+        <div class="toast-content">
+            <div class="toast-message">
+                {{ message }}
+            </div>
+            <button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+        <div class="toast-progress"></div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
     <header>
         <nav class="container">
             <a href="{% url 'dashboard' %}" class="logo">
@@ -23,7 +38,7 @@
             </a>
             <ul>
                 <li><a href="#">ABOUT US</a></li>
-                <li><a href="#">ORDERS</a></li>
+                <li><a href="{% url 'redirect_to_orders' %}" id="ordersLink">ORDERS</a></li>
                 <li><a href="{% url 'orders_menu' %}">OUR MENU</a></li>
             </ul>
             <div class="user-section">
@@ -118,6 +133,44 @@
         </div>
     </div>
 </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ordersLink = document.getElementById('ordersLink');
+    
+    if (ordersLink) {
+        ordersLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Always let the server handle the redirection logic
+            window.location.href = "{% url 'redirect_to_orders' %}";
+        });
+    }
+});
+
+
+// Auto-remove toasts after they slide out
+document.addEventListener('DOMContentLoaded', function() {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+        // Remove element after animation completes
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 5300); // 5s progress + 0.3s slide out
+    });
+});
+
+// Manual close function
+function closeToast(toastElement) {
+    toastElement.style.animation = 'toastSlideOut 0.3s ease-in forwards';
+    setTimeout(() => {
+        if (toastElement.parentNode) {
+            toastElement.remove();
+        }
+    }, 300);
+}
+</script>
 
 
 </body>

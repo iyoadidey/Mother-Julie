@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,12 +15,34 @@
         }
         
         body {
+            position: relative;
             background: linear-gradient(to bottom, #FFD7D7, #FF87B8);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
+        }
+        
+        .logo-container {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 250px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         
         .container {
@@ -37,20 +60,6 @@
             background: white;
             padding: 25px;
         }
-        
-        .logo {
-            width: 120px;
-            height: 40px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 12px;
-        }
-  
         
         .section-title {
             font-family: 'Sansita', sans-serif;
@@ -92,6 +101,42 @@
             font-weight: bold;
         }
         
+        .status-indicator {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .status-title {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .current-status {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FF87B8;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #FF87B8;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
         .right-panel {
             flex: 1;
             background: #f9f9f9;
@@ -111,8 +156,8 @@
         }
         
         .step-icon {
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background-color: #f0f0f0;
             margin-right: 15px;
@@ -120,8 +165,13 @@
             align-items: center;
             justify-content: center;
             color: #666;
-            font-size: 10px;
+            font-size: 16px;
             flex-shrink: 0;
+        }
+        
+        .step-icon img {
+            width: 70%;
+            height: 70%;
         }
         
         .step-content {
@@ -140,15 +190,10 @@
             font-size: 12px;
         }
         
-        .step-time {
-            color: #666;
-            font-size: 12px;
-        }
-        
         .timeline {
             position: absolute;
-            left: 20px;
-            top: 40px;
+            left: 30px;
+            top: 60px;
             bottom: 0;
             width: 1px;
             background-color: #ddd;
@@ -160,30 +205,172 @@
             color: #666;
             margin-bottom: 15px;
         }
+        
+        .active .step-icon {
+            background-color: #FF87B8;
+            color: white;
+        }
+        
+        .active .step-title {
+            color: #FF87B8;
+        }
+
+        .logo-link {
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .logo-link:hover {
+            opacity: 0.9;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: transparent;
+            color: #FF87B8;
+            text-decoration: none;
+            font-weight: bold;
+            border: 2px solid #FF87B8;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: #FF87B8;
+            color: white;
+        }
+
+        .order-items {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 12px;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-total {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #ddd;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+            }
+            
+            .logo {
+                width: 200px;
+                height: 60px;
+            }
+
+            .order-items {
+                margin-top: 15px;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+
+            .order-item {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #f0f0f0;
+                font-size: 12px;
+            }
+
+            .order-item:last-child {
+                border-bottom: none;
+            }
+
+            .order-total {
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 2px solid #ddd;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Back Button -->
+    <a href="{% url 'dashboard' %}" class="back-button">Back to Dashboard</a>
+
+    <!-- Logo -->
+    <div class="logo-container">
+        <a href="{% url 'dashboard' %}" class="logo-link">
+            <div class="logo">
+                <img src="{% static 'motherjulie.png' %}" alt="Mother Julie Logo">
+            </div>
+        </a>
+    </div>
+    
     <div class="container">
         <div class="left-panel">
-            <div class="logo">mother_julie_logo.png</div>
-            
             <div class="order-details">
                 <div class="section-title">Order Details</div>
                 
                 <div class="detail-row">
-                    <div class="detail-label">Order Number:</div>
-                    <div class="detail-value">1234</div>
+                    <div class="detail-label">Order ID:</div>
+                    <div class="detail-value" id="orderId">-</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Order Placed:</div>
+                    <div class="detail-value" id="orderPlaced">-</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Estimated Ready:</div>
+                    <div class="detail-value" id="readyTime">-</div>
                 </div>
                 
                 <div class="detail-row">
                     <div class="detail-label">No. of Items:</div>
-                    <div class="detail-value">5 items</div>
+                    <div class="detail-value" id="itemCount">-</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Total Amount:</div>
+                    <div class="detail-value" id="totalAmount">-</div>
                 </div>
                 
                 <div class="detail-row">
                     <div class="detail-label">Status:</div>
-                    <div class="detail-value status-badge">Ready for pick up</div>
+                    <div class="detail-value status-badge" id="statusBadge">-</div>
                 </div>
+            </div>
+
+            <!-- Order Items Display -->
+            <div class="order-items" id="orderItems">
+                <!-- Items will be populated by JavaScript -->
+            </div>
+            
+            <div class="status-indicator">
+                <div class="status-title">CURRENT STATUS</div>
+                <div class="current-status" id="currentStatusDisplay">-</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="status-details" id="statusDetails">-</div>
             </div>
         </div>
         
@@ -192,27 +379,201 @@
             <div class="order-type">FOR PICKUP ORDER</div>
             
             <div class="tracking-steps">
-                <div class="timeline"></div>
-                
-                <div class="tracking-step">
-                    <div class="step-icon">preparing_order.png</div>
-                    <div class="step-content">
-                        <div class="step-title">PREPARING ORDER</div>
-                        <div class="step-date">October 8, 2025</div>
-                        <div class="step-time">9:01 am</div>
-                    </div>
-                </div>
-                
-                <div class="tracking-step">
-                    <div class="step-icon">order_ready_for_pickup.png</div>
-                    <div class="step-content">
-                        <div class="step-title">ORDER READY FOR PICKUP</div>
-                        <div class="step-date">October 8, 2025</div>
-                        <div class="step-time">9:45 am</div>
-                    </div>
-                </div>
-            </div>
+    <div class="timeline"></div>
+    
+    <div class="tracking-step" data-step="order-placed" id="stepOrderPlaced">
+        <div class="step-icon">
+            <img src="{% static 'deliverypics/order_placed.png' %}" alt="Order Placed">
+        </div>
+        <div class="step-content">
+            <div class="step-title">ORDER PLACED</div>
+            <div class="step-date" id="orderPlacedDate">-</div>
         </div>
     </div>
+    
+    <div class="tracking-step" data-step="preparing-order" id="stepPreparing">
+        <div class="step-icon">
+            <img src="{% static 'pickuppics/preparing_order.png' %}" alt="Preparing Order">
+        </div>
+        <div class="step-content">
+            <div class="step-title">PREPARING ORDER</div>
+            <div class="step-date" id="preparingDate">-</div>
+        </div>
+    </div>
+    
+    <div class="tracking-step" data-step="ready-for-pickup" id="stepReady">
+        <div class="step-icon">
+            <img src="{% static 'pickuppics/order_ready_for_pickup.png' %}" alt="Ready for Pickup">
+        </div>
+        <div class="step-content">
+            <div class="step-title">READY FOR PICKUP</div>
+            <div class="step-date" id="readyDate">-</div>
+        </div>
+    </div>
+</div>
+    </div>
+
+<script>
+// Order data loading with API fallback
+function getUrlParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+// Load order data from both localStorage and API
+async function loadOrderData() {
+    const orderId = getUrlParameter('orderId');
+    if (!orderId) {
+        showNoOrderMessage();
+        return null;
+    }
+
+    // Try localStorage first
+    const localOrderData = localStorage.getItem('currentOrder');
+    if (localOrderData) {
+        try {
+            const parsedData = JSON.parse(localOrderData);
+            if (parsedData.orderId === orderId) {
+                return parsedData;
+            }
+        } catch (e) {
+            console.error('Error parsing localStorage data:', e);
+        }
+    }
+
+    // Fallback to API
+    try {
+        const response = await fetch(`/api/orders/${orderId}/status/`);
+        if (response.ok) {
+            const apiData = await response.json();
+            return apiData;
+        }
+    } catch (error) {
+        console.error('Error fetching from API:', error);
+    }
+
+    showNoOrderMessage();
+    return null;
+}
+
+// Update order details
+function updateOrderDetails(data) {
+    document.getElementById('orderId').textContent = data.order_id || data.orderId || '-';
+    document.getElementById('orderPlaced').textContent = data.order_placed || data.orderPlaced || new Date().toLocaleString();
+    document.getElementById('readyTime').textContent = '15-25 minutes';
+    document.getElementById('itemCount').textContent = (data.items ? data.items.length : 0) + " items";
+    document.getElementById('totalAmount').textContent = data.total_amount ? `Php ${parseFloat(data.total_amount).toFixed(2)}` : (data.total || 'Php 0.00');
+    
+    // Update order items if available
+    const orderItemsContainer = document.getElementById('orderItems');
+    if (data.items && data.items.length > 0) {
+        let itemsHTML = '<div class="section-title">Order Items</div>';
+        data.items.forEach(item => {
+            itemsHTML += `
+                <div class="order-item">
+                    <span>${item.name || item.product_name} ${item.size ? `(${item.size})` : ''} x${item.quantity}</span>
+                    <span>Php ${((item.price || item.unit_price) * item.quantity).toFixed(2)}</span>
+                </div>
+            `;
+        });
+        orderItemsContainer.innerHTML = itemsHTML;
+    }
+
+    // Start progress simulation
+    simulateOrderProgress(data.status || 'order_placed');
+}
+
+// Improved progress simulation based on actual status
+function simulateOrderProgress(currentStatus = 'order_placed') {
+    // In simulateOrderProgress function - update statusSteps:
+const statusSteps = {
+    'order_placed': { progress: 33, activeStep: 'stepOrderPlaced' },
+    'preparing': { progress: 66, activeStep: 'stepPreparing' },
+    'ready_for_pickup': { progress: 100, activeStep: 'stepReady' }
+};
+
+
+    const currentStep = statusSteps[currentStatus] || statusSteps['order_placed'];
+    
+    // Set initial state
+    document.getElementById('currentStatusDisplay').textContent = currentStatus.replace(/_/g, ' ').toUpperCase();
+    document.getElementById('statusBadge').textContent = currentStatus.replace(/_/g, ' ').toUpperCase();
+    document.getElementById('progressFill').style.width = currentStep.progress + '%';
+
+    // Activate steps up to current status
+    const steps = ['stepOrderPlaced', 'stepPreparing', 'stepReady', 'stepPickedUp'];
+    const currentIndex = steps.indexOf(currentStep.activeStep);
+    
+    steps.forEach((step, index) => {
+        if (index <= currentIndex) {
+            document.getElementById(step).classList.add('active');
+            // Update step date
+            const dateElement = document.getElementById(step.replace('step', '').toLowerCase() + 'Date');
+            if (dateElement) {
+                dateElement.textContent = new Date().toLocaleTimeString();
+            }
+        }
+    });
+
+    // Continue simulation if not picked up
+    if (currentStatus !== 'picked_up') {
+        continueProgressSimulation(currentIndex);
+    }
+}
+
+function continueProgressSimulation(startIndex) {
+    const steps = [
+        { id: 'stepOrderPlaced', status: 'ORDER PLACED', progress: 25 },
+        { id: 'stepPreparing', status: 'PREPARING ORDER', progress: 50 },
+        { id: 'stepReady', status: 'READY FOR PICKUP', progress: 75 },
+        { id: 'stepPickedUp', status: 'PICKED UP', progress: 100 }
+    ];
+
+    let currentStep = startIndex + 1;
+    
+    function updateProgress() {
+        if (currentStep < steps.length) {
+            const step = steps[currentStep];
+            
+            // Update UI
+            document.getElementById(step.id).classList.add('active');
+            document.getElementById('currentStatusDisplay').textContent = step.status;
+            document.getElementById('statusBadge').textContent = step.status;
+            document.getElementById('progressFill').style.width = step.progress + '%';
+            
+            // Update step date
+            const dateElement = document.getElementById(step.id.replace('step', '').toLowerCase() + 'Date');
+            if (dateElement) {
+                dateElement.textContent = new Date().toLocaleTimeString();
+            }
+
+            currentStep++;
+            
+            // Schedule next update
+            if (currentStep < steps.length) {
+                setTimeout(updateProgress, 8000);
+            }
+        }
+    }
+
+    // Start progress simulation
+    setTimeout(updateProgress, 8000);
+}
+
+function showNoOrderMessage() {
+    document.getElementById('currentStatusDisplay').textContent = 'Order Not Found';
+    document.getElementById('orderId').textContent = '-';
+    document.getElementById('statusBadge').textContent = 'NOT FOUND';
+}
+
+// Improved initialization
+document.addEventListener("DOMContentLoaded", async () => {
+    const orderData = await loadOrderData();
+    if (orderData) {
+        updateOrderDetails(orderData);
+    }
+});
+</script>
+
 </body>
 </html>

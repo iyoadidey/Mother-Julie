@@ -10,11 +10,11 @@ from django.utils.crypto import get_random_string
 from django.urls import reverse
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.decorators import user_passes_test
-from django.shortcuts import render, redirect
-
+from django.utils import timezone
 import os
 import time
+import json
+import random
 
 from .models import SignupEvent, PasswordResetToken, Product, Order, OrderItem
 from django.db import transaction
@@ -22,14 +22,7 @@ from django.db.models import F
 
 
 def signin(request):
-    # Clear irrelevant messages
-    storage = messages.get_messages(request)
-    for message in storage:
-        if "Payment Notice" not in str(message):
-            if "logged out" in str(message) or "Invalid username" in str(message):
-                pass  # keep these
-            # everything else is ignored
-
+    """Handle user signin"""
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -51,6 +44,7 @@ def signin(request):
                 messages.error(request, "Invalid username or password")
 
     return render(request, "signin.html")
+
 
 def signup_view(request):
     """Handle user registration"""
@@ -107,24 +101,9 @@ def signup_view(request):
 
 def logout_view(request):
     """Handle user logout"""
-    # Clear payment notice messages before logging out
-    storage = messages.get_messages(request)
-    messages_to_keep = []
-    for message in storage:
-        if "Payment Notice" not in str(message):
-            messages_to_keep.append(message)
-    
-    # Clear all messages
-    storage.used = True
-    
-    # Re-add only non-payment notice messages
-    for message in messages_to_keep:
-        if "logged out" not in str(message):  # Don't re-add existing logout messages
-            messages.add_message(request, message.level, message.message)
-    
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
-    return redirect('dashboard')  # Changed from 'signin' to 'dashboard'
+    return redirect('dashboard')
 
 
 def terms_view(request):
@@ -146,13 +125,77 @@ def delivery_view(request):
 @login_required
 def pickup_view(request):
     """Pickup page"""
-    return render(request, 'pick_up.html')
+    return render(request, 'pick_up.html')  # If you rename the template
+
+
+@login_required
+def redirect_to_order(request):
+    """Redirect user to their appropriate order tracking page"""
+    print(f"DEBUG: redirect_to_order called for user: {request.user.username}")
+    
+    try:
+        # Get the user's most recent order
+        latest_order = Order.objects.filter(
+            user=request.user
+        ).order_by('-created_at').first()
+        
+        print(f"DEBUG: Latest order found: {latest_order}")
+        
+        if latest_order:
+            order_id = latest_order.order_id
+            order_type = latest_order.order_type
+            
+            print(f"DEBUG: Order ID: {order_id}, Type: {order_type}")
+            
+            # Redirect based on order type
+            if order_type == 'delivery':
+                print("DEBUG: Redirecting to DELIVERY")
+                return redirect(f'/delivery/?orderId={order_id}')
+            elif order_type == 'pickup':
+                print("DEBUG: Redirecting to PICKUP")
+                return redirect(f'/pick_up/?orderId={order_id}')
+            else:
+                print(f"DEBUG: Unknown order type '{order_type}' - defaulting to PICKUP")
+                return redirect(f'/pick_up/?orderId={order_id}')
+        else:
+            print("DEBUG: No orders found for user - redirecting to dashboard with message")
+            # No orders found - redirect to dashboard with a message
+            messages.info(request, "📦 You don't have any orders yet. Click 'OUR MENU' to place your first order!")
+            return redirect('dashboard')
+            
+    except Exception as e:
+        print(f"DEBUG: Exception occurred: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, "❌ Could not load your orders. Please try again.")
+        return redirect('dashboard')
+    
+
+@login_required
+def debug_orders(request):
+    """Debug view to check user's orders"""
+    user_orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    
+    orders_data = []
+    for order in user_orders:
+        orders_data.append({
+            'order_id': order.order_id,
+            'order_type': order.order_type,
+            'status': order.status,
+            'created_at': order.created_at,
+            'user': order.user.username if order.user else 'None'
+        })
+    
+    return JsonResponse({
+        'user': request.user.username,
+        'total_orders': user_orders.count(),
+        'orders': orders_data
+    })
 
 
 @login_required
 def orders_menu_view(request):
     """Orders menu for customers"""
-    # Show only products flagged for All Menu and active
     visible_product_names = list(
         Product.objects.filter(show_in_all_menu=True, is_active=True)
         .order_by('name')
@@ -282,39 +325,58 @@ def upload_product_image(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
+    """Admin dashboard"""
     return render(request, 'admin_dashboard.html')
 
 
 @csrf_exempt
 def api_create_order(request):
-    """Create an order from frontend JSON; stores in DB for admin history."""
+    """Create an order from frontend JSON"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
 
     try:
-        import json
+        print("=== DEBUG: api_create_order called ===")  # ADD THIS
         data = json.loads(request.body.decode('utf-8'))
+        print("Received data:", data)  # ADD THIS
 
         items = data.get('items', [])
         total_amount = data.get('totalAmount', 0)
         order_type = data.get('orderType', '')
+        payment_method = data.get('paymentMethod', 'Cash')
+
+        print(f"Items: {items}")  # ADD THIS
+        print(f"Total: {total_amount}, Type: {order_type}, Payment: {payment_method}")  # ADD THIS
+        
+        # Generate unique order ID
+        order_id = 'MJ' + str(int(timezone.now().timestamp())) + str(random.randint(100, 999))
+        
         # Prefer the authenticated user's username as the customer name
         customer_name = request.user.username if request.user.is_authenticated else data.get('customerName', '')
+        print(f"Customer: {customer_name}, User: {request.user}")  # ADD THIS
+
 
         with transaction.atomic():
+            print("Creating order...")  # ADD THIS
             order = Order.objects.create(
+                order_id=order_id,
                 user=request.user if request.user.is_authenticated else None,
                 customer_name=customer_name,
                 order_type=order_type,
+                payment_method=payment_method,
                 total_amount=total_amount,
-                status='pending'
+                status='order_placed'
             )
+            print(f"Order created: {order.order_id}")  # ADD THIS
+
 
             for item in items:
                 name = item.get('name', '')
                 qty = int(item.get('quantity', 1))
                 unit_price = item.get('price', 0)
                 total_price = item.get('total', 0)
+                size = item.get('size', '')
+                print(f"Creating order item: {name} x {qty}")  # ADD THIS
 
                 # Save order line
                 OrderItem.objects.create(
@@ -322,13 +384,13 @@ def api_create_order(request):
                     product_name=name,
                     quantity=qty,
                     unit_price=unit_price,
-                    total_price=total_price
+                    total_price=total_price,
+                    size=size
                 )
 
                 # Decrement stock on matching Product by name
                 try:
                     product = Product.objects.select_for_update().get(name=name)
-                    # Use F expression for race-safe decrement
                     product.stock_quantity = F('stock_quantity') - qty
                     product.save(update_fields=['stock_quantity'])
                     product.refresh_from_db(fields=['stock_quantity'])
@@ -338,9 +400,95 @@ def api_create_order(request):
                         product.is_active = False
                         product.save(update_fields=['stock_quantity', 'show_in_all_menu', 'is_active'])
                 except Product.DoesNotExist:
-                    # If no product matches, skip stock updates
+                # If no product matches, skip stock updates
+                    print(f"Product '{name}' not found, skipping stock update")  # ADD THIS                
                     pass
 
-        return JsonResponse({'success': True, 'orderId': order.id})
+        print("=== DEBUG: Order creation SUCCESS ===")  # ADD THIS       
+        return JsonResponse({'success': True, 'orderId': order_id})
     except Exception as e:
+        print(f"=== DEBUG: ERROR - {str(e)} ===")  # ADD THIS
+        import traceback
+        traceback.print_exc()  # ADD THIS
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@csrf_exempt
+def api_get_order_status(request, order_id):
+    """Get order status for delivery/pickup tracking pages"""
+    try:
+        order = Order.objects.get(order_id=order_id)
+        order_data = {
+            'order_id': order.order_id,
+            'customer_name': order.customer_name,
+            'order_type': order.order_type,
+            'status': order.status,
+            'total_amount': float(order.total_amount),
+            'order_placed': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'items': [
+                {
+                    'name': item.product_name,
+                    'quantity': item.quantity,
+                    'price': float(item.unit_price),
+                    'size': getattr(item, 'size', '')
+                } for item in order.orderitem_set.all()
+            ]
+        }
+        return JsonResponse(order_data)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+
+
+@csrf_exempt
+def api_update_order_status(request, order_id):
+    """Update order status from admin dashboard"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            new_status = data.get('status')
+            
+            order = Order.objects.get(order_id=order_id)
+            order.status = new_status
+            order.updated_at = timezone.now()
+            order.save()
+            
+            return JsonResponse({'success': True, 'message': 'Order status updated'})
+        except Order.DoesNotExist:
+            return JsonResponse({'error': 'Order not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+
+@csrf_exempt
+def api_get_orders(request):
+    """Get all orders for admin dashboard"""
+    try:
+        orders = Order.objects.all().order_by('-created_at')
+        orders_data = []
+        
+        for order in orders:
+            order_data = {
+                'order_id': order.order_id,
+                'customer_name': order.customer_name,
+                'order_type': order.order_type,
+                'status': order.status,
+                'total_amount': float(order.total_amount),
+                'payment_method': getattr(order, 'payment_method', 'Cash'),
+                'created_at': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'items_count': order.orderitem_set.count(),
+                'items': [
+                    {
+                        'name': item.product_name,
+                        'quantity': item.quantity,
+                        'price': float(item.unit_price)
+                    } for item in order.orderitem_set.all()
+                ]
+            }
+            orders_data.append(order_data)
+        
+        return JsonResponse(orders_data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    

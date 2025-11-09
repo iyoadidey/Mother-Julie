@@ -28,7 +28,7 @@ body {
     background: #F9A8C9;
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: 100;
 }
 
 .topbar-left {
@@ -225,7 +225,7 @@ body {
     position: fixed;
     left: 0;
     top: 0;
-    z-index: 40;
+    z-index: 90;
     padding-top: 60px;
     padding-bottom: 20px;
     overflow-y: hidden;
@@ -393,7 +393,7 @@ body {
     transition: transform 0.12s ease, box-shadow 0.12s ease;
     position: relative;
     width: 100%;
-    height: 400px;
+    height: 420px; /* This should already ensure equal height */
 }
 
 .card:hover { 
@@ -403,7 +403,7 @@ body {
 
 .card img { 
     width: 100%; 
-    height: 255px;
+    height: 240px; 
     object-fit: cover; 
     display: block; 
 }
@@ -413,7 +413,8 @@ body {
     display: flex; 
     flex-direction: column; 
     gap: 8px;
-    min-height: 120px;
+    min-height: 140px;
+    flex: 1; /* Add this to make card body take available space */
 }
 
 .card-body h3 { 
@@ -423,12 +424,17 @@ body {
     line-height: 1.2;
     margin-bottom: 2px;
     font-weight: 600;
+    min-height: 38px; /* Add fixed height for product names */
+    display: flex;
+    align-items: flex-start;
 }
 
 .size-select {
     display: flex;
     gap: 12px;
     margin: 10px 0;
+    min-height: 40px; /* Add fixed height for size selector */
+    align-items: center;
 }
 
 .size-select label {
@@ -454,12 +460,16 @@ body {
     transform: scale(1.1);
 }
 
+/* Ensure price has consistent positioning */
 .price { 
     color: #ff2b87; 
     font-family: 'Inter', sans-serif;
     font-weight: 800; 
     font-size: 12px;
     margin: 2px 0;
+    min-height: 5px; /* Add fixed height for price */
+    display: flex;
+    align-items: center;
 }
 
 .availability { 
@@ -467,6 +477,9 @@ body {
     font-family: 'Inter', sans-serif;
     color: #28a745; 
     font-weight: 700; 
+    min-height: 20px; /* Add fixed height for availability */
+    display: flex;
+    align-items: center;
 }
 
 .availability.out-of-stock {
@@ -492,7 +505,6 @@ body {
     display: block; 
 }
 
-/* ========== ADD TO CART BUTTON ========== */
 .add-to-cart {
     background: #ff7bbd;
     border: none;
@@ -541,7 +553,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 120;
     align-items: center;
     justify-content: center;
     font-family: 'Inter', sans-serif;
@@ -880,7 +892,7 @@ body {
     padding: 20px;
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
     transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1001;
+    z-index: 110;
     overflow-y: auto;
     font-family: 'Inter', sans-serif;
     scrollbar-width: none;
@@ -930,6 +942,7 @@ body {
 .billing-close:hover {
     background: white;
     transform: scale(1.1);
+    color: #ff2b87;
 }
 
 /* Billing Items */
@@ -1571,242 +1584,138 @@ body {
     background: linear-gradient(135deg, #ff8bc6, #ff3a90);
 }
 
-/* ========== TOAST NOTIFICATIONS ========== */
+/* ========== MINIMALIST TOAST NOTIFICATIONS ========== */
 #toastContainer {
     position: fixed;
-    top: 100px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 20px;
+    right: 20px;
     z-index: 10000;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-end;
+    gap: 10px;
     pointer-events: none;
-    width: 100%;
 }
 
 .toast {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: white;
-    padding: 12px 24px;
+    background: white;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transform: translateY(-100px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    overflow: hidden;
+    min-width: 280px;
+    max-width: 320px;
+    border-left: 3px solid;
     opacity: 0;
+    transform: translateX(100%);
     transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    max-width: 300px;
-    text-align: center;
-    margin-bottom: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2); /* Thinner border */
+    pointer-events: auto;
 }
 
 .toast.show {
-    transform: translateY(0);
     opacity: 1;
+    transform: translateX(0);
 }
 
-.toast.error {
-    background: linear-gradient(135deg, #f44336, #d32f2f);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.toast.hide {
+    opacity: 0;
+    transform: translateX(100%);
 }
 
-.toast.warning {
-    background: linear-gradient(135deg, #ff9800, #f57c00);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.toast-info {
+    border-left-color: #ff5fa2;
 }
 
-.toast.info {
-    background: linear-gradient(135deg, #2196F3, #1976d2);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.toast-error {
+    border-left-color: #ff4444;
 }
 
-/* Toast Order Success Styles */
-.toast.order-success {
-    background: white;
-    color: #333;
-    padding: 0;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border: 1px solid #e8f5e9; /* Thinner border */
-    border-left: 3px solid #4caf50; /* Thinner left border */
-    max-width: 320px;
-    text-align: left;
+.toast-success {
+    border-left-color: #4CAF50;
 }
 
 .toast-content {
-    padding: 1.2rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-}
-
-.toast-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: white;
-    border-radius: 50%;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    font-weight: bold;
-    flex-shrink: 0;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .toast-message {
     flex: 1;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.4;
 }
 
-.toast-message h4 {
-    color: #2e7d32;
-    margin: 0 0 8px 0;
-    font-family: 'Poppins', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #999;
+    padding: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
-.toast-message p {
+.toast-close:hover {
+    background: #f5f5f5;
     color: #666;
-    margin: 0 0 12px 0;
-    font-size: 13px;
-    font-weight: 500;
 }
 
-.order-details-toast {
-    background: #f8f9fa;
-    border-radius: 6px;
-    padding: 10px;
-    border-left: 2px solid #4caf50; /* Thinner border */
+.toast-progress {
+    height: 2px;
+    background: rgba(0,0,0,0.1);
+    width: 100%;
+    position: relative;
+    overflow: hidden;
 }
 
-.order-details-toast .order-details-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 4px 0;
-    font-size: 12px;
-    color: #495057;
-    gap: 15px;
+.toast-progress::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    animation: toastProgress 3s linear forwards;
 }
 
-.order-details-toast .order-details-label {
-    color: #2e7d32;
-    font-weight: 600;
-    min-width: 50px;
-    white-space: nowrap;
+.toast-info .toast-progress::after {
+    background: #ff5fa2;
 }
 
-.order-details-toast .order-details-value {
-    color: #495057;
-    font-weight: 500;
-    text-align: right;
-    white-space: nowrap;
-    flex: 1;
+.toast-error .toast-progress::after {
+    background: #ff4444;
 }
 
-/* ========== SIMPLE CART TOAST NOTIFICATIONS ========== */
-.toast.add-to-cart-toast {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    color: #2e7d32;
-    padding: 12px 20px;
-    border-radius: 25px;
-    box-shadow: 0 4px 20px rgba(76, 175, 80, 0.25);
-    transform: translateY(-100px);
-    opacity: 0;
-    transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    max-width: 280px;
-    text-align: center;
-    margin-bottom: 10px;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    animation: slideInUp 0.3s ease;
-}
-
-.toast.remove-btn-toast {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    color: #d32f2f;
-    padding: 12px 20px;
-    border-radius: 25px;
-    box-shadow: 0 4px 20px rgba(211, 47, 47, 0.25);
-    transform: translateY(-100px);
-    opacity: 0;
-    transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    max-width: 280px;
-    text-align: center;
-    margin-bottom: 10px;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    animation: slideInUp 0.3s ease;
-}
-
-.toast.add-to-cart-toast::before {
-    content: "✓";
+.toast-success .toast-progress::after {
     background: #4CAF50;
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: bold;
-    flex-shrink: 0;
 }
 
-.toast.remove-btn-toast::before {
-    content: "🗑️";
-    background: #f44336;
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
-.toast.add-to-cart-toast.show,
-.toast.remove-btn-toast.show {
-    transform: translateY(0);
-    opacity: 1;
-}
-
-@keyframes slideInUp {
+@keyframes toastProgress {
     from {
-        transform: translateY(-100px);
-        opacity: 0;
+        transform: translateX(-100%);
     }
     to {
-        transform: translateY(0);
-        opacity: 1;
+        transform: translateX(0);
     }
 }
 
 /* ========== ORDER SUCCESS BOX STYLES ========== */
 .order-success-box {
     background: #e8f5e9;
-    border: 1px solid #c8e6c9; /* Thinner border */
-    border-left: 2px solid #4caf50; /* Thinner left border */
+    border: 1px solid #c8e6c9;
+    border-left: 2px solid #4caf50;
     border-radius: 8px;
     padding: 12px 15px;
     margin: 15px 0;
@@ -1994,20 +1903,100 @@ body {
         gap: 10px;
     }
     
-    .order-details-row,
-    .order-details-toast .order-details-row {
+    #toastContainer {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        align-items: center;
+    }
+    
+    .toast {
+        min-width: auto;
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .order-details-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 2px;
     }
     
-    .order-details-label,
-    .order-details-toast .order-details-label {
+    .order-details-label {
         min-width: auto;
     }
     
-    .order-details-value,
-    .order-details-toast .order-details-value {
+    .order-details-value {
         text-align: left;
     }
+}
+
+/* Minimal Clear Verification Button Styles */
+.clear-verification {
+    background: transparent;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    width: fit-content;
+}
+
+.clear-verification:hover {
+    background: #f8f9fa;
+    color: #495057;
+    border-color: #adb5bd;
+}
+
+.clear-icon {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Verified State Styles */
+.verified-badge {
+    background: #d4edda;
+    color: #155724;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-size: 14px;
+    border: 1px solid #c3e6cb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.verified-icon {
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.payment-form.verified {
+    border-left: 4px solid #28a745;
+    background: #f8fff9;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+/* Disabled verified inputs */
+.payment-form.verified input:disabled {
+    background: #f8fff9;
+    color: #155724;
+    border-color: #c3e6cb;
+    opacity: 0.8;
 }

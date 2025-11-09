@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from django.utils import timezone
+import random
 
 
 class Item(models.Model):
@@ -11,17 +13,21 @@ class Item(models.Model):
     def __str__(self) -> str:
         return self.name
 
+
 class SignupEvent(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='signup_events')
     email = models.EmailField()
-    first_name = models.CharField(max_length=100)  # Remove null=True, blank=True
-    last_name = models.CharField(max_length=100)   # Remove null=True, blank=True
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         return f"SignupEvent(user={self.user.username}, at={self.created_at:%Y-%m-%d %H:%M})"
 
+
+# Make email unique
 User._meta.get_field('email')._unique = True
+
 
 class PasswordResetToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -50,17 +56,36 @@ class Product(models.Model):
 
 
 class Order(models.Model):
-    ORDER_STATUS_CHOICES = (
-        ("pending", "Pending"),
-        ("completed", "Completed"),
-        ("cancelled", "Cancelled"),
-    )
-
+    ORDER_STATUS_CHOICES = [
+        ('order_placed', 'Order Placed'),
+        ('preparing', 'Preparing Order'),
+        ('ready_for_delivery', 'Ready for Delivery'),
+        ('out_for_delivery', 'Out for Delivery'),
+        ('delivered', 'Delivered'),
+        ('ready_for_pickup', 'Ready for Pickup'),
+        ('picked_up', 'Picked Up'),
+        ('cancelled', 'Cancelled')
+    ]
+    
+    ORDER_TYPE_CHOICES = [
+        ('dine-in', 'Dine-in'),
+        ('delivery', 'Delivery'),
+        ('pickup', 'Pickup')
+    ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Cash'),
+        ('gcash', 'GCash'),
+        ('bank', 'Bank Transfer')
+    ]
+    
+    order_id = models.CharField(max_length=50, unique=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    customer_name = models.CharField(max_length=200, blank=True)
-    order_type = models.CharField(max_length=20, blank=True)  # dine-in / pickup / delivery
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default="pending")
+    customer_name = models.CharField(max_length=100)
+    order_type = models.CharField(max_length=20, choices=ORDER_TYPE_CHOICES)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='order_placed')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -68,18 +93,25 @@ class Order(models.Model):
         ordering = ("-created_at",)
 
     def __str__(self) -> str:
-        return f"Order #{self.id} - {self.status}"
+        return f"Order {self.order_id} - {self.customer_name}"
+
+    def save(self, *args, **kwargs):
+        # Generate order_id if not set
+        if not self.order_id:
+            self.order_id = 'MJ' + str(int(timezone.now().timestamp())) + str(random.randint(100, 999))
+        super().save(*args, **kwargs)
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    product_name = models.CharField(max_length=200)
-    quantity = models.PositiveIntegerField(default=1)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_items")
+    product_name = models.CharField(max_length=100)
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    size = models.CharField(max_length=10, blank=True, null=True)
 
     def __str__(self) -> str:
-        return f"{self.product_name} x{self.quantity}"
+        return f"{self.product_name} x {self.quantity}"
 
 
 class SalesSummary(models.Model):
@@ -107,64 +139,4 @@ class SalesSummary(models.Model):
         return f"{self.period_type.capitalize()} starting {self.period_start}: {self.total_amount}"
 
 
-# ----- Sales summary maintenance on Order status changes -----
-def _start_of_week(date_obj):
-    # Monday as start of the week
-    return (date_obj - models.functions.datetime.timedelta(days=date_obj.weekday()))
-
-def _start_of_month(date_obj):
-    return date_obj.replace(day=1)
-
-def _start_of_year(date_obj):
-    return date_obj.replace(month=1, day=1)
-
-def _adjust_sales_summaries(order, amount_multiplier):
-    """Update SalesSummary rows by adding amount_multiplier * order.total_amount.
-    amount_multiplier: +1 when moving to completed, -1 when leaving completed.
-    """
-    from django.utils import timezone
-    date_obj = (order.updated_at or order.created_at or timezone.now()).date()
-
-    starts = [
-        (SalesSummary.PERIOD_DAY, date_obj),
-        (SalesSummary.PERIOD_WEEK, _start_of_week(date_obj)),
-        (SalesSummary.PERIOD_MONTH, _start_of_month(date_obj)),
-        (SalesSummary.PERIOD_YEAR, _start_of_year(date_obj)),
-    ]
-
-    for period_type, period_start in starts:
-        summary, _ = SalesSummary.objects.get_or_create(
-            period_type=period_type,
-            period_start=period_start,
-            defaults={"total_amount": 0},
-        )
-        summary.total_amount = (summary.total_amount or 0) + (order.total_amount or 0) * amount_multiplier
-        # Guard against negative totals due to edits
-        if summary.total_amount < 0:
-            summary.total_amount = 0
-        summary.save(update_fields=["total_amount", "updated_at"])
-
-
-def _get_existing_status(pk):
-    try:
-        return Order.objects.only("status").get(pk=pk).status
-    except Order.DoesNotExist:
-        return None
-
-
-orig_order_save = Order.save
-
-def order_save_with_sales_update(self, *args, **kwargs):
-    previous_status = _get_existing_status(self.pk) if self.pk else None
-    result = orig_order_save(self, *args, **kwargs)
-    # If transitioned into completed
-    if self.status == "completed" and previous_status != "completed":
-        _adjust_sales_summaries(self, +1)
-    # If transitioned out of completed
-    if previous_status == "completed" and self.status != "completed":
-        _adjust_sales_summaries(self, -1)
-    return result
-
-
-# Monkey-patch the save to include summary updates
-Order.save = order_save_with_sales_update
+# Remove the old sales summary maintenance code since we have a new Order model structure
