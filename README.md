@@ -25,7 +25,13 @@ Customers can browse available menu items, place their orders, and choose either
 
 ## 📦 Installation & Setup
 
-### 1️⃣ Clone the repository
+### 1️ Clone the repository
 ```bash
 git clone <your-repo-link>
 cd mother-julie
+
+### 2 Run the Server
+python manage.py runserver
+
+### 3 Open local host url
+http://127.0.0.1:8000/
