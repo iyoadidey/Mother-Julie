@@ -1,0 +1,279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Sign In</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sansita:ital,wght@0,400;0,700;0,800;0,900;1,400;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom right, #FFD7D7, #FF87B8);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .signin-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-family: 'Sansita', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+            color: #FF5C9D;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            outline: none;
+        }
+        
+        .form-group input:focus {
+            border-color: #FF5C9D;
+            box-shadow: 0 0 0 3px rgba(255, 92, 157, 0.1);
+        }
+        
+        .form-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-wrapper input {
+            padding-left: 45px;
+        }
+        
+        .btn-signin {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #FF5C9D, #FF87B8);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-signin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 92, 157, 0.3);
+        }
+        
+        .btn-signin:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .messages {
+            margin-bottom: 20px;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .alert-success {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+    </style>
+</head>
+<body>
+    <div class="signin-container">
+        <div class="logo">
+            <i class="fas fa-store"></i>
+            <span>Mother Julie</span>
+        </div>
+        <p class="subtitle">Admin Dashboard Sign In</p>
+        
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <form method="POST" action="{% url 'signin_admindashboard' %}" id="signinForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" required>
+                </div>
+            </div>
+            
+            <div class="form-group" style="display: flex; align-items: center; margin-bottom: 20px;">
+                <input type="checkbox" id="rememberMe" name="remember_me" style="width: auto; margin-right: 8px; cursor: pointer;">
+                <label for="rememberMe" style="margin: 0; font-weight: normal; cursor: pointer; color: #666; font-size: 14px;">Remember Me</label>
+            </div>
+            
+            <div class="error-message" id="errorMessage"></div>
+            
+            <button type="submit" class="btn-signin">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        // Check for saved credentials
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedUsername = localStorage.getItem('admin_username');
+            const savedPassword = localStorage.getItem('admin_password');
+            const rememberMe = localStorage.getItem('admin_remember_me') === 'true';
+            
+            if (rememberMe && savedUsername && savedPassword) {
+                document.getElementById('username').value = savedUsername;
+                document.getElementById('password').value = savedPassword;
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
+        
+        const form = document.getElementById('signinForm');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const username = formData.get('username');
+            const password = formData.get('password');
+            
+            // Clear previous errors
+            errorMessage.classList.remove('show');
+            errorMessage.textContent = '';
+            
+            try {
+                const response = await fetch('{% url "signin_admindashboard" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Handle Remember Me
+                    const rememberMe = document.getElementById('rememberMe').checked;
+                    const username = formData.get('username');
+                    const password = formData.get('password');
+                    
+                    if (rememberMe) {
+                        localStorage.setItem('admin_username', username);
+                        localStorage.setItem('admin_password', password);
+                        localStorage.setItem('admin_remember_me', 'true');
+                    } else {
+                        localStorage.removeItem('admin_username');
+                        localStorage.removeItem('admin_password');
+                        localStorage.removeItem('admin_remember_me');
+                    }
+                    
+                    window.location.href = data.redirect_url || '{% url "admin_dashboard" %}';
+                } else {
+                    errorMessage.textContent = data.message || 'Invalid username or password';
+                    errorMessage.classList.add('show');
+                }
+            } catch (error) {
+                // Fallback to normal form submission
+                form.submit();
+            }
+        });
+    </script>
+</body>
+</html>
+

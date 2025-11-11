@@ -11,8 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sansita:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sansita+One&display=swap" rel="stylesheet">
-
-
 </head>
 <body>
 <!-- Messages/Notifications - Toast Style -->
@@ -37,7 +35,7 @@
                 <img src="{% static 'dashboardpics/motherjulie.png' %}" alt="Mother Julie Logo">
             </a>
             <ul>
-                <li><a href="#">ABOUT US</a></li>
+                <li><a href="#about">ABOUT US</a></li>
                 <li><a href="{% url 'redirect_to_orders' %}" id="ordersLink">ORDERS</a></li>
                 <li><a href="{% url 'orders_menu' %}">OUR MENU</a></li>
             </ul>
@@ -75,39 +73,98 @@
             </div>
         </section>
 
-        <section class="featured">
+        <!-- Increased gap between Hero and Featured -->
+        <div style="height: 80px;"></div>
+
+        <section class="featured" id="featured">
             <div class="container">
                 <h2>FEATURED ITEMS</h2>
                 <div class="items-grid">
                     <div class="item-card">
                         <img src="{% static 'dashboardpics/avocado_moto.png' %}" alt="Avocado Moto Drink">
-                        
                     </div>
-
                     <div class="item-card">
                         <img src="{% static 'dashboardpics/mais_conyelo.png' %}" alt="Mais Con Yelo Drink">
                         <div class="card-overlay-text mais-title">
                         </div>
                     </div>
-
                     <div class="item-card">
                         <img src="{% static 'dashboardpics/biscoff.png' %}" alt="Biscoff Drink">
                     </div>
-
                     <div class="item-card">
                         <img src="{% static 'dashboardpics/best_sellers.png' %}" alt="Best Sellers of the Week">
                     </div>
-
                 </div>
             </div>
         </section>
 
+        <!-- Increased gap between Featured and About -->
+        <div style="height: 100px;"></div>
     
-    <section class="ABOUT US"></section>
+        <section id="about" class="about-section" style="scroll-margin-top: 80px;">
+            <div style="max-width: 1100px; margin: 0 auto; padding: 8px 16px 0 16px;">
+                <div style="display:flex; gap:64px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+                    <!-- Image on the LEFT side -->
+                    <div style="flex:1 1 420px; min-width:300px;">
+                    <img src="{% static 'dashboardpics/mother_julie_logo.png' %}"
+                             alt="Community at Mother Julie"
+                             style="width:100%; height:auto; border-radius:12px; display:block;"/>
+                    </div>
+                    <!-- Text on the RIGHT side -->
+                    <div style="flex:1 1 420px; min-width:300px;">
+                        <h2 style="margin:0 0 10px 0; font-size:40px; color:#FF5EA0; letter-spacing:.3px;">
+                            Mother Julie
+                        </h2>
+                    <h3 style="margin:0 0 10px 0; font-size:22px; color:#FF5EA0; letter-spacing:.2px;">
+                        <strong>"Tastes like no other"</strong>
+                    </h3>
+                    <p style="margin:0 0 14px 0; color:#334155; line-height:1.85; font-size:16px; font-family: 'Inter', sans-serif;">
+                        The very first Filipino ice dessert brand that aims to produce
+                        products that are not excessively sweet. It was established in the heart of
+                        Barrio Menu, located in Tondo, Manila, Philippines. We are well-known for
+                        delivering original and high-quality iced desserts, iced coffees, specialty
+                        drinks, and food.
+                    </p>
+                    
+                    <p style="margin:0 0 14px 0; color:#334155; line-height:1.85; font-size:16px; font-family: 'Inter', sans-serif;">
+                        Our journey began in Tondo, Manila, along Old Torres 1st Street.
+                        What started in 1983 grew through passion, family traditions, and dedication — and on November 25, 2024, we officially opened our first store to the community.
+                    </p>
+                    
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div style="height: 100px;"></div>
+
+        <section id="learn-more" style="scroll-margin-top: 80px;">
+            <div style="max-width: 1100px; margin: 24px auto 0 auto; padding: 0 16px;">
+                <div style="display:flex; gap:40px; align-items:flex-start; flex-wrap:wrap;">
+                    <div style="flex:1 1 520px; min-width:280px;">
+                    <h3 style="margin:0 0 10px 0; color:#111827; font-size:26px;">Founder</h3>
+                        <p style="margin:0 0 14px 0; color:#1f2937; line-height:1.85; font-size:17px; font-family: 'Inter', sans-serif;">
+                            Bee Bernabe, a young and talented entrepreneur and business consultant, invented a dessert that suits the taste of Filipinos who prefer desserts that are not overly sweet. Filipinos are known for their love of saccharine treats and iced coffees.
+                        </p>
+                        <p style="margin:0 0 14px 0; color:#1f2937; line-height:1.85; font-size:17px; font-family: 'Inter', sans-serif;">
+                            It all started with a famous <em>panghimagas</em> (dessert) in the Philippines called
+                            <strong> Mais Con Yelo</strong> (Iced Milk Corn). From there, Bee took the lead in innovating the business by introducing new flavors and eventually offering iced coffees, specialty drinks, and food.
+                        </p>
+                        <p style="margin:0; color:#1f2937; line-height:1.85; font-size:17px; font-family: 'Inter', sans-serif;">
+                            Today, Mother Julie's store has opened another branch on Perfecto Street, Manila, on November 25, 2025 — exactly a year after its anniversary.
+                        </p>
+                    </div>
+                    <div style="flex:0 1 360px; min-width:260px;">
+                        <img src="{% static 'dashboardpics/founder.png' %}" alt="Founder" style="width:100%; height:auto; border-radius:12px; display:block;" />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div style="height: 80px;"></div>
     </main>
 
-    <!-- Footer with Navigation -->
-    <footer>
+<footer style="margin-top: 60px; padding: 40px 0;">
     <div class="footer-container">
         <nav class="footer-nav">
             <ul>
@@ -117,7 +174,6 @@
                 </li>
                 <li class="contact-item">
                     <img src="{% static 'dashboardpics/gmailicon.png' %}" alt="Gmail" width="20" height="20">
-                    <span></span>
                     <a href="mailto:contact.motherjulie@gmail.com">contact.motherjulie@gmail.com</a>
                 </li>
             </ul>
@@ -125,7 +181,8 @@
         <div class="footer-social">
             <span>Follow us on:</span>
             <a href="https://www.facebook.com/motherjulie.products" class="social-icon" target="_blank">
-            <img src="{% static 'dashboardpics/fbicon.png' %}" alt="Gmail" width="20" height="20">
+                <img src="{% static 'dashboardpics/fbicon.png' %}" alt="Facebook" width="20" height="20">
+            </a>
             <span class="separator">|</span>
             <a href="https://www.instagram.com/mother.julie?utm_source=ig_web_button_share_sheet&igsh=MXYzcDBibmRid3d0bg==" class="social-icon" target="_blank">
                 <img src="{% static 'dashboardpics/igicon.png' %}" alt="Instagram" width="20" height="20">
@@ -145,11 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = "{% url 'redirect_to_orders' %}";
         });
     }
-});
 
-
-// Auto-remove toasts after they slide out
-document.addEventListener('DOMContentLoaded', function() {
+    // Auto-remove toasts after they slide out
     const toasts = document.querySelectorAll('.toast');
     toasts.forEach(toast => {
         // Remove element after animation completes
@@ -172,6 +226,27 @@ function closeToast(toastElement) {
 }
 </script>
 
-
+<!-- Back to top button -->
+<button id="backToTop" class="back-to-top" aria-label="Back to top" title="Back to top">
+    <img src="{% static 'dashboardpics/back_to_top.png' %}" alt="Back to top" style="width: 40px; height:40px;" />
+</button>
+<script>
+// Back-to-top button behavior
+(function() {
+    const btn = document.getElementById('backToTop');
+    function toggleButton() {
+        if (window.scrollY > 300) {
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    }
+    window.addEventListener('scroll', toggleButton, { passive: true });
+    toggleButton();
+    btn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
+</script>
 </body>
 </html>

@@ -168,6 +168,48 @@
 
         window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.style.display = 'none'; });
+
+        // Handle request reset submission
+        const requestResetForm = document.getElementById('requestResetForm');
+        const resetSubmitButton = document.getElementById('resetSubmitButton');
+        if (requestResetForm) {
+            requestResetForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const emailInput = document.getElementById('reset-email');
+                const email = emailInput.value.trim();
+                if (!email) {
+                    showToast('Please enter your email address.', 'error');
+                    return;
+                }
+                const original = resetSubmitButton.innerHTML;
+                resetSubmitButton.disabled = true;
+                resetSubmitButton.innerHTML = 'Sending...';
+                try {
+                    const formData = new FormData(requestResetForm);
+                    const response = await fetch("{% url 'request_password_reset' %}", {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('Reset link sent! Check your email.', 'success');
+                        setTimeout(() => { modal.style.display = 'none'; }, 800);
+                        requestResetForm.reset();
+                    } else {
+                        showToast(data.message || 'Could not send reset link.', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Network error. Please try again.', 'error');
+                } finally {
+                    resetSubmitButton.disabled = false;
+                    resetSubmitButton.innerHTML = original;
+                }
+            });
+        }
     });
     </script>
 </body>

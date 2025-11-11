@@ -23,7 +23,7 @@ body {
 
 .password-wrapper input {
     width: 100%;
-    padding-right: 45px; /* space for icon */
+    padding-right: 10px; /* space for icon */
 }
 
 .password-wrapper .toggle-password {

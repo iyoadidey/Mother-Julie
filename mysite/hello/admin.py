@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SignupEvent, Product, Order, OrderItem, SalesSummary
+from .models import SignupEvent, Product, Order, OrderItem, SalesSummary, FrontendContent
 
 
 class ItemAdmin(admin.ModelAdmin):
@@ -65,4 +65,17 @@ class SalesSummaryAdmin(admin.ModelAdmin):
     date_hierarchy = "period_start"
     search_fields = ("period_type",)
     readonly_fields = ("period_type", "period_start", "total_amount", "updated_at")
+
+
+@admin.register(FrontendContent)
+class FrontendContentAdmin(admin.ModelAdmin):
+    list_display = ("section_key", "get_section_key_display", "content_preview", "is_active", "order", "updated_at")
+    list_filter = ("is_active", "section_key", "created_at")
+    search_fields = ("section_key", "content")
+    list_editable = ("is_active", "order")
+    readonly_fields = ("created_at", "updated_at")
+    
+    def content_preview(self, obj):
+        return obj.content[:50] + "..." if len(obj.content) > 50 else obj.content
+    content_preview.short_description = "Content Preview"
 

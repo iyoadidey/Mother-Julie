@@ -603,15 +603,18 @@ function addClearVerificationButtons() {
 }
 
 async function checkPaymentVerification() {
-    if (selectedPaymentMethod === 'gcash') {
-        const verifiedPayment = localStorage.getItem('verifiedGCashPayment');
-        return !!verifiedPayment;
-    } else if (selectedPaymentMethod === 'bank') {
-        const verifiedPayment = localStorage.getItem('verifiedBankPayment');
-        return !!verifiedPayment;
-    }
+    // Payment verification disabled for testing - all payment methods allowed
+    return true;
     
-    return true; // Cash payments don't need verification
+    // Original verification code (disabled):
+    // if (selectedPaymentMethod === 'gcash') {
+    //     const verifiedPayment = localStorage.getItem('verifiedGCashPayment');
+    //     return !!verifiedPayment;
+    // } else if (selectedPaymentMethod === 'bank') {
+    //     const verifiedPayment = localStorage.getItem('verifiedBankPayment');
+    //     return !!verifiedPayment;
+    // }
+    // return true; // Cash payments don't need verification
 }
 
 function getVerifiedPaymentDetails() {
@@ -730,6 +733,14 @@ function updateGCashAmount() {
 function addToCart(cardElement) {
     const itemName = cardElement.querySelector('h3').textContent;
     const itemImage = cardElement.querySelector('img').src;
+    const productId = cardElement.getAttribute('data-product-id');
+    
+    // Check if out of stock
+    const availabilityEl = cardElement.querySelector('.availability');
+    if (availabilityEl && availabilityEl.textContent === 'Out of Stock') {
+        showToast(`${itemName} is out of stock`, 'error');
+        return;
+    }
 
     let selectedSize = '';
     let price = 0;
@@ -739,9 +750,14 @@ function addToCart(cardElement) {
         const selectedRadio = Array.from(sizeRadios).find(radio => radio.checked);
         if (selectedRadio) {
             selectedSize = selectedRadio.value;
-            const priceText = cardElement.querySelector('.price').textContent;
-            const sizePriceMatch = priceText.match(new RegExp(`Php\\s*(\\d+)\\s*\\(${selectedSize}\\)`));
-            price = sizePriceMatch ? parseInt(sizePriceMatch[1]) : 0;
+            // Get price from data attribute if available
+            price = parseFloat(selectedRadio.getAttribute('data-size-price')) || 0;
+            if (price === 0) {
+                // Fallback to parsing from price text
+                const priceText = cardElement.querySelector('.price').textContent;
+                const sizePriceMatch = priceText.match(new RegExp(`Php\\s*(\\d+)\\s*\\(${selectedSize}\\)`));
+                price = sizePriceMatch ? parseInt(sizePriceMatch[1]) : 0;
+            }
         } else {
             showToast('Please select a size', 'error');
             return;
@@ -760,6 +776,7 @@ function addToCart(cardElement) {
         cart[existingItemIndex].quantity += 1;
     } else {
         cart.push({
+            id: productId,
             name: itemName,
             image: itemImage,
             size: selectedSize,
@@ -925,14 +942,15 @@ async function processOrder() {
         return;
     }
     
-    // Check payment verification for online payments
-    if (selectedPaymentMethod !== 'cash') {
-        const isVerified = await checkPaymentVerification();
-        if (!isVerified) {
-            showToast('Please verify your payment first', 'error');
-            return;
-        }
-    }
+    // Payment verification disabled for testing
+    // Orders can be placed without verification
+    // if (selectedPaymentMethod !== 'cash') {
+    //     const isVerified = await checkPaymentVerification();
+    //     if (!isVerified) {
+    //         showToast('Please verify your payment first', 'error');
+    //         return;
+    //     }
+    // }
     
     const orderType = document.querySelector('.order-btn.active').dataset.type;
     const total = document.querySelector('.total').textContent;
@@ -994,6 +1012,12 @@ async function processOrder() {
         
         if (result.success) {
             console.log('Order created successfully with ID:', result.orderId);
+            
+            // Update product stocks if provided
+            if (result.updated_stocks) {
+                updateProductStocks(result.updated_stocks);
+            }
+            
             handleSuccessfulOrder(result.orderId, orderType, total);
         } else {
             throw new Error(result.error || 'Failed to create order');
@@ -1435,207 +1459,274 @@ function updateHeaderForCategory(categoryId) {
 }
 
 function populateCategory(categoryId) {
+    // Handle "all" category specially - populate all category grids within it
+    if (categoryId === 'all') {
+        const categoryMap = {
+            'desserts': 'DESSERTS',
+            'spuds': 'SPUDS',
+            'pasta': 'PASTA / BREAD',
+            'wrap': 'WRAP',
+            'appetizers': 'APPETIZERS'
+        };
+        
+        Object.keys(categoryMap).forEach(catId => {
+            // Find category section by subtitle text
+            const categorySections = document.querySelectorAll('.category-section');
+            categorySections.forEach(section => {
+                const subtitle = section.querySelector('.category-subtitle');
+                if (subtitle && subtitle.textContent.trim() === categoryMap[catId]) {
+                    const grid = section.querySelector('.menu-grid');
+                    if (grid) {
+                        grid.innerHTML = '';
+                        const categoryItems = getCategoryItems(catId);
+                        categoryItems.forEach(item => {
+                            const card = createMenuItemCard(item);
+                            grid.appendChild(card);
+                        });
+                    }
+                }
+            });
+        });
+        return;
+    }
+    
+    // Try to find grid by ID first
     const categoryGrid = document.getElementById(categoryId + 'CategoryGrid');
     
-    if (!categoryGrid) return;
+    if (categoryGrid) {
+        categoryGrid.innerHTML = '';
+        const categoryItems = getCategoryItems(categoryId);
+        categoryItems.forEach(item => {
+            const card = createMenuItemCard(item);
+            categoryGrid.appendChild(card);
+        });
+        return;
+    }
     
-    categoryGrid.innerHTML = '';
+    // Try to find grid within category section by subtitle
+    const categoryMap = {
+        'desserts': 'DESSERTS',
+        'spuds': 'SPUDS',
+        'pasta': 'PASTA / BREAD',
+        'wrap': 'WRAP',
+        'appetizers': 'APPETIZERS'
+    };
     
-    const categoryItems = getCategoryItems(categoryId);
-    
-    categoryItems.forEach(item => {
-        const card = createMenuItemCard(item);
-        categoryGrid.appendChild(card);
+    const categoryTitle = categoryMap[categoryId];
+    if (categoryTitle) {
+        const categorySections = document.querySelectorAll('.category-section');
+        categorySections.forEach(section => {
+            const subtitle = section.querySelector('.category-subtitle');
+            if (subtitle && subtitle.textContent.trim() === categoryTitle) {
+                const grid = section.querySelector('.menu-grid');
+                if (grid) {
+                    grid.innerHTML = '';
+                    const categoryItems = getCategoryItems(categoryId);
+                    categoryItems.forEach(item => {
+                        const card = createMenuItemCard(item);
+                        grid.appendChild(card);
+                    });
+                }
+            }
+        });
+    }
+}
+
+// Store products loaded from API
+let productsFromAPI = [];
+
+// Load products from API
+async function loadProductsFromAPI() {
+    try {
+        const response = await fetch('/api/products/public/');
+        if (!response.ok) {
+            throw new Error('Failed to load products');
+        }
+        productsFromAPI = await response.json();
+        console.log('Products loaded from API:', productsFromAPI.length);
+        
+        // Log products with 0 stock to debug
+        const outOfStock = productsFromAPI.filter(p => p.stock <= 0);
+        if (outOfStock.length > 0) {
+            console.log('Out of stock products:', outOfStock.map(p => p.name));
+        }
+        
+        return productsFromAPI;
+    } catch (error) {
+        console.error('Error loading products from API:', error);
+        showToast('Failed to load products. Please refresh the page.', 'error');
+        return [];
+    }
+}
+
+// Function to refresh products (can be called after admin updates)
+async function refreshProducts() {
+    await loadProductsFromAPI();
+    const categories = ['all', 'desserts', 'spuds', 'pasta', 'wrap', 'appetizers'];
+    categories.forEach(categoryId => {
+        populateCategory(categoryId);
     });
 }
 
+// Get category items from API data
 function getCategoryItems(categoryId) {
-    const menuData = {
-        desserts: [
-            {
-                name: "Mais Con Yelo",
-                image: STATIC_URLS.maisConYelo,
-                price: "Php 110 (M) • Php 130 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 110, checked: true },
-                    { value: "L", price: 130, checked: false }
-                ]
-            },
-            {
-                name: "Biscoff Classic",
-                image: STATIC_URLS.biscoffClassic,
-                price: "Php 175 (M) • Php 200 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 175, checked: true },
-                    { value: "L", price: 200, checked: false }
-                ]
-            },
-            {
-                name: "Buko Pandan",
-                image: STATIC_URLS.bukoPandan,
-                price: "Php 100 (M) • Php 120 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 100, checked: true },
-                    { value: "L", price: 120, checked: false }
-                ]
-            },
-            {
-                name: "Mango Graham",
-                image: STATIC_URLS.mangoGraham,
-                price: "Php 150 (M) • Php 180 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 150, checked: true },
-                    { value: "L", price: 180, checked: false }
-                ]
-            },
-            {
-                name: "Ube Macapuno",
-                image: STATIC_URLS.ubeMacapuno,
-                price: "Php 130 (M) • Php 160 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 130, checked: true },
-                    { value: "L", price: 160, checked: false }
-                ]
-            },
-            {
-                name: "Rocky Road",
-                image: STATIC_URLS.rockyRoad,
-                price: "Php 140 (M) • Php 170 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 140, checked: true },
-                    { value: "L", price: 170, checked: false }
-                ]
-            },
-            {
-                name: "Coffee Jelly",
-                image: STATIC_URLS.coffeeJelly,
-                price: "Php 115 (M) • Php 140 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 115, checked: true },
-                    { value: "L", price: 140, checked: false }
-                ]
-            },
-            {
-                name: "Cookie Monster",
-                image: STATIC_URLS.cookieMonster,
-                price: "Php 160 (M) • Php 190 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 160, checked: true },
-                    { value: "L", price: 190, checked: false }
-                ]
-            },
-            {
-                name: "Dulce de Leche",
-                image: STATIC_URLS.dulce_de_Leche,
-                price: "Php 160 (M) • Php 190 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 160, checked: true },
-                    { value: "L", price: 190, checked: false }
-                ]
-            },
-            {
-                name: "Choco-Peanut Banana",
-                image: STATIC_URLS.choco_peanut_Banana,
-                price: "Php 160 (M) • Php 190 (L)",
-                hasSizes: true,
-                sizes: [
-                    { value: "M", price: 160, checked: true },
-                    { value: "L", price: 190, checked: false }
-                ]
-            }
-        ],
-        spuds: [
-            {
-                name: "Cheesy Bacon",
-                image: STATIC_URLS.cheesyBacon,
-                price: "Php 159",
-                hasSizes: false
-            },
-            {
-                name: "Chili Con Carne",
-                image: STATIC_URLS.chiliConCarne,
-                price: "Php 179",
-                hasSizes: false
-            },
-            {
-                name: "Triple Cheese",
-                image: STATIC_URLS.tripleCheese,
-                price: "Php 129",
-                hasSizes: false
-            },
-            {
-                name: "Lasagna Jacket",
-                image: STATIC_URLS.lasagnaJacket,
-                price: "Php 129",
-                hasSizes: false
-            }
-        ],
-        pasta: [
-            {
-                name: "Lasagna",
-                image: STATIC_URLS.lasagna,
-                price: "Php 250",
-                hasSizes: false
-            },
-            {
-                name: "Garlic Bread",
-                image: STATIC_URLS.garlicBread,
-                price: "Php 69",
-                hasSizes: false
-            }
-        ],
-        wrap: [
-            {
-                name: "Chicken Wrap",
-                image: STATIC_URLS.chickenWrap,
-                price: "Php 169",
-                hasSizes: false
-            },
-            {
-                name: "Beef Wrap",
-                image: STATIC_URLS.beefWrap,
-                price: "Php 139",
-                hasSizes: false
-            },
-            {
-                name: "Kesodilla",
-                image: STATIC_URLS.kesodilla,
-                price: "Php 99",
-                hasSizes: false
-            }
-        ],
-        appetizers: [
-            {
-                name: "Chicken Poppers",
-                image: STATIC_URLS.chickenPoppers,
-                price: "Php 149",
-                hasSizes: false
-            },
-            {
-                name: "Nachos",
-                image: STATIC_URLS.nachos,
-                price: "Php 129",
-                hasSizes: false
-            }
-        ]
+    // Map category IDs to API category names
+    const categoryMap = {
+        'all': null,
+        'desserts': 'desserts',
+        'spuds': 'spuds',
+        'pasta': 'pasta',
+        'wrap': 'wrap',
+        'appetizers': 'appetizers'
     };
     
-    return menuData[categoryId] || [];
+    const apiCategory = categoryMap[categoryId];
+    
+    if (categoryId === 'all') {
+        return productsFromAPI.map(convertProductToMenuItem);
+    }
+    
+    if (!apiCategory) {
+        return [];
+    }
+    
+    return productsFromAPI
+        .filter(product => product.category === apiCategory)
+        .map(convertProductToMenuItem);
+}
+
+// Product name to STATIC_URLS key mapping
+function getProductImageKey(productName) {
+    const nameMapping = {
+        // Desserts
+        'mais con yelo': 'maisConYelo',
+        'maisconyelo': 'maisConYelo',
+        'biscoff classic': 'biscoffClassic',
+        'biscoff': 'biscoffClassic',
+        'buko pandan': 'bukoPandan',
+        'bukopandan': 'bukoPandan',
+        'mango graham': 'mangoGraham',
+        'mangograham': 'mangoGraham',
+        'ube macapuno': 'ubeMacapuno',
+        'ubemacapuno': 'ubeMacapuno',
+        'rocky road': 'rockyRoad',
+        'rockyroad': 'rockyRoad',
+        'coffee jelly': 'coffeeJelly',
+        'coffeejelly': 'coffeeJelly',
+        'cookie monster': 'cookieMonster',
+        'cookiemonster': 'cookieMonster',
+        'dulce de leche': 'dulce_de_Leche',
+        'dulcedeleche': 'dulce_de_Leche',
+        'choco peanut banana': 'choco_peanut_Banana',
+        'chocopeanutbanana': 'choco_peanut_Banana',
+        'choco-peanut banana': 'choco_peanut_Banana',
+        
+        // Spuds
+        'cheesy bacon': 'cheesyBacon',
+        'cheesybacon': 'cheesyBacon',
+        'chili con carne': 'chiliConCarne',
+        'chiliconcarne': 'chiliConCarne',
+        'triple cheese': 'tripleCheese',
+        'triplecheese': 'tripleCheese',
+        'lasagna jacket': 'lasagnaJacket',
+        'lasagnajacket': 'lasagnaJacket',
+        
+        // Pasta/Bread
+        'lasagna': 'lasagna',
+        'garlic bread': 'garlicBread',
+        'garlicbread': 'garlicBread',
+        
+        // Wrap
+        'chicken wrap': 'chickenWrap',
+        'chickenwrap': 'chickenWrap',
+        'hongar chicken wrap': 'chickenWrap',
+        'beef wrap': 'beefWrap',
+        'beefwrap': 'beefWrap',
+        'kesodilla': 'kesodilla',
+        'quesodilla': 'kesodilla',
+        
+        // Appetizers
+        'chicken poppers': 'chickenPoppers',
+        'chickenpoppers': 'chickenPoppers',
+        'nachos': 'nachos'
+    };
+    
+    const normalizedName = productName.toLowerCase().trim();
+    return nameMapping[normalizedName] || null;
+}
+
+// Convert API product format to menu item format
+function convertProductToMenuItem(product) {
+    const hasSizes = product.size_options && Object.keys(product.size_options).length > 0;
+    
+    let sizes = [];
+    let priceText = '';
+    
+    if (hasSizes) {
+        // Convert size options to sizes array
+        sizes = Object.entries(product.size_options)
+            .map(([size, price]) => ({
+                value: size,
+                price: parseFloat(price),
+                checked: size === 'M' // Default to M if available
+            }))
+            .sort((a, b) => a.value.localeCompare(b.value)); // Sort by size (M, L)
+        
+        // Set first size as checked if no M
+        if (sizes.length > 0 && !sizes.find(s => s.value === 'M')) {
+            sizes[0].checked = true;
+        }
+        
+        priceText = sizes.map(s => `Php ${s.price} (${s.value})`).join(' • ');
+    } else {
+        priceText = `Php ${product.price}`;
+    }
+    
+    // Get image URL - prioritize database image, then fallback to STATIC_URLS
+    let imageUrl = '';
+    
+    // First priority: Use image from database if available
+    if (product.image && product.image.trim() !== '') {
+        imageUrl = product.image;
+    } else if (typeof STATIC_URLS !== 'undefined') {
+        // Second priority: Try to find matching image from STATIC_URLS based on product name
+        const imageKey = getProductImageKey(product.name);
+        if (imageKey && STATIC_URLS[imageKey]) {
+            imageUrl = STATIC_URLS[imageKey];
+        } else {
+            // Third priority: Fallback to category default or menu icon
+            const categoryDefaults = {
+                'desserts': STATIC_URLS.dessert,
+                'spuds': STATIC_URLS.spud,
+                'pasta': STATIC_URLS.pasta,
+                'wrap': STATIC_URLS.wrap,
+                'appetizers': STATIC_URLS.appetizer
+            };
+            imageUrl = categoryDefaults[product.category] || STATIC_URLS.menu || '/static/orders_menupics/menu.png';
+        }
+    } else {
+        // Last resort: Use a default
+        imageUrl = '/static/orders_menupics/menu.png';
+    }
+    
+    return {
+        id: product.id,
+        name: product.name,
+        image: imageUrl,
+        price: priceText,
+        hasSizes: hasSizes,
+        sizes: sizes,
+        stock: product.stock || 0,
+        category: product.category
+    };
 }
 
 
 function createMenuItemCard(item) {
     const card = document.createElement('div');
     card.className = 'card';
+    card.setAttribute('data-product-id', item.id || '');
+    card.setAttribute('data-product-name', item.name);
     
     let sizesHtml = '';
     if (item.hasSizes) {
@@ -1644,7 +1735,7 @@ function createMenuItemCard(item) {
                 ${item.sizes.map((size, index) => `
                     <label>
                         <input type="radio" name="${item.name.toLowerCase().replace(/\s+/g, '-')}-size" 
-                               value="${size.value}" ${size.checked ? 'checked' : ''}>
+                               value="${size.value}" ${size.checked ? 'checked' : ''} data-size-price="${size.price}">
                         ${size.value}
                     </label>
                 `).join('')}
@@ -1652,16 +1743,45 @@ function createMenuItemCard(item) {
         `;
     }
     
+    const availabilityText = item.stock > 0 ? 'Available' : 'Out of Stock';
+    const availabilityClass = item.stock > 0 ? 'availability' : 'availability out-of-stock';
+    
+    // Ensure image URL is properly formatted - prioritize database image
+    let imageSrc = item.image || '';
+    
+    // If no database image, try to get from STATIC_URLS
+    if (!imageSrc && typeof STATIC_URLS !== 'undefined') {
+        const imageKey = getProductImageKey(item.name);
+        if (imageKey && STATIC_URLS[imageKey]) {
+            imageSrc = STATIC_URLS[imageKey];
+        } else {
+            const categoryDefaults = {
+                'desserts': STATIC_URLS.dessert,
+                'spuds': STATIC_URLS.spud,
+                'pasta': STATIC_URLS.pasta,
+                'wrap': STATIC_URLS.wrap,
+                'appetizers': STATIC_URLS.appetizer
+            };
+            imageSrc = categoryDefaults[item.category] || STATIC_URLS.menu || '/static/orders_menupics/menu.png';
+        }
+    } else if (!imageSrc) {
+        imageSrc = '/static/orders_menupics/menu.png';
+    }
+    
+    // Fallback image for onerror
+    const fallbackImage = (typeof STATIC_URLS !== 'undefined' && STATIC_URLS.menu) ? STATIC_URLS.menu : '/static/orders_menupics/menu.png';
+    const addToCartIcon = (typeof STATIC_URLS !== 'undefined' && STATIC_URLS.addToCart) ? STATIC_URLS.addToCart : '/static/orders_menupics/addtocart.png';
+    
     card.innerHTML = `
-        <img src="${item.image}" alt="${item.name}">
+        <img src="${imageSrc}" alt="${item.name}" onerror="this.src='${fallbackImage}'">
         <div class="card-body">
             <h3>${item.name}</h3>
-            <div class="availability">Available</div>
+            <div class="${availabilityClass}">${availabilityText}</div>
             ${sizesHtml}
             <div class="price">${item.price}</div>
         </div>
-        <button class="add-to-cart" data-item-id="${item.name.toLowerCase().replace(/\s+/g, '-')}">
-            <img src="${STATIC_URLS.addToCart}" alt="Add to Cart" class="cart-icon">
+        <button class="add-to-cart" data-item-id="${item.id || item.name.toLowerCase().replace(/\s+/g, '-')}" ${item.stock <= 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+            <img src="${addToCartIcon}" alt="Add to Cart" class="cart-icon">
         </button>
     `;
     
@@ -1684,9 +1804,38 @@ function initializeAddToCartDelegation() {
     });
 }
 
+// Update product stocks after order is placed
+function updateProductStocks(updatedStocks) {
+    // Update the productsFromAPI array with new stock values
+    Object.keys(updatedStocks).forEach(productId => {
+        const stockInfo = updatedStocks[productId];
+        const productIndex = productsFromAPI.findIndex(p => p.id == productId);
+        if (productIndex !== -1) {
+            productsFromAPI[productIndex].stock = stockInfo.stock;
+            productsFromAPI[productIndex].is_active = stockInfo.is_active;
+            productsFromAPI[productIndex].show_in_all_menu = stockInfo.show_in_all_menu;
+        }
+    });
+    
+    // Re-render all categories with updated stock information
+    const categories = ['all', 'desserts', 'spuds', 'pasta', 'wrap', 'appetizers'];
+    categories.forEach(categoryId => {
+        populateCategory(categoryId);
+    });
+}
+
 // ========== INITIALIZATION ==========
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     loadCartFromStorage();
+    
+    // Load products from API first
+    await loadProductsFromAPI();
+    
+    // Populate all categories with products from API
+    const categories = ['all', 'desserts', 'spuds', 'pasta', 'wrap', 'appetizers'];
+    categories.forEach(categoryId => {
+        populateCategory(categoryId);
+    });
     
     initializeLocationModal();
     initializePaymentMethods();

@@ -244,6 +244,81 @@
             background: #FF87B8;
             color: white;
         }
+
+        /* Cancelled Order Popup Modal */
+        .cancelled-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .cancelled-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cancelled-modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        .cancelled-modal-content h2 {
+            color: #FF87B8;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .cancelled-modal-content p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .cancelled-modal-content button {
+            background: #FF87B8;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancelled-modal-content button:hover {
+            background: #FF6BA3;
+            transform: scale(1.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
         
         @media (max-width: 768px) {
             .container {
@@ -348,6 +423,15 @@
 
             <!-- FIXED: Added back button -->
             <a href="{% url 'dashboard' %}" class="back-button">Back to Dashboard</a>
+        </div>
+
+        <!-- Cancelled Order Popup Modal -->
+        <div id="cancelledModal" class="cancelled-modal">
+            <div class="cancelled-modal-content">
+                <h2>Order Cancelled</h2>
+                <p>The order has been cancelled.</p>
+                <button onclick="closeCancelledModal()">OK</button>
+            </div>
         </div>
         
         <div class="right-panel">
@@ -464,84 +548,175 @@ function updateOrderDetails(data) {
         orderItemsContainer.innerHTML = itemsHTML;
     }
 
-    // Start progress simulation
-    simulateOrderProgress(data.status || 'order_placed');
+    // Update status details
+    const statusDetails = {
+        'order_placed': 'Your order has been placed and is being processed.',
+        'preparing': 'Your order is being prepared in the kitchen.',
+        'out_for_delivery': 'Your order is out for delivery!',
+        'delivered': 'Your order has been delivered. Thank you for your order!',
+        'cancelled': 'This order has been cancelled. Please contact us if you have any questions.'
+    };
+    
+    const currentStatus = data.status || 'order_placed';
+    const detailsElement = document.getElementById('statusDetails');
+    if (detailsElement) {
+        detailsElement.textContent = statusDetails[currentStatus] || 'Order status updated.';
+    }
+    
+    // Start progress simulation based on actual status from database
+    simulateOrderProgress(currentStatus);
 }
 
-// FIXED: Improved progress simulation based on actual status
+// Improved progress simulation based on actual status from admin dashboard
 function simulateOrderProgress(currentStatus = 'order_placed') {
+    // Map status values from admin dashboard to UI states
     const statusSteps = {
-        'order_placed': { progress: 25, activeStep: 'stepOrderPlaced' },
-        'preparing': { progress: 50, activeStep: 'stepPreparing' },
-        'out_for_delivery': { progress: 75, activeStep: 'stepOutForDelivery' },
-        'delivered': { progress: 100, activeStep: 'stepDelivered' }
+        'order_placed': { progress: 25, activeStep: 'stepOrderPlaced', display: 'ORDER PLACED' },
+        'preparing': { progress: 50, activeStep: 'stepPreparing', display: 'PREPARING ORDER' },
+        'out_for_delivery': { progress: 75, activeStep: 'stepOutForDelivery', display: 'OUT FOR DELIVERY' },
+        'delivered': { progress: 100, activeStep: 'stepDelivered', display: 'DELIVERED' },
+        'cancelled': { progress: 0, activeStep: null, display: 'CANCELLED' }
     };
 
     const currentStep = statusSteps[currentStatus] || statusSteps['order_placed'];
     
     // Set initial state
-    document.getElementById('currentStatusDisplay').textContent = currentStatus.replace(/_/g, ' ').toUpperCase();
-    document.getElementById('statusBadge').textContent = currentStatus.replace(/_/g, ' ').toUpperCase();
-    document.getElementById('progressFill').style.width = currentStep.progress + '%';
+    const statusDisplay = currentStep ? currentStep.display : currentStatus.replace(/_/g, ' ').toUpperCase();
+    document.getElementById('currentStatusDisplay').textContent = statusDisplay;
+    document.getElementById('statusBadge').textContent = statusDisplay;
+    document.getElementById('progressFill').style.width = (currentStep ? currentStep.progress : 0) + '%';
 
-    // Activate steps up to current status
+    // All tracking steps
     const steps = ['stepOrderPlaced', 'stepPreparing', 'stepOutForDelivery', 'stepDelivered'];
-    const currentIndex = steps.indexOf(currentStep.activeStep);
     
-    steps.forEach((step, index) => {
-        if (index <= currentIndex) {
-            document.getElementById(step).classList.add('active');
-            // Update step date
-            const dateElement = document.getElementById(step.replace('step', '').toLowerCase() + 'Date');
-            if (dateElement) {
-                dateElement.textContent = new Date().toLocaleTimeString();
-            }
+    // Reset all steps first
+    steps.forEach(step => {
+        const stepElement = document.getElementById(step);
+        if (stepElement) {
+            stepElement.classList.remove('active');
         }
     });
-
-    // Continue simulation if not delivered
-    if (currentStatus !== 'delivered') {
-        continueProgressSimulation(currentIndex);
+    
+    // Activate steps based on current status
+    if (currentStatus === 'cancelled') {
+        // Show cancelled popup
+        showCancelledModal();
+    } else if (currentStatus === 'order_placed') {
+        document.getElementById('stepOrderPlaced').classList.add('active');
+        updateStepDate('orderPlacedDate');
+    } else if (currentStatus === 'preparing') {
+        document.getElementById('stepOrderPlaced').classList.add('active');
+        document.getElementById('stepPreparing').classList.add('active');
+        updateStepDate('orderPlacedDate');
+        updateStepDate('preparingDate');
+    } else if (currentStatus === 'out_for_delivery') {
+        document.getElementById('stepOrderPlaced').classList.add('active');
+        document.getElementById('stepPreparing').classList.add('active');
+        document.getElementById('stepOutForDelivery').classList.add('active');
+        updateStepDate('orderPlacedDate');
+        updateStepDate('preparingDate');
+        updateStepDate('outForDeliveryDate');
+    } else if (currentStatus === 'delivered') {
+        // Activate all steps including delivered
+        document.getElementById('stepOrderPlaced').classList.add('active');
+        document.getElementById('stepPreparing').classList.add('active');
+        document.getElementById('stepOutForDelivery').classList.add('active');
+        document.getElementById('stepDelivered').classList.add('active');
+        updateStepDate('orderPlacedDate');
+        updateStepDate('preparingDate');
+        updateStepDate('outForDeliveryDate');
+        updateStepDate('deliveredDate');
     }
 }
 
-function continueProgressSimulation(startIndex) {
-    const steps = [
-        { id: 'stepOrderPlaced', status: 'ORDER PLACED', progress: 25 },
-        { id: 'stepPreparing', status: 'PREPARING ORDER', progress: 50 },
-        { id: 'stepOutForDelivery', status: 'OUT FOR DELIVERY', progress: 75 },
-        { id: 'stepDelivered', status: 'DELIVERED', progress: 100 }
-    ];
+function updateStepDate(elementId) {
+    const dateElement = document.getElementById(elementId);
+    if (dateElement && dateElement.textContent === '-') {
+        dateElement.textContent = new Date().toLocaleTimeString();
+    }
+}
 
-    let currentStep = startIndex + 1;
+// Poll for status updates from admin dashboard
+let statusPollInterval = null;
+let currentOrderId = null;
+
+async function pollOrderStatus() {
+    if (!currentOrderId) return;
     
-    function updateProgress() {
-        if (currentStep < steps.length) {
-            const step = steps[currentStep];
+    try {
+        const response = await fetch(`/api/orders/${currentOrderId}/status/`);
+        if (response.ok) {
+            const orderData = await response.json();
+            const newStatus = orderData.status;
             
-            // Update UI
-            document.getElementById(step.id).classList.add('active');
-            document.getElementById('currentStatusDisplay').textContent = step.status;
-            document.getElementById('statusBadge').textContent = step.status;
-            document.getElementById('progressFill').style.width = step.progress + '%';
+            // Check if status changed
+            const currentStatusDisplay = document.getElementById('currentStatusDisplay').textContent;
+            const statusMapping = {
+                'order_placed': 'ORDER PLACED',
+                'preparing': 'PREPARING ORDER',
+                'out_for_delivery': 'OUT FOR DELIVERY',
+                'delivered': 'DELIVERED',
+                'cancelled': 'CANCELLED'
+            };
             
-            // Update step date
-            const dateElement = document.getElementById(step.id.replace('step', '').toLowerCase() + 'Date');
-            if (dateElement) {
-                dateElement.textContent = new Date().toLocaleTimeString();
+            // Check if stepDelivered element exists
+            const deliveredStep = document.getElementById('stepDelivered');
+            if (deliveredStep && newStatus === 'delivered') {
+                deliveredStep.classList.add('active');
+                updateStepDate('deliveredDate');
             }
-
-            currentStep++;
             
-            // Schedule next update
-            if (currentStep < steps.length) {
-                setTimeout(updateProgress, 10000);
+            const expectedDisplay = statusMapping[newStatus] || newStatus.replace(/_/g, ' ').toUpperCase();
+            
+            if (currentStatusDisplay !== expectedDisplay) {
+                // Status changed - update UI
+                console.log('Status updated from admin:', newStatus);
+                simulateOrderProgress(newStatus);
+                
+                // Update status details
+                const statusDetails = {
+                    'order_placed': 'Your order has been placed and is being processed.',
+                    'preparing': 'Your order is being prepared in the kitchen.',
+                    'out_for_delivery': 'Your order is out for delivery!',
+                    'delivered': 'Your order has been delivered. Thank you for your order!',
+                    'cancelled': 'This order has been cancelled. Please contact us if you have any questions.'
+                };
+                
+                const detailsElement = document.getElementById('statusDetails');
+                if (detailsElement) {
+                    detailsElement.textContent = statusDetails[newStatus] || 'Order status updated.';
+                }
+                
+                // Show popup if order is cancelled
+                if (newStatus === 'cancelled') {
+                    showCancelledModal();
+                    stopStatusPolling();
+                } else if (newStatus === 'delivered') {
+                    stopStatusPolling();
+                }
             }
         }
+    } catch (error) {
+        console.error('Error polling order status:', error);
     }
+}
 
-    // Start progress simulation
-    setTimeout(updateProgress, 10000);
+function startStatusPolling(orderId) {
+    currentOrderId = orderId;
+    // Clear any existing interval
+    if (statusPollInterval) {
+        clearInterval(statusPollInterval);
+    }
+    
+    // Poll every 3 seconds for status updates
+    statusPollInterval = setInterval(pollOrderStatus, 3000);
+}
+
+function stopStatusPolling() {
+    if (statusPollInterval) {
+        clearInterval(statusPollInterval);
+        statusPollInterval = null;
+    }
 }
 
 function showNoOrderMessage() {
@@ -550,11 +725,53 @@ function showNoOrderMessage() {
     document.getElementById('statusBadge').textContent = 'NOT FOUND';
 }
 
-// FIXED: Improved initialization
+function showCancelledModal() {
+    const modal = document.getElementById('cancelledModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+}
+
+function closeCancelledModal() {
+    const modal = document.getElementById('cancelledModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('cancelledModal');
+    if (event.target === modal) {
+        closeCancelledModal();
+    }
+}
+
+// Improved initialization
 document.addEventListener("DOMContentLoaded", async () => {
     const orderData = await loadOrderData();
     if (orderData) {
         updateOrderDetails(orderData);
+        
+        // Show popup if order is already cancelled
+        if (orderData.status === 'cancelled') {
+            showCancelledModal();
+        }
+        
+        // Start polling for status updates from admin dashboard
+        const orderId = orderData.order_id || orderData.orderId;
+        if (orderId) {
+            startStatusPolling(orderId);
+            
+            // Stop polling when page is hidden
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    stopStatusPolling();
+                } else {
+                    startStatusPolling(orderId);
+                }
+            });
+        }
     }
 });
 </script>
