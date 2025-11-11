@@ -82,6 +82,10 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Points to your main static folder
 ]
 
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Add to your settings.py
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
@@ -95,16 +99,19 @@ CSRF_COOKIE_SECURE = False     # Set to True in production with HTTPS
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email Configuration
+# Login URL for authentication redirects
+LOGIN_URL = '/signin/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'noreply.motherjulie@gmail.com'
-EMAIL_HOST_PASSWORD = 'rkuljmuknxlszfyi'  # From noreply account
-DEFAULT_FROM_EMAIL = 'Mother Julie <noreply.motherjulie@gmail.com>'
+EMAIL_HOST_PASSWORD = 'guleyxbrrypkoghh'  # From noreply account
+DEFAULT_FROM_EMAIL = 'Mother Julie noreply.motherjulie@gmail.com'
 
-# Admin error reporting
+#Admin error reporting
 ADMINS = [
     ('Iyo Adidey', 'iyoadidey11@gmail.com'),
 ]

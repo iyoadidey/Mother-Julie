@@ -19,10 +19,45 @@ body {
     color: var(--text-dark);
 }
 
+/* Smooth scrolling for in-page anchors */
+html {
+    scroll-behavior: smooth;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
+}
+
+/* Back-to-top button */
+.back-to-top {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    outline: none;
+    background: #FF5EA0;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(255, 94, 160, 0.35);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+}
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+.back-to-top:hover {
+    transform: translateY(-3px);
 }
 
 a {
@@ -613,4 +648,70 @@ footer {
 
 .toast:hover .toast-progress::after {
     animation-play-state: paused;
+}
+
+.about-hero {
+    position: relative;
+    height: 360px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.about-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.45) 40%, rgba(0,0,0,.25) 100%);
+}
+
+.about-hero-content {
+    position: absolute;
+    left: 32px;
+    bottom: 28px;
+    color: #fff;
+}
+
+.about-hero-content h2 {
+    font-size: 40px;
+    letter-spacing: .3px;
+    margin: 0 0 6px 0;
+    font-family: 'Sansita One', cursive, sans-serif;
+
+}
+
+.about-hero-content p {
+    margin: 0;
+    color: #f0f0f0;
+    opacity: 1;
+    font-size: 25px !important;
+
+}
+
+.about-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.about-body {
+    max-width: 1100px;
+    margin: 24px auto 0 auto;
+    padding: 0 16px;
+    color: #2b2b2b;
+    line-height: 1.9;
+    letter-spacing: .2px;
+    text-align: left;
+}
+
+.about-section {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 80px;
+}
+
+/* About section headings use Sansita One */
+.about-section h2 {
+    font-family: 'Sansita One', cursive, sans-serif;
+ 
 }

@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.utils import timezone
 import random
+import json
 
 
 class Item(models.Model):
@@ -39,10 +40,22 @@ class PasswordResetToken(models.Model):
 
 
 class Product(models.Model):
+    CATEGORY_CHOICES = [
+        ('spud', 'Spud'),
+        ('appetizers', 'Appetizers'),
+        ('wrap', 'Wrap'),
+        ('pasta_bread', 'Pasta/Bread'),
+        ('desserts', 'Desserts'),
+    ]
+    
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock_quantity = models.PositiveIntegerField(default=0)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, blank=True, null=True)
+    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    # Size options for products (e.g., {"M": 110, "L": 130} for desserts)
+    size_options = models.JSONField(default=dict, blank=True)
     show_in_all_menu = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -82,6 +95,7 @@ class Order(models.Model):
     order_id = models.CharField(max_length=50, unique=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     customer_name = models.CharField(max_length=100)
+    customer_email = models.EmailField(blank=True, null=True, help_text="Customer email for order notifications")
     order_type = models.CharField(max_length=20, choices=ORDER_TYPE_CHOICES)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -140,3 +154,39 @@ class SalesSummary(models.Model):
 
 
 # Remove the old sales summary maintenance code since we have a new Order model structure
+
+
+class FrontendContent(models.Model):
+    """Model to store frontend content that admins can control"""
+    SECTION_CHOICES = [
+        ('hero_title', 'Hero Title'),
+        ('hero_subtitle', 'Hero Subtitle'),
+        ('hero_button_text', 'Hero Button Text'),
+        ('hero_image', 'Hero Image'),
+        ('featured_section_title', 'Featured Section Title'),
+        ('about_us_title', 'About Us Title'),
+        ('about_us_content', 'About Us Content'),
+        ('footer_address', 'Footer Address'),
+        ('footer_email', 'Footer Email'),
+        ('footer_facebook_url', 'Footer Facebook URL'),
+        ('footer_instagram_url', 'Footer Instagram URL'),
+        ('featured_item_1', 'Featured Item 1'),
+        ('featured_item_2', 'Featured Item 2'),
+        ('featured_item_3', 'Featured Item 3'),
+        ('featured_item_4', 'Featured Item 4'),
+    ]
+    
+    section_key = models.CharField(max_length=50, choices=SECTION_CHOICES, unique=True)
+    content = models.TextField(blank=True, help_text="Text content or image URL")
+    is_active = models.BooleanField(default=True)
+    order = models.IntegerField(default=0, help_text="Display order for sorting")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ('order', 'section_key')
+        verbose_name = 'Frontend Content'
+        verbose_name_plural = 'Frontend Content'
+    
+    def __str__(self):
+        return f"{self.get_section_key_display()} - {self.content[:50]}"
