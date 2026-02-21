@@ -1203,10 +1203,12 @@ function initializeLocationModal() {
     const confirmLocationBtn = document.getElementById('confirmLocationBtn');
     const selectedLocationDisplay = document.getElementById('selectedLocationDisplay');
 
-    let map = null;
-    let marker = null;
-    let isMapVisible = false;
+    let map;
+    let marker;
+    let geocoder;
+    let autocomplete;
     let selectedLocation = null;
+    let isMapVisible = false;
 
     // Open modal
     document.querySelector('.location-search').addEventListener('click', () => {
@@ -1244,154 +1246,68 @@ function initializeLocationModal() {
         }
     });
 
-    // Initialize Map (Leaflet)
-    function initMap() {
-        const defaultLocation = [14.5995, 120.9842];
-        map = L.map('map').setView(defaultLocation, 12);
+function initMap() {
+    const defaultLocation = { lat: 14.5995, lng: 120.9842 };
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: "© OpenStreetMap contributors"
-        }).addTo(map);
+    map = new google.maps.Map(document.getElementById("map"), {
+        center: defaultLocation,
+        zoom: 12,
+    });
 
-        map.on('click', (e) => {
-            placeMarker(e.latlng.lat, e.latlng.lng);
-            reverseGeocode(e.latlng.lat, e.latlng.lng).then(address => {
-                setSelectedLocation(address);
-            });
+    geocoder = new google.maps.Geocoder();
+
+    map.addListener("click", (e) => {
+        placeMarker(e.latLng);
+        reverseGeocode(e.latLng);
+    });
+
+    autocomplete = new google.maps.places.Autocomplete(locationInput);
+
+    autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) return;
+
+        map.setCenter(place.geometry.location);
+        map.setZoom(15);
+        placeMarker(place.geometry.location);
+        setSelectedLocation(place.formatted_address);
+    });
+}
+
+function placeMarker(location) {
+    if (marker) {
+        marker.setPosition(location);
+    } else {
+        marker = new google.maps.Marker({
+            position: location,
+            map: map,
+            draggable: true
+        });
+
+        marker.addListener("dragend", () => {
+            reverseGeocode(marker.getPosition());
         });
     }
 
-    function placeMarker(lat, lng) {
-        if (marker) {
-            marker.setLatLng([lat, lng]);
-        } else {
-            marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-            marker.on("dragend", () => {
-                const pos = marker.getLatLng();
-                reverseGeocode(pos.lat, pos.lng).then(address => {
-                    setSelectedLocation(address);
-                });
-            });
-        }
-        map.setView([lat, lng], 15);
-    }
-
-    // Reverse Geocode to Address
-    function reverseGeocode(lat, lng) {
-        return fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
-            .then(res => res.json())
-            .then(data => data.display_name || "Pinned Location")
-            .catch(() => "Unknown Location");
-    }
-
-    function setSelectedLocation(address) {
-        selectedLocation = address;
-        updateSelectedLocationDisplay(address);
-        confirmLocationBtn.disabled = false;
-    }
-
-    // Search Autocomplete
-    function searchLocations() {
-        const query = locationInput.value.trim();
-        if (!query) return suggestions.classList.remove('active');
-
-        fetch(`https://photon.komoot.io/api/?q=${query}&limit=5`)
-            .then(res => res.json())
-            .then(data => {
-                suggestions.innerHTML = "";
-                suggestions.classList.add('active');
-
-                data.features.forEach(loc => {
-                    const place = document.createElement('div');
-                    place.className = "suggestion-item";
-
-                    const name = loc.properties.name || "";
-                    const city = loc.properties.city || "";
-                    const country = loc.properties.country || "";
-                    const finalName = `${name}, ${city}, ${country}`.replace(/, ,/g, ",");
-
-                    place.textContent = finalName;
-
-                    place.addEventListener('click', () => {
-                        const lat = loc.geometry.coordinates[1];
-                        const lng = loc.geometry.coordinates[0];
-                        placeMarker(lat, lng);
-
-                        reverseGeocode(lat, lng).then(address => {
-                            locationInput.value = address;
-                            setSelectedLocation(address);
-                        });
-
-                        suggestions.classList.remove('active');
-                    });
-
-                    suggestions.appendChild(place);
-                });
-            });
-    }
-
-    currentLocationBtn.addEventListener("click", () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-
-                const address = await reverseGeocode(lat, lon);
-                selectedLocation = address;
-                updateSelectedLocationDisplay(selectedLocation);
-                confirmLocationBtn.disabled = false;
-
-                mapContainer.style.display = "block";
-                showMapBtn.style.display = "none";
-
-                if (!map) {
-                    map = L.map("map").setView([lat, lon], 17);
-                    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {}).addTo(map);
-                } else {
-                    map.setView([lat, lon], 17);
-                }
-
-                if (marker) map.removeLayer(marker);
-                marker = L.marker([lat, lon]).addTo(map);
-
-            }, () => {
-                alert("Failed to get current location.");
-            });
-        } else {
-            alert("Geolocation is not supported by your browser.");
-        }
-    });
-
-    // Confirm Button
-    confirmLocationBtn.addEventListener('click', () => {
-        if (!selectedLocation) return showError("Select location first");
-        document.querySelector('.location .loc-text').textContent = selectedLocation;
-        closeModal();
-        showToast(`Location set to ${selectedLocation}`, "success");
-    });
-
-    searchBtn.addEventListener('click', searchLocations);
-    locationInput.addEventListener('input', searchLocations);
-
-    function updateSelectedLocationDisplay(location) {
-        selectedLocationDisplay.innerHTML = `<p><strong>Selected:</strong> ${location}</p>`;
-        selectedLocationDisplay.classList.add('active');
-    }
-
-    function showError(msg) {
-        locationError.textContent = msg;
-        locationError.classList.add('active');
-    }
-
-    function resetModal() {
-        selectedLocation = null;
-        suggestions.classList.remove('active');
-        locationInput.value = "";
-        confirmLocationBtn.disabled = true;
-        selectedLocationDisplay.classList.remove('active');
-    }
+    map.setCenter(location);
 }
 
+function reverseGeocode(latLng) {
+    geocoder.geocode({ location: latLng }, (results, status) => {
+        if (status === "OK" && results[0]) {
+            setSelectedLocation(results[0].formatted_address);
+        } else {
+            setSelectedLocation("Unknown Location");
+        }
+    });
+
+    function setSelectedLocation(address) {
+    selectedLocation = address;
+    updateSelectedLocationDisplay(address);
+    confirmLocationBtn.disabled = false;
+}
+
+}
 // ========== SIDEBAR NAVIGATION ==========
 function initializeSidebarNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
@@ -1911,4 +1827,7 @@ function getOrderData() {
     }
     
     return null;
+}
+
+
 }

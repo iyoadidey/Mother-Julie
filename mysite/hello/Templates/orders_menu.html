@@ -13,11 +13,9 @@
     
     <link rel="stylesheet" href="{% static 'orders_menu.css' %}" />
 </head>
-<!-- Leaflet CSS & JS (required for the map) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCS4yxxAVrYIZbzUMzZaUEB-1ifLFF1exo&callback=initMap" async defer></script>
 <body>
+
     <div id="root">
         <!-- Topbar -->
         <div class="topbar">
@@ -28,6 +26,7 @@
                     <button class="location-search" id="locationSearchBtn">CHANGE</button>
                 </div>
             </div>
+
             
             <div class="topbar-center">
             <img class="title-logo" src="{% static 'orders_menupics/menu.png' %}" alt="All Menu" id="titleLogo">                
