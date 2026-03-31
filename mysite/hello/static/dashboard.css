@@ -291,6 +291,49 @@ nav ul li a:hover {
     display: block;
 }
 
+/* Featured infinite marquee style */
+.featured .items-grid {
+    position: relative;
+    overflow: hidden;
+    height: 420px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    scroll-behavior: smooth;
+}
+.featured .items-grid .item-card {
+    position: relative;
+    width: 320px;
+    min-width: 320px;
+    max-width: 320px;
+    height: 380px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.featured .items-grid .item-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+.featured .items-grid .item-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Ensure card overlay text uses relative placement on slideshow card */
+.featured .items-grid .card-overlay-text {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    z-index: 3;
+}
+
+
+
 /* Specific Card Overlays */
 .card-overlay-text {
     position: absolute;

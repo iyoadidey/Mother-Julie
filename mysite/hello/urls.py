@@ -26,11 +26,19 @@ urlpatterns = [
 
     # Order APIs
     path('api/orders/', views.api_create_order, name='api_create_order'),
+    path('api/calculate-delivery-fee/', views.api_calculate_delivery_fee, name='api_calculate_delivery_fee'),
     path('api/orders/<str:order_id>/status/', views.api_get_order_status, name='api_get_order_status'),
     path('api/orders/<str:order_id>/update-status/', views.api_update_order_status, name='api_update_order_status'),
     path('api/orders/<str:order_id>/delete/', views.api_delete_order, name='api_delete_order'),
     path('api/orders/delete-all/', views.api_delete_all_orders, name='api_delete_all_orders'),
     path('api/orders/all/', views.api_get_orders, name='api_get_orders'),
+
+    # PayMongo QR PH APIs
+    path('api/payment-intent/', views.api_create_payment_intent, name='api_create_payment_intent'),
+    path('api/payment-method/qr/', views.api_create_qr_payment_method, name='api_create_qr_payment_method'),
+    path('api/qrph/generate/', views.api_generate_qrph, name='api_generate_qrph'),
+    path('api/payment-intent/attach/', views.api_attach_payment_method, name='api_attach_payment_method'),
+    path('api/payment-intent/<str:payment_intent_id>/status/', views.api_check_payment_status, name='api_check_payment_status'),
 
     # Admin Dashboard Backend
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),

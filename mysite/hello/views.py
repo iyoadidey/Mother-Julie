@@ -16,6 +16,13 @@ import time
 import json
 import random
 import threading
+try:
+    import requests
+except ImportError:
+    requests = None
+import hmac
+import hashlib
+import base64
 
 from .models import SignupEvent, PasswordResetToken, Product, Order, OrderItem, FrontendContent
 from django.db import transaction, close_old_connections
@@ -23,6 +30,12 @@ from django.db.models import F
 from django.templatetags.static import static
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.staticfiles import finders
+
+
+def _paymongo_auth_header(api_key):
+    """Build valid PayMongo Basic auth header from key."""
+    token = base64.b64encode(f"{api_key}:".encode("utf-8")).decode("utf-8")
+    return f"Basic {token}"
 
 def signin(request):
     """Handle user signin"""
@@ -144,26 +157,34 @@ def redirect_to_order(request):
         
         print(f"DEBUG: Latest order found: {latest_order}")
         
-        if latest_order:
-            order_id = latest_order.order_id
-            order_type = latest_order.order_type
-            
-            print(f"DEBUG: Order ID: {order_id}, Type: {order_type}")
-            
-            # Redirect based on order type
-            if order_type == 'delivery':
-                print("DEBUG: Redirecting to DELIVERY")
-                return redirect(f'/delivery/?orderId={order_id}')
-            elif order_type == 'pickup':
-                print("DEBUG: Redirecting to PICKUP")
-                return redirect(f'/pick_up/?orderId={order_id}')
-            else:
-                print(f"DEBUG: Unknown order type '{order_type}' - defaulting to PICKUP")
-                return redirect(f'/pick_up/?orderId={order_id}')
-        else:
+        if not latest_order:
             print("DEBUG: No orders found for user - redirecting to dashboard with message")
-            # No orders found - redirect to dashboard with a message
             messages.info(request, "📦 You don't have any orders yet. Click 'OUR MENU' to place your first order!")
+            return redirect('dashboard')
+
+        # If the latest order is already completed/cancelled, consider it as no active order
+        completed_statuses = ['delivered', 'picked_up', 'cancelled']
+        if latest_order.status in completed_statuses:
+            print(f"DEBUG: Latest order {latest_order.order_id} status is '{latest_order.status}' (completed). Showing no existing order.")
+            messages.info(request, "📦 No active orders at the moment. Click 'OUR MENU' to create a new order.")
+            return redirect('dashboard')
+
+        order_id = latest_order.order_id
+        order_type = latest_order.order_type
+        
+        print(f"DEBUG: Order ID: {order_id}, Type: {order_type}")
+        
+        # Redirect based on order type
+        if order_type == 'delivery':
+            print("DEBUG: Redirecting to DELIVERY")
+            return redirect(f'/delivery/?orderId={order_id}')
+        elif order_type == 'pickup':
+            print("DEBUG: Redirecting to PICKUP")
+            return redirect(f'/pick_up/?orderId={order_id}')
+        else:
+            # Dine-in and unknown order types are not currently trackable in dedicated route
+            print(f"DEBUG: Order type '{order_type}' is not trackable; redirecting to dashboard")
+            messages.info(request, "📦 No active trackable order found. Click 'OUR MENU' to place an order.")
             return redirect('dashboard')
             
     except Exception as e:
@@ -213,34 +234,30 @@ def orders_menu_view(request):
 def request_password_reset(request):
     """Send password reset link via email"""
     if request.method == 'POST':
-        email = request.POST.get('email')
+        email = request.POST.get('email', '').strip().lower()
 
-        try:
-            user = User.objects.filter(email=email).first()
+        if not email:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': 'Please enter your email address.'})
+            messages.error(request, 'Please enter your email address.')
+            return render(request, 'reset_password.html')
 
-            if not user:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'No account found with this email address.'
-                })
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        token = get_random_string(50)
 
-            token = get_random_string(50)
+        if user:
+            try:
+                reset_token, _ = PasswordResetToken.objects.update_or_create(
+                    user=user,
+                    defaults={'token': token}
+                )
 
-            reset_token, created = PasswordResetToken.objects.get_or_create(
-                user=user,
-                defaults={'token': token}
-            )
-            if not created:
-                reset_token.token = token
-                reset_token.save()
+                reset_url = request.build_absolute_uri(
+                    reverse('reset_password_confirm', kwargs={'token': token})
+                )
 
-            reset_url = request.build_absolute_uri(
-                reverse('reset_password_confirm', kwargs={'token': token})
-            )
-
-            subject = 'Reset Your Password - Mother Julie'
-            # Inline logo (CID) so it renders without public static hosting
-            html_message = f"""
+                subject = 'Reset Your Password - Mother Julie'
+                html_message = f"""
 <!doctype html>
 <html>
   <body style="margin:0;padding:0;background:#f7f7f8;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;color:#111;">
@@ -250,70 +267,60 @@ def request_password_reset(request):
           <table role="presentation" cellpadding="0" cellspacing="0" width="560" style="background:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;">
             <tr>
               <td align="center" style="padding:28px 28px 8px 28px;">
-                <!-- Logo removed -->
                 <h1 style="margin:16px 0 0 0;font-size:22px;line-height:28px;color:#ff5b89;">Reset your password</h1>
               </td>
             </tr>
             <tr>
               <td style="padding:12px 28px 0 28px;font-size:14px;line-height:22px;color:#333;">
-                We received a request to reset the password for your Mother Julie account.
-                If you didn’t make this request, you can safely ignore this email.
+                We received a request to reset the password for your account. If you didn’t request this, ignore this email.
               </td>
             </tr>
             <tr>
               <td align="center" style="padding:24px 28px 8px 28px;">
-                <a href="{reset_url}" style="display:inline-block;background:#ff5b89;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600;">
-                  Reset Password
-                </a>
+                <a href="{reset_url}" style="display:inline-block;background:#ff5b89;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600;">Reset Password</a>
               </td>
             </tr>
             <tr>
-              <td style="padding:6px 28px 20px 28px;font-size:12px;line-height:18px;color:#666;">
-                This link will expire in 1 hour for your security.
-              </td>
+              <td style="padding:6px 28px 20px 28px;font-size:12px;line-height:18px;color:#666;">Link expires in 1 hour.</td>
             </tr>
             <tr>
-              <td style="padding:0 28px 24px 28px;font-size:12px;line-height:18px;color:#666;">
-                If the button doesn't work, copy and paste this URL into your browser:<br />
-                <a href="{reset_url}" style="color:#ff5b89;word-break:break-all;">{reset_url}</a>
-              </td>
+              <td style="padding:0 28px 24px 28px;font-size:12px;line-height:18px;color:#666;">If button doesn't work, visit: <a href="{reset_url}" style="color:#ff5b89;word-break:break-all;">{reset_url}</a></td>
             </tr>
           </table>
-          <div style="padding:14px 0 0 0;font-size:11px;color:#9aa0a6;">
-            Sent by Mother Julie • Please do not reply to this automated message.
-          </div>
+          <div style="padding:14px 0 0 0;font-size:11px;color:#9aa0a6;">Sent by Mother Julie • Do not reply.</div>
         </td>
       </tr>
     </table>
   </body>
-  </html>
+</html>
 """
 
-            # Build email with inline image
-            msg = EmailMultiAlternatives(
-                subject=subject,
-                body=f"Reset your password here: {reset_url}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[email],
-            )
-            msg.attach_alternative(html_message, "text/html")
+                msg = EmailMultiAlternatives(
+                    subject=subject,
+                    body=f"Reset your password here: {reset_url}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email],
+                )
+                msg.attach_alternative(html_message, 'text/html')
+                msg.send(fail_silently=False)
 
-            # No inline images
+            except Exception as e:
+                # For debugging, log the exception (console + Django logs)
+                import traceback
+                traceback.print_exc()
+                error_message = str(e)
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'message': f'Unable to send reset email. {error_message}'})
+                messages.error(request, f'Unable to send reset email. {error_message}')
+                return render(request, 'reset_password.html')
 
-            msg.send(fail_silently=False)
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': 'If an account exists, a reset link has been sent.'})
 
-            return JsonResponse({
-                'success': True,
-                'message': 'Password reset link has been sent to your email!'
-            })
+        messages.success(request, 'If an account exists, a reset link has been sent. Check your email.')
+        return redirect('signin')
 
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'An error occurred: {str(e)}'
-            })
-
-    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    return render(request, 'reset_password.html')
 
 def reset_password_confirm(request, token):
     """Handle password reset confirmation"""
@@ -565,6 +572,351 @@ def api_create_order(request):
         import traceback
         traceback.print_exc()  # ADD THIS
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@csrf_exempt
+def api_calculate_delivery_fee(request):
+    """Calculate delivery fee using Lalamove API"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        origin = data.get('origin')
+        destination = data.get('destination')
+
+        if not origin or not destination:
+            return JsonResponse({'success': False, 'error': 'Origin and destination must be provided'}, status=400)
+
+        api_key = settings.LALAMOVE_API_KEY
+        api_secret = settings.LALAMOVE_API_SECRET
+        mode = settings.LALAMOVE_MODE
+
+        if not api_key or not api_secret:
+            return JsonResponse({'success': False, 'error': 'Lalamove API key/secret are not configured'}, status=500)
+
+        if requests is None:
+            return JsonResponse({'success': False, 'error': 'Python requests library is not installed'}, status=500)
+
+        host = 'https://rest.lalamove.com' if mode == 'production' else 'https://rest.sandbox.lalamove.com'
+        endpoint_path = '/v3/quotations'
+        url = f"{host}{endpoint_path}"
+
+        payload = {
+            'stop': [
+                { 'location': { 'lat': float(origin.get('lat')), 'lng': float(origin.get('lng')) } },
+                { 'location': { 'lat': float(destination.get('lat')), 'lng': float(destination.get('lng')) } }
+            ],
+            'serviceType': 'MOTORCYCLE',
+            'specialRequests': []
+        }
+
+        body_text = json.dumps(payload, separators=(',', ':'), ensure_ascii=False)
+        timestamp = str(int(time.time() * 1000))
+        message = f"{timestamp}.POST.{endpoint_path}.{body_text}".encode('utf-8')
+        signature = hmac.new(api_secret.encode('utf-8'), message, hashlib.sha256).hexdigest()
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'hmac {api_key}:{signature}',
+            'X-LLM-Timestamp': timestamp,
+            'X-LLM-ApiKey': api_key,
+            'X-LLM-Signature': signature,
+        }
+
+        response = requests.post(url, headers=headers, data=body_text, timeout=15)
+        response_data = response.json() if response.content else {}
+
+        if response.status_code not in (200, 201):
+            return JsonResponse({'success': False, 'error': 'Lalamove API returned error', 'details': response_data}, status=response.status_code)
+
+        # Lalamove quotation response usually contains totalFee in PHP
+        delivery_fee = 0.0
+        if isinstance(response_data, dict):
+            delivery_fee = float(response_data.get('totalFee', response_data.get('data', {}).get('totalFee', 0)))
+
+        return JsonResponse({'success': True, 'deliveryFee': delivery_fee, 'raw': response_data})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_create_payment_intent(request):
+    """Create PayMongo payment intent for QR PH"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        amount = data.get('amount')
+
+        if not amount or amount < 1:
+            return JsonResponse({'success': False, 'error': 'Invalid amount'}, status=400)
+
+        secret_key = settings.PAYMONGO_SECRET_KEY
+        mode = settings.PAYMONGO_MODE
+
+        if not secret_key:
+            return JsonResponse({'success': False, 'error': 'PayMongo secret key is not configured'}, status=500)
+
+        if requests is None:
+            return JsonResponse({'success': False, 'error': 'Python requests library is not installed'}, status=500)
+
+        # PayMongo expects amount in centavos
+        amount_in_centavos = int(amount * 100)
+
+        host = 'https://api.paymongo.com' if mode == 'production' else 'https://api.paymongo.com'
+        url = f"{host}/v1/payment_intents"
+
+        payload = {
+            'data': {
+                'attributes': {
+                    'amount': amount_in_centavos,
+                    'payment_method_allowed': ['qrph'],
+                    'currency': 'PHP',
+                    'description': 'Order from Mother Julie'
+                }
+            }
+        }
+
+        headers = {
+            'Authorization': _paymongo_auth_header(secret_key),
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        response_data = response.json() if response.content else {}
+
+        if response.status_code not in (200, 201):
+            return JsonResponse({'success': False, 'error': 'PayMongo API returned error', 'details': response_data}, status=response.status_code)
+
+        return JsonResponse({'success': True, 'paymentIntent': response_data.get('data', {})})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_create_qr_payment_method(request):
+    """Create PayMongo QR PH payment method"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        billing_name = data.get('billing_name', 'Customer')
+        billing_email = data.get('billing_email', 'customer@example.com')
+
+        secret_key = settings.PAYMONGO_SECRET_KEY
+        mode = settings.PAYMONGO_MODE
+
+        if not secret_key:
+            return JsonResponse({'success': False, 'error': 'PayMongo secret key is not configured'}, status=500)
+
+        if requests is None:
+            return JsonResponse({'success': False, 'error': 'Python requests library is not installed'}, status=500)
+
+        host = 'https://api.paymongo.com' if mode == 'production' else 'https://api.paymongo.com'
+        url = f"{host}/v1/payment_methods"
+
+        payload = {
+            'data': {
+                'attributes': {
+                    'type': 'qrph',
+                    'billing': {
+                        'name': billing_name,
+                        'email': billing_email
+                    }
+                }
+            }
+        }
+
+        headers = {
+            'Authorization': _paymongo_auth_header(secret_key),
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        response_data = response.json() if response.content else {}
+
+        if response.status_code not in (200, 201):
+            return JsonResponse({'success': False, 'error': 'PayMongo API returned error', 'details': response_data}, status=response.status_code)
+
+        return JsonResponse({'success': True, 'paymentMethod': response_data.get('data', {})})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_attach_payment_method(request):
+    """Attach payment method to payment intent and get QR code"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        payment_intent_id = data.get('payment_intent_id')
+        payment_method_id = data.get('payment_method_id')
+
+        if not payment_intent_id or not payment_method_id:
+            return JsonResponse({'success': False, 'error': 'Payment intent ID and payment method ID are required'}, status=400)
+
+        secret_key = settings.PAYMONGO_SECRET_KEY
+        mode = settings.PAYMONGO_MODE
+
+        if not secret_key:
+            return JsonResponse({'success': False, 'error': 'PayMongo API keys are not configured'}, status=500)
+
+        if requests is None:
+            return JsonResponse({'success': False, 'error': 'Python requests library is not installed'}, status=500)
+
+        host = 'https://api.paymongo.com' if mode == 'production' else 'https://api.paymongo.com'
+        url = f"{host}/v1/payment_intents/{payment_intent_id}/attach"
+
+        payload = {
+            'data': {
+                'attributes': {
+                    'payment_method': payment_method_id,
+                    'return_url': f"{request.scheme}://{request.get_host()}/orders_menu/"
+                }
+            }
+        }
+
+        headers = {
+            'Authorization': _paymongo_auth_header(secret_key),
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        response_data = response.json() if response.content else {}
+
+        if response.status_code not in (200, 201):
+            return JsonResponse({'success': False, 'error': 'PayMongo API returned error', 'details': response_data}, status=response.status_code)
+
+        return JsonResponse({'success': True, 'result': response_data.get('data', {})})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_check_payment_status(request, payment_intent_id):
+    """Check PayMongo payment intent status"""
+    try:
+        secret_key = settings.PAYMONGO_SECRET_KEY
+        mode = settings.PAYMONGO_MODE
+
+        if not secret_key:
+            return JsonResponse({'success': False, 'error': 'PayMongo API keys are not configured'}, status=500)
+
+        if requests is None:
+            return JsonResponse({'success': False, 'error': 'Python requests library is not installed'}, status=500)
+
+        host = 'https://api.paymongo.com' if mode == 'production' else 'https://api.paymongo.com'
+        url = f"{host}/v1/payment_intents/{payment_intent_id}"
+
+        headers = {
+            'Authorization': _paymongo_auth_header(secret_key),
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.get(url, headers=headers, timeout=15)
+        response_data = response.json() if response.content else {}
+
+        if response.status_code != 200:
+            return JsonResponse({'success': False, 'error': 'PayMongo API returned error', 'details': response_data}, status=response.status_code)
+
+        payment_data = response_data.get('data', {})
+        status = payment_data.get('attributes', {}).get('status', 'unknown')
+
+        return JsonResponse({
+            'success': True,
+            'status': status,
+            'payment_data': payment_data
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_generate_qrph(request):
+    """Generate PayMongo QR PH code"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+    try:
+        mode = settings.PAYMONGO_MODE
+        secret_key = (getattr(settings, 'PAYMONGO_SECRET_KEY', '') or '').strip()
+        auth_header = (getattr(settings, 'PAYMONGO_QRPH_BASIC_AUTH', '') or '').strip()
+
+        # Prefer proper PayMongo secret key auth when available
+        if secret_key:
+            auth_header = _paymongo_auth_header(secret_key)
+        elif auth_header:
+            if not auth_header.lower().startswith('basic '):
+                auth_header = f'Basic {auth_header}'
+        else:
+            return JsonResponse({'success': False, 'error': 'PayMongo auth is not configured (set PAYMONGO_SECRET_KEY or PAYMONGO_QRPH_BASIC_AUTH)'}, status=500)
+
+        if requests is None:
+            return JsonResponse({'success': False, 'error': 'Python requests library is not installed'}, status=500)
+
+        host = 'https://api.paymongo.com' if mode == 'production' else 'https://api.paymongo.com'
+        url = f"{host}/v1/qrph/generate"
+
+        payload = {
+            "data": {
+                "attributes": {
+                    "kind": "instore"
+                }
+            }
+        }
+
+        headers = {
+            'Authorization': auth_header,
+            'accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        response_data = response.json() if response.content else {}
+
+        if response.status_code not in (200, 201):
+            paymongo_detail = None
+            if isinstance(response_data, dict):
+                paymongo_detail = (
+                    response_data.get('errors', [{}])[0].get('detail')
+                    if isinstance(response_data.get('errors'), list) and response_data.get('errors')
+                    else None
+                )
+            return JsonResponse(
+                {
+                    'success': False,
+                    'error': paymongo_detail or f'PayMongo API returned error ({response.status_code})',
+                    'details': response_data
+                },
+                status=response.status_code
+            )
+
+        return JsonResponse({'success': True, 'qr_data': response_data})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @csrf_exempt

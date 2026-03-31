@@ -331,7 +331,6 @@ body {
     padding-top: 20px;
 }
 
-/* WELCOME MESSAGE STYLES */
 .welcome-message {
     text-align: center;
     padding: 60px 20px;
@@ -382,7 +381,6 @@ body {
     gap: 20px;
 }
 
-/* MENU ITEM STYLES */
 .card {
     background: #fff;
     border-radius: 10px;
@@ -393,7 +391,7 @@ body {
     transition: transform 0.12s ease, box-shadow 0.12s ease;
     position: relative;
     width: 100%;
-    height: 420px; /* This should already ensure equal height */
+    height: 420px;
 }
 
 .card:hover { 
@@ -414,7 +412,7 @@ body {
     flex-direction: column; 
     gap: 8px;
     min-height: 140px;
-    flex: 1; /* Add this to make card body take available space */
+    flex: 1;
 }
 
 .card-body h3 { 
@@ -424,7 +422,7 @@ body {
     line-height: 1.2;
     margin-bottom: 2px;
     font-weight: 600;
-    min-height: 38px; /* Add fixed height for product names */
+    min-height: 38px;
     display: flex;
     align-items: flex-start;
 }
@@ -433,7 +431,7 @@ body {
     display: flex;
     gap: 12px;
     margin: 10px 0;
-    min-height: 40px; /* Add fixed height for size selector */
+    min-height: 40px;
     align-items: center;
 }
 
@@ -460,14 +458,13 @@ body {
     transform: scale(1.1);
 }
 
-/* Ensure price has consistent positioning */
 .price { 
     color: #ff2b87; 
     font-family: 'Inter', sans-serif;
     font-weight: 800; 
     font-size: 12px;
     margin: 2px 0;
-    min-height: 5px; /* Add fixed height for price */
+    min-height: 5px;
     display: flex;
     align-items: center;
 }
@@ -477,24 +474,13 @@ body {
     font-family: 'Inter', sans-serif;
     color: #28a745; 
     font-weight: 700; 
-    min-height: 20px; /* Add fixed height for availability */
+    min-height: 20px;
     display: flex;
     align-items: center;
 }
 
 .availability.out-of-stock {
     color: #dc3545;
-}
-
-.stock-info {
-    font-size: 11px;
-    color: #666;
-    font-family: 'Inter', sans-serif;
-}
-
-.stock-info.low-stock {
-    color: #ffc107;
-    font-weight: 600;
 }
 
 .category { 
@@ -516,7 +502,7 @@ body {
     transition: all 0.3s ease;
     position: absolute;
     bottom: 15px;
-    right: 15px;
+    right: 20px;
     z-index: 20;
     display: flex;
     align-items: center;
@@ -553,7 +539,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 120;
+    z-index: 2000;
     align-items: center;
     justify-content: center;
     font-family: 'Inter', sans-serif;
@@ -572,6 +558,7 @@ body {
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    z-index: 2001;
 }
 
 .modal-header {
@@ -678,7 +665,30 @@ body {
     border-bottom: none;
 }
 
-/* ========== SELECTED LOCATION DISPLAY ========== */
+.suggestion-item.loading,
+.suggestion-item.no-results,
+.suggestion-item.error {
+    color: #666;
+    font-style: italic;
+    cursor: default;
+}
+
+.suggestion-item.loading:hover,
+.suggestion-item.no-results:hover,
+.suggestion-item.error:hover {
+    background: transparent;
+}
+
+.suggestion-item.error {
+    color: #ff4444;
+}
+
+.current-location-btn.loading {
+    opacity: 0.7;
+    cursor: wait;
+    background: #f0f0f0;
+}
+
 .selected-location {
     background: #e8f5e9;
     border: 2px solid #4caf50;
@@ -693,20 +703,21 @@ body {
     animation: slideDown 0.3s ease-out;
 }
 
-.selected-location p {
-    margin: 0;
+.selected-address {
     font-size: 14px;
     color: #2e7d32;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    line-height: 1.5;
+    word-break: break-word;
 }
 
-.selected-location small {
-    color: #666;
-    font-size: 12px;
+.selected-address strong {
+    color: #1b5e20;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
 }
 
-/* ========== MAP CONTAINER ========== */
 .map-container {
     margin: 15px 0;
     border-radius: 10px;
@@ -714,6 +725,8 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border: 2px solid #F9A8C9;
     display: none;
+    height: 350px;
+    width: 100%;
 }
 
 .map-container.active {
@@ -722,22 +735,38 @@ body {
 }
 
 #map {
-    height: 300px;
+    height: 100%;
     width: 100%;
 }
 
-.map-instructions {
-    background: #fff5f9;
-    padding: 12px;
-    text-align: center;
-    border-top: 1px solid #F9A8C9;
-    font-size: 13px;
-    color: #ff5fa2;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
+.gm-style img {
+    max-width: none;
 }
 
-/* ========== LOCATION ACTIONS ========== */
+.map-container.active {
+    z-index: 1000;
+}
+
+.gm-style iframe + div {
+    z-index: 1001 !important;
+}
+
+.map-container.loading {
+    position: relative;
+    min-height: 200px;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-container.loading::after {
+    content: "Loading map...";
+    color: #ff5fa2;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
 .location-actions {
     display: flex;
     gap: 10px;
@@ -826,7 +855,6 @@ body {
     animation: slideDown 0.3s ease-out;
 }
 
-/* ========== CONFIRMATION BUTTONS ========== */
 .confirmation-buttons {
     display: flex;
     gap: 10px;
@@ -945,7 +973,6 @@ body {
     color: #ff2b87;
 }
 
-/* Billing Items */
 .billing-items {
     display: flex;
     flex-direction: column;
@@ -1042,7 +1069,6 @@ body {
     box-shadow: 0 4px 10px rgba(255, 68, 68, 0.4);
 }
 
-/* Empty Cart */
 .empty-cart-message {
     text-align: center;
     padding: 60px 20px;
@@ -1066,7 +1092,6 @@ body {
     font-size: 14px;
 }
 
-/* Billing Summary */
 .billing-summary {
     background: white;
     color: #3b0b2b;
@@ -1099,7 +1124,6 @@ body {
     font-weight: 800;
 }
 
-/* Order Type */
 .order-type {
     display: flex;
     gap: 8px;
@@ -1136,7 +1160,6 @@ body {
     border-color: #ff8bbd;
 }
 
-/* Process Order */
 .process-order {
     width: 100%;
     padding: 18px;
@@ -1223,7 +1246,16 @@ body {
     font-size: 18px;
 }
 
-/* Payment Details */
+.payment-btn.qr {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.payment-btn.qr.active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
 .payment-details {
     margin-top: 15px;
 }
@@ -1259,7 +1291,6 @@ body {
     border-left: 3px solid #ff5fa2;
 }
 
-/* Payment Forms */
 .payment-form {
     background: white;
     padding: 15px;
@@ -1274,173 +1305,133 @@ body {
     font-size: 14px;
 }
 
-.form-group {
-    margin-bottom: 12px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #333;
-    font-family: 'Inter', sans-serif;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: #ff5fa2;
-}
-
-/* GCash QR */
-.gcash-qr {
+/* QR Payment Styles */
+.qr-form {
     text-align: center;
-    margin: 15px 0;
     padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
 }
 
-.qr-placeholder {
-    display: inline-block;
-}
-
-.qr-code {
-    font-size: 64px;
-    margin-bottom: 10px;
-}
-
-.gcash-qr p {
-    margin: 5px 0;
-    font-weight: 600;
-    color: #333;
-}
-
-.gcash-qr small {
-    color: #666;
-    font-size: 11px;
-}
-
-/* Bank Options */
-.bank-options {
+.qr-display {
+    min-height: 300px;
     display: flex;
-    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-code-container {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.qr-code-image {
+    width: 100%;
+    height: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    background: white;
+}
+
+.qr-amount {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ff2b87;
+    margin: 15px 0 5px;
+}
+
+.qr-expiry {
+    font-size: 12px;
+    color: #666;
     margin-bottom: 15px;
 }
 
-.bank-option {
-    flex: 1;
-    padding: 10px;
-    border: 2px solid #e0e0e0;
-    border-radius: 6px;
-    background: white;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.3s ease;
-    font-size: 11px;
-    font-weight: 600;
+.qr-instructions {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: left;
+    margin: 15px 0;
 }
 
-.bank-option.active {
-    border-color: #ff5fa2;
-    background: rgba(255, 95, 162, 0.1);
-    transform: translateY(-2px);
-}
-
-.bank-icon {
-    display: block;
-    font-size: 16px;
-    margin-bottom: 5px;
-}
-
-/* Bank Details */
-.bank-info {
-    display: none;
-}
-
-.bank-info.active {
-    display: block;
-    animation: slideDown 0.3s ease-out;
-}
-
-.bank-info h5 {
-    margin-bottom: 8px;
-    color: #333;
+.qr-instructions p {
+    margin: 5px 0;
     font-size: 13px;
+    color: #555;
 }
 
-.bank-info p {
-    margin: 4px 0;
-    font-size: 11px;
+.qr-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 6px;
+    background: #e3f2fd;
+    color: #1565c0;
+    font-size: 14px;
+}
+
+.qr-loading, .qr-error {
+    text-align: center;
+    padding: 40px;
+}
+
+.qr-loading {
     color: #666;
 }
 
-/* Verify Payment Button */
-.verify-payment {
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+.qr-error {
+    color: #c62828;
+}
+
+.error-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.qr-retry-btn {
+    background: #ff7bbd;
     color: white;
     border: none;
+    padding: 10px 20px;
     border-radius: 6px;
-    font-weight: 600;
     cursor: pointer;
+    font-weight: 600;
+    margin-top: 15px;
     transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-    margin-top: 10px;
 }
 
-.verify-payment:hover {
+.qr-retry-btn:hover {
+    background: #ff5fa2;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-}
-
-.verify-payment:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-/* Payment Messages */
-.payment-error, .payment-success, .payment-processing {
-    padding: 12px;
-    border-radius: 6px;
-    margin: 10px 0;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.payment-error {
-    background: #ffebee;
-    color: #c62828;
-    border-left: 4px solid #c62828;
 }
 
 .payment-success {
-    background: #e8f5e9;
-    color: #2e7d32;
-    border-left: 4px solid #4caf50;
+    background: #d4edda;
+    color: #155724;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-align: left;
 }
 
-.payment-processing {
-    background: #e3f2fd;
-    color: #1565c0;
-    border-left: 4px solid #1565c0;
+.success-icon {
+    background: #28a745;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
 }
 
-/* Loading Spinner */
 .loading-spinner {
     width: 16px;
     height: 16px;
@@ -1449,7 +1440,6 @@ body {
     border-radius: 50%;
     animation: spin 1s linear infinite;
     display: inline-block;
-    margin-right: 8px;
 }
 
 @keyframes spin {
@@ -1530,31 +1520,6 @@ body {
     text-align: left;
 }
 
-.order-details-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 8px 0;
-    font-size: 14px;
-    color: #2e7d32;
-    gap: 15px;
-}
-
-.order-details-label {
-    color: #1b5e20;
-    font-weight: 600;
-    min-width: 60px;
-    white-space: nowrap;
-}
-
-.order-details-value {
-    color: #2e7d32;
-    font-weight: 600;
-    text-align: right;
-    white-space: nowrap;
-    flex: 1;
-}
-
 .thank-you {
     color: #666;
     font-size: 14px;
@@ -1584,7 +1549,7 @@ body {
     background: linear-gradient(135deg, #ff8bc6, #ff3a90);
 }
 
-/* ========== MINIMALIST TOAST NOTIFICATIONS ========== */
+/* ========== TOAST NOTIFICATIONS ========== */
 #toastContainer {
     position: fixed;
     top: 20px;
@@ -1711,27 +1676,7 @@ body {
     }
 }
 
-/* ========== ORDER SUCCESS BOX STYLES ========== */
-.order-success-box {
-    background: #e8f5e9;
-    border: 1px solid #c8e6c9;
-    border-left: 2px solid #4caf50;
-    border-radius: 8px;
-    padding: 12px 15px;
-    margin: 15px 0;
-    font-size: 12px;
-    color: #2e7d32;
-    font-family: 'Inter', sans-serif;
-    font-weight: 400;
-    line-height: 1.4;
-}
-
-.order-success-box strong {
-    color: #1b5e20;
-    font-weight: 600;
-}
-
-/* ========== CONSISTENT DISCLAIMER BOX STYLES ========== */
+/* ========== DISCLAIMER BOX STYLES ========== */
 .disclaimer-box {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
@@ -1761,58 +1706,6 @@ body {
     border-left-color: #17a2b8;
     background: #d1ecf1;
     color: #0c5460;
-}
-
-/* ========== PAYMENT METHOD RESTRICTIONS ========== */
-.payment-method .disclaimer-box {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-left: 4px solid #6c757d;
-    border-radius: 8px;
-    padding: 12px 15px;
-    margin-top: 15px;
-    font-size: 12px;
-    color: #495057;
-    font-family: 'Inter', sans-serif;
-    font-weight: 400;
-    line-height: 1.4;
-}
-
-.payment-method .disclaimer-box strong {
-    color: #495057;
-    font-weight: 600;
-}
-
-.payment-method .disclaimer-box.warning {
-    border-left-color: #ffc107;
-    background: #fff3cd;
-    color: #856404;
-}
-
-.payment-method .disclaimer-box.info {
-    border-left-color: #17a2b8;
-    background: #d1ecf1;
-    color: #0c5460;
-}
-
-/* Ensure Leaflet map tiles and marker icons appear correctly */
-.leaflet-container {
-    width: 100% !important;
-    height: 300px !important;
-    z-index: 1;
-}
-
-/* Fix missing default Leaflet marker icons */
-.leaflet-control-attribution {
-    font-size: 10px;
-}
-
-/* Fix the toggle color when map is visible */
-.show-map-btn.active {
-    background: #ff5fa2;
-    color: white;
-    border-color: #ff5fa2;
-    transform: translateY(-1px);
 }
 
 /* ========== RESPONSIVE DESIGN ========== */
@@ -1915,88 +1808,4 @@ body {
         width: 100%;
         max-width: 300px;
     }
-    
-    .order-details-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-    }
-    
-    .order-details-label {
-        min-width: auto;
-    }
-    
-    .order-details-value {
-        text-align: left;
-    }
-}
-
-/* Minimal Clear Verification Button Styles */
-.clear-verification {
-    background: transparent;
-    color: #6c757d;
-    border: 1px solid #dee2e6;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-    width: fit-content;
-}
-
-.clear-verification:hover {
-    background: #f8f9fa;
-    color: #495057;
-    border-color: #adb5bd;
-}
-
-.clear-icon {
-    font-size: 14px;
-    opacity: 0.7;
-}
-
-/* Verified State Styles */
-.verified-badge {
-    background: #d4edda;
-    color: #155724;
-    padding: 8px 12px;
-    border-radius: 4px;
-    margin: 10px 0;
-    font-size: 14px;
-    border: 1px solid #c3e6cb;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.verified-icon {
-    background: #28a745;
-    color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.payment-form.verified {
-    border-left: 4px solid #28a745;
-    background: #f8fff9;
-    padding: 15px;
-    border-radius: 4px;
-}
-
-/* Disabled verified inputs */
-.payment-form.verified input:disabled {
-    background: #f8fff9;
-    color: #155724;
-    border-color: #c3e6cb;
-    opacity: 0.8;
 }

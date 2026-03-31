@@ -1,9 +1,31 @@
+// ========== PAYMONGO CONFIGURATION ==========
+const PAYMONGO_PUBLIC_KEY = 'pk_test_your_public_key_here'; // Replace with your actual public key
+const PAYMONGO_SECRET_KEY = 'sk_test_your_secret_key_here'; // Replace with your actual secret key (use only on backend)
+
+// For frontend-only demo, we'll use the public key
+// In production, create payment intents on your backend!
+
+// GLOBAL INITMAP FUNCTION - MUST be at the top level
+window.initMap = function() {
+    console.log('✅ Google Maps API loaded successfully');
+    // The map will be initialized when the modal opens
+};
+
+
 // Order Management System
 let cart = JSON.parse(localStorage.getItem('motherJulieCart')) || [];
 let orderCount = cart.reduce((total, item) => total + item.quantity, 0) || 0;
-const deliveryCharge = 50;
+let deliveryCharge = 0;  // Dynamic delivery fee - will be calculated via Lalamove API
 let selectedPaymentMethod = 'cash';
 let selectedBank = 'bpi';
+let selectedDeliveryLocation = null;  // Store selected location for delivery calculation
+
+// Branch coordinates for delivery origin (approximate, adjust as needed)
+const BRANCH_LOCATIONS = [
+    { name: 'Old Torres Branch', lat: 14.5869, lng: 120.9799 },
+    { name: 'Perfecto Branch', lat: 14.6150, lng: 120.9929 },
+    { name: 'Velasquez Branch', lat: 14.5905, lng: 120.9814 }
+];
 
 // DOM Elements
 const elements = {
@@ -132,6 +154,95 @@ function getMinimalSuccessMessage(orderType, paymentMethod) {
     return baseMessages[orderType] || 'Order placed successfully!';
 }
 
+function getNearestBranch(lat, lng) {
+    let closest = null;
+    let minDistance = Number.MAX_VALUE;
+
+    const toRadians = degrees => degrees * (Math.PI / 180);
+    const earthRadiusKm = 6371;
+
+    const dLat = (lat1, lat2) => toRadians(lat2 - lat1);
+    const dLng = (lng1, lng2) => toRadians(lng2 - lng1);
+
+    const haversineDistance = (a, b) => {
+        const dLatVal = dLat(a.lat, b.lat);
+        const dLngVal = dLng(a.lng, b.lng);
+        const sinLat = Math.sin(dLatVal / 2);
+        const sinLng = Math.sin(dLngVal / 2);
+        const p = sinLat * sinLat + Math.cos(toRadians(a.lat)) * Math.cos(toRadians(b.lat)) * sinLng * sinLng;
+        return earthRadiusKm * 2 * Math.atan2(Math.sqrt(p), Math.sqrt(1 - p));
+    };
+
+    BRANCH_LOCATIONS.forEach(branch => {
+        const distance = haversineDistance({ lat, lng }, branch);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closest = branch;
+        }
+    });
+
+    return closest;
+}
+
+async function calculateDeliveryFee(destination) {
+    try {
+        console.log('DEBUG calculateDeliveryFee destination:', destination);
+
+        if (!destination || !destination.lat || !destination.lng) {
+            deliveryCharge = 0;
+            return;
+        }
+
+        const branch = getNearestBranch(destination.lat, destination.lng);
+
+        if (!branch) {
+            deliveryCharge = 0;
+            showToast('Could not determine nearest branch for delivery fee.', 'error', 5000);
+            return;
+        }
+
+        showToast('Calculating delivery fee via Lalamove...', 'info', 3000);
+
+        const response = await fetch('/api/calculate-delivery-fee/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                origin: { lat: branch.lat, lng: branch.lng },
+                destination: { lat: destination.lat, lng: destination.lng }
+            })
+        });
+
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (jsonErr) {
+            console.error('JSON parse error from calculate-delivery-fee:', jsonErr);
+            throw new Error(`Lalamove response NOT JSON (status ${response.status}).`);
+        }
+
+        console.log('DEBUG Lalamove API response:', response.status, data);
+
+        if (!response.ok) {
+            const errorDetails = data && (data.error || data.details || JSON.stringify(data));
+            throw new Error(`Lalamove API failed ${response.status}: ${errorDetails}`);
+        }
+
+        if (!data.success) {
+            throw new Error(data.error || 'Unable to calculate delivery fee.');
+        }
+
+        deliveryCharge = Number(data.deliveryFee) || 0;
+        updateBillingPanel();
+
+        showToast(`Delivery fee ${deliveryCharge > 0 ? 'set to' : 'reset to'} Php ${deliveryCharge.toFixed(2)}.`, 'success', 3000);
+    } catch (err) {
+        console.error('Delivery fee calculation error:', err);
+        deliveryCharge = 0;
+        updateBillingPanel();
+        showToast(`Could not calculate delivery fee. ${err.message}`, 'error', 8000);
+    }
+}
+
 function handleOrderError(error) {
     let errorMessage = 'Failed to process order';
     if (error.message.includes('CSRF token')) {
@@ -154,6 +265,7 @@ function handleOrderError(error) {
 function updatePaymentMethodsBasedOnOrderType() {
     const orderType = document.querySelector('.order-btn.active').dataset.type;
     const cashPaymentBtn = document.querySelector('.payment-btn.cash');
+    const qrPaymentBtn = document.querySelector('.payment-btn.qr');
     const paymentMethodSection = document.querySelector('.payment-method');
     
     const existingMessages = paymentMethodSection.querySelectorAll('.disclaimer-box');
@@ -163,470 +275,260 @@ function updatePaymentMethodsBasedOnOrderType() {
         cashPaymentBtn.classList.add('disabled');
         cashPaymentBtn.disabled = true;
         
+        // Enable QR payment for pickup/delivery
+        qrPaymentBtn.classList.remove('disabled');
+        qrPaymentBtn.disabled = false;
+        
         const message = document.createElement('div');
         message.className = 'disclaimer-box warning';
-        message.innerHTML = `<strong>Payment Notice:</strong> Online payment (GCash or Bank Transfer) is required for ${orderType} orders. Cash payment is only available for dine-in orders.`;
+        message.innerHTML = `<strong>Payment Notice:</strong> QR PH payment is required for ${orderType} orders. Cash payment is only available for dine-in orders.`;
         paymentMethodSection.appendChild(message);
         
         if (selectedPaymentMethod === 'cash') {
-            selectPaymentMethod('gcash');
+            selectPaymentMethod('qr');
         }
     } else {
         cashPaymentBtn.classList.remove('disabled');
         cashPaymentBtn.disabled = false;
         
+        // QR also available for dine-in
+        qrPaymentBtn.classList.remove('disabled');
+        qrPaymentBtn.disabled = false;
+        
         const message = document.createElement('div');
         message.className = 'disclaimer-box info';
-        message.innerHTML = `<strong>Payment Notice:</strong> Cash payment is available for dine-in orders.`;
+        message.innerHTML = `<strong>Payment Notice:</strong> Cash or QR PH payment accepted.`;
         paymentMethodSection.appendChild(message);
+
+        // Ensure dine-in uses cash by default to avoid unwanted QR hang with previous state
+        if (selectedPaymentMethod !== 'cash') {
+            selectPaymentMethod('cash');
+        }
     }
 }
 
-// ========== PAYMENT VERIFICATION FUNCTIONS ==========
-async function verifyGCashPayment() {
-    const gcashNumber = document.getElementById('gcashNumber')?.value.trim();
-    const gcashName = document.getElementById('gcashName')?.value.trim();
+// ========== STATIC QR PH PAYMENT FUNCTIONS ==========
+let qrPaymentCheckInterval = null;
+
+async function initializeQRPayment() {
+    const totalElement = document.querySelector('.total');
+    const amount = parseFloat(totalElement.textContent.replace(/[^0-9.]/g, ''));
     
-    if (!gcashNumber || !gcashName) {
-        showToast('Please fill in all GCash details', 'error');
-        return false;
+    if (amount < 1) {
+        showToast('Minimum amount is ₱1.00', 'error');
+        return;
     }
-    
-    // Enhanced GCash number validation
-    if (!/^(09|\+639)\d{9}$/.test(gcashNumber)) {
-        showToast('Please enter a valid GCash number (09XXXXXXXXX)', 'error');
-        return false;
-    }
-    
-    // Name validation
-    if (gcashName.length < 2) {
-        showToast('Please enter a valid name', 'error');
-        return false;
-    }
-    
-    showToast('Verifying GCash payment...', 'info');
     
     try {
-        // Simulate API call to GCash verification service
-        const verificationResult = await simulateGCashVerification(gcashNumber, gcashName);
+        // Show loading state
+        const qrDisplay = document.querySelector('.qr-display');
+        qrDisplay.innerHTML = '<div class="qr-loading">Generating QR code...</div>';
         
-        if (verificationResult.success) {
-            // Save verified GCash details
-            saveVerifiedGCashDetails({
-                number: gcashNumber,
-                name: gcashName,
-                verifiedAt: new Date().toISOString(),
-                reference: verificationResult.reference
-            });
-            
-            showToast('GCash payment verified successfully!', 'success');
-            updatePaymentStatus('verified');
-            return true;
-        } else {
-            showToast(verificationResult.message || 'GCash verification failed', 'error');
-            return false;
-        }
-    } catch (error) {
-        console.error('GCash verification error:', error);
-        showToast('Verification service temporarily unavailable', 'error');
-        return false;
-    }
-}
+        // Single-step QRPH generation (manual confirmation flow)
+        const qrResult = await generateQRPhCode();
+        const qrImageUrl =
+            qrResult?.attributes?.image_url ||
+            qrResult?.attributes?.qr_image_url ||
+            qrResult?.attributes?.code?.image_url ||
+            qrResult?.image_url ||
+            null;
+        const qrCodeId = qrResult?.id || qrResult?.attributes?.code?.id || '';
 
-async function simulateGCashVerification(gcashNumber, gcashName) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            // Simulate different verification scenarios
-            const random = Math.random();
-            
-            if (random < 0.8) {
-                // 80% success rate
-                resolve({
-                    success: true,
-                    message: 'GCash account verified',
-                    reference: 'GC' + Date.now().toString().slice(-8),
-                    accountName: gcashName.toUpperCase(),
-                    number: gcashNumber
-                });
-            } else if (random < 0.9) {
-                // 10% invalid number
-                resolve({
-                    success: false,
-                    message: 'Invalid GCash number or account not found'
-                });
-            } else {
-                // 10% insufficient balance
-                resolve({
-                    success: false,
-                    message: 'Insufficient balance in GCash account'
-                });
+        if (qrImageUrl) {
+            displayQRCode(qrImageUrl, amount, qrCodeId);
+            localStorage.setItem('paymentVerificationStatus', JSON.stringify({
+                method: 'qr',
+                status: 'manual_pending',
+                timestamp: new Date().toISOString()
+            }));
+            const processOrderBtn = document.querySelector('.process-order');
+            if (processOrderBtn) {
+                processOrderBtn.disabled = false;
             }
-        }, 2000); // Simulate 2-second API call
-    });
-}
-
-function saveVerifiedGCashDetails(details) {
-    // Save to localStorage for order processing
-    localStorage.setItem('verifiedGCashPayment', JSON.stringify(details));
-    
-    // Update UI to show verified status
-    const gcashForm = document.querySelector('.gcash-form');
-    if (gcashForm) {
-        gcashForm.classList.add('verified');
-        
-        // Add verified badge
-        const existingBadge = gcashForm.querySelector('.verified-badge');
-        if (!existingBadge) {
-            const verifiedBadge = document.createElement('div');
-            verifiedBadge.className = 'verified-badge';
-            verifiedBadge.innerHTML = `
-                <span class="verified-icon">✓</span>
-                Verified - ${details.number}
-            `;
-            gcashForm.appendChild(verifiedBadge);
-        }
-        
-        // Disable input fields after verification
-        const inputs = gcashForm.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.disabled = true;
-            input.style.backgroundColor = '#f8fff9';
-        });
-        
-        // Update verify button
-        const verifyBtn = document.getElementById('verifyGCash');
-        if (verifyBtn) {
-            verifyBtn.textContent = 'Verified';
-            verifyBtn.disabled = true;
-            verifyBtn.style.backgroundColor = '#28a745';
-        }
-        
-        // Add clear verification button
-        addClearVerificationButtons();
-    }
-}
-
-async function verifyBankPayment() {
-    const referenceNumber = document.getElementById('referenceNumber')?.value.trim();
-    const senderName = document.getElementById('senderName')?.value.trim();
-    const amount = document.querySelector('.total')?.textContent.replace(/[^0-9.]/g, '');
-    
-    if (!referenceNumber || !senderName) {
-        showToast('Please fill in all bank details', 'error');
-        return false;
-    }
-    
-    if (referenceNumber.length < 6) {
-        showToast('Please enter a valid reference number', 'error');
-        return false;
-    }
-    
-    if (senderName.length < 2) {
-        showToast('Please enter sender name', 'error');
-        return false;
-    }
-    
-    showToast('Verifying bank transfer...', 'info');
-    
-    try {
-        const verificationResult = await simulateBankVerification(
-            referenceNumber, 
-            senderName, 
-            amount, 
-            selectedBank
-        );
-        
-        if (verificationResult.success) {
-            saveVerifiedBankDetails({
-                reference: referenceNumber,
-                senderName: senderName,
-                bank: selectedBank,
-                amount: amount,
-                verifiedAt: new Date().toISOString(),
-                transactionId: verificationResult.transactionId
-            });
-            
-            showToast('Bank transfer verified successfully!', 'success');
-            updatePaymentStatus('verified');
-            return true;
         } else {
-            showToast(verificationResult.message || 'Bank transfer verification failed', 'error');
-            return false;
+            throw new Error('QR code generation failed');
         }
+        
     } catch (error) {
-        console.error('Bank verification error:', error);
-        showToast('Verification service temporarily unavailable', 'error');
-        return false;
+        console.error('QR Payment initialization error:', error);
+        showToast(error?.message || 'Failed to initialize QR payment. Please try again.', 'error');
+        
+        const qrDisplay = document.querySelector('.qr-display');
+        qrDisplay.innerHTML = `
+            <div class="qr-error">
+                <span class="error-icon">❌</span>
+                <p>Failed to generate QR code</p>
+                <button class="qr-retry-btn" onclick="initializeQRPayment()">Try Again</button>
+            </div>
+        `;
     }
 }
 
-async function simulateBankVerification(referenceNumber, senderName, amount, bank) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const random = Math.random();
-            
-            if (random < 0.85) {
-                resolve({
-                    success: true,
-                    message: 'Bank transfer verified',
-                    transactionId: 'BT' + Date.now().toString().slice(-8),
-                    reference: referenceNumber,
-                    bank: bank,
-                    amount: amount
-                });
-            } else if (random < 0.92) {
-                resolve({
-                    success: false,
-                    message: 'Reference number not found'
-                });
-            } else if (random < 0.96) {
-                resolve({
-                    success: false,
-                    message: 'Amount does not match'
-                });
-            } else {
-                resolve({
-                    success: false,
-                    message: 'Bank transfer is still processing'
-                });
-            }
-        }, 2500);
-    });
+async function generateQRPhCode() {
+    const staticImageUrl = (typeof STATIC_URLS !== 'undefined' && STATIC_URLS.qrPh)
+        ? STATIC_URLS.qrPh
+        : '/static/orders_menupics/menu.png';
+
+    return {
+        id: 'static-qrph',
+        attributes: {
+            image_url: staticImageUrl
+        }
+    };
 }
 
-function saveVerifiedBankDetails(details) {
-    localStorage.setItem('verifiedBankPayment', JSON.stringify(details));
+function displayQRCode(imageUrl, amount, codeId) {
+    const qrDisplay = document.querySelector('.qr-display');
     
-    const bankForm = document.querySelector('.bank-form');
-    if (bankForm) {
-        bankForm.classList.add('verified');
-        
-        const existingBadge = bankForm.querySelector('.verified-badge');
-        if (!existingBadge) {
-            const verifiedBadge = document.createElement('div');
-            verifiedBadge.className = 'verified-badge';
-            verifiedBadge.innerHTML = `
-                <span class="verified-icon">✓</span>
-                Verified - Ref: ${details.reference}
-            `;
-            bankForm.appendChild(verifiedBadge);
-        }
-        
-        const inputs = bankForm.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.disabled = true;
-            input.style.backgroundColor = '#f8fff9';
-        });
-        
-        const verifyBtn = document.getElementById('verifyBank');
-        if (verifyBtn) {
-            verifyBtn.textContent = 'Verified';
-            verifyBtn.disabled = true;
-            verifyBtn.style.backgroundColor = '#28a745';
-        }
-        
-        // Add clear verification button
-        addClearVerificationButtons();
-    }
+    qrDisplay.innerHTML = `
+        <div class="qr-code-container">
+            <img src="${imageUrl}" alt="QR Ph Code" class="qr-code-image">
+            <div class="qr-amount">Amount: ₱${amount.toFixed(2)}</div>
+            <div class="qr-expiry">⏱️ Expires in 30 minutes</div>
+            <div class="qr-instructions">
+                <p>1. Open your banking app or e-wallet</p>
+                <p>2. Scan the QR code above</p>
+                <p>3. Confirm payment in your app, then place your order</p>
+            </div>
+            <div class="qr-status checking">
+                <span class="loading-spinner"></span>
+                Ready to place order after scan
+            </div>
+        </div>
+    `;
+    
+    // Store QR code info
+    localStorage.setItem('currentQRCode', JSON.stringify({
+        codeId: codeId,
+        amount: amount,
+        timestamp: new Date().toISOString(),
+        expiresIn: 30 * 60 * 1000 // 30 minutes
+    }));
 }
 
-function updatePaymentStatus(status) {
-    const paymentData = {
-        method: selectedPaymentMethod,
-        status: status,
-        timestamp: new Date().toISOString()
+function startPaymentStatusCheck(paymentIntentId) {
+    // Clear any existing interval
+    if (qrPaymentCheckInterval) {
+        clearInterval(qrPaymentCheckInterval);
+    }
+    
+    let attempts = 0;
+    const maxAttempts = 60; // Check for 60 seconds initially
+    
+    qrPaymentCheckInterval = setInterval(async () => {
+        attempts++;
+        
+        try {
+            // Check payment status via webhook simulation or API
+            const status = await checkPaymentStatus(paymentIntentId);
+            
+            if (status === 'succeeded') {
+                clearInterval(qrPaymentCheckInterval);
+                handleSuccessfulQRPayment(paymentIntentId);
+            } else if (status === 'failed' || status === 'expired') {
+                clearInterval(qrPaymentCheckInterval);
+                handleFailedQRPayment(status);
+            } else if (attempts >= maxAttempts) {
+                // Check if still waiting but within 30-minute expiry
+                const qrInfo = JSON.parse(localStorage.getItem('currentQRCode') || '{}');
+                const elapsed = new Date() - new Date(qrInfo.timestamp);
+                
+                if (elapsed > 30 * 60 * 1000) { // 30 minutes expired [citation:2]
+                    clearInterval(qrPaymentCheckInterval);
+                    handleFailedQRPayment('expired');
+                }
+            }
+            
+            // Update status message
+            updateQRStatusMessage(`Waiting for payment... (${attempts}s)`);
+            
+        } catch (error) {
+            console.error('Status check error:', error);
+        }
+    }, 1000);
+}
+
+async function checkPaymentStatus(paymentIntentId) {
+    const response = await fetch(`/api/payment-intent/${paymentIntentId}/status/`);
+    const data = await response.json();
+    
+    if (!data.success) {
+        throw new Error(data.error || 'Failed to check payment status');
+    }
+    
+    return data.status;
+}
+
+function handleSuccessfulQRPayment(paymentIntentId) {
+    // Save payment details
+    const paymentDetails = {
+        method: 'qr',
+        paymentIntentId: paymentIntentId,
+        amount: document.querySelector('.total').textContent,
+        timestamp: new Date().toISOString(),
+        status: 'verified'
     };
     
-    localStorage.setItem('paymentVerificationStatus', JSON.stringify(paymentData));
+    localStorage.setItem('verifiedQRPayment', JSON.stringify(paymentDetails));
+    localStorage.setItem('paymentVerificationStatus', JSON.stringify({
+        method: 'qr',
+        status: 'verified',
+        timestamp: new Date().toISOString()
+    }));
     
-    // Enable order processing if payment is verified
-    if (status === 'verified') {
-        const processOrderBtn = document.querySelector('.process-order');
-        if (processOrderBtn) {
-            processOrderBtn.disabled = false;
-        }
-    }
-}
-
-function checkExistingGCashVerification() {
-    const verifiedPayment = localStorage.getItem('verifiedGCashPayment');
-    const paymentStatus = localStorage.getItem('paymentVerificationStatus');
+    // Update UI
+    const qrForm = document.querySelector('.qr-form');
+    const qrDisplay = qrForm.querySelector('.qr-display');
     
-    if (verifiedPayment && paymentStatus) {
-        try {
-            const paymentData = JSON.parse(verifiedPayment);
-            const statusData = JSON.parse(paymentStatus);
-            
-            // Check if verification is still valid (less than 1 hour old)
-            const verificationTime = new Date(statusData.timestamp);
-            const currentTime = new Date();
-            const hoursDiff = (currentTime - verificationTime) / (1000 * 60 * 60);
-            
-            if (hoursDiff < 1 && statusData.status === 'verified') {
-                restoreVerifiedGCashUI(paymentData);
-                return true;
-            } else {
-                // Clear expired verification
-                clearGCashVerification();
-            }
-        } catch (error) {
-            console.error('Error restoring GCash verification:', error);
-            clearGCashVerification();
-        }
+    qrDisplay.innerHTML = `
+        <div class="payment-success">
+            <span class="success-icon">✓</span>
+            <div>
+                <strong>Payment Successful!</strong><br>
+                Amount: ${document.querySelector('.total').textContent}<br>
+                Reference: ${paymentIntentId.slice(-8)}
+            </div>
+        </div>
+    `;
+    
+    // Enable place order button
+    const processOrderBtn = document.querySelector('.process-order');
+    if (processOrderBtn) {
+        processOrderBtn.disabled = false;
     }
     
-    return false;
+    showToast('✅ Payment successful! You can now place your order.', 'success');
 }
 
-function restoreVerifiedGCashUI(details) {
-    const gcashForm = document.querySelector('.gcash-form');
-    if (!gcashForm) return;
+function handleFailedQRPayment(reason) {
+    const qrForm = document.querySelector('.qr-form');
+    const qrDisplay = qrForm.querySelector('.qr-display');
     
-    // Populate fields
-    const gcashNumber = document.getElementById('gcashNumber');
-    const gcashName = document.getElementById('gcashName');
-    
-    if (gcashNumber) gcashNumber.value = details.number;
-    if (gcashName) gcashName.value = details.name;
-    
-    // Apply verified styling
-    saveVerifiedGCashDetails(details);
-}
-
-function clearGCashVerification() {
-    localStorage.removeItem('verifiedGCashPayment');
-    localStorage.removeItem('paymentVerificationStatus');
-    
-    const gcashForm = document.querySelector('.gcash-form');
-    if (gcashForm) {
-        gcashForm.classList.remove('verified');
-        
-        // Remove verified badge
-        const verifiedBadge = gcashForm.querySelector('.verified-badge');
-        if (verifiedBadge) {
-            verifiedBadge.remove();
-        }
-        
-        // Re-enable input fields
-        const inputs = gcashForm.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.disabled = false;
-            input.style.backgroundColor = '';
-        });
-        
-        // Reset verify button
-        const verifyBtn = document.getElementById('verifyGCash');
-        if (verifyBtn) {
-            verifyBtn.textContent = 'Verify GCash';
-            verifyBtn.disabled = false;
-            verifyBtn.style.backgroundColor = '';
-        }
-        
-        // Remove clear button
-        const clearBtn = gcashForm.querySelector('.clear-verification');
-        if (clearBtn) {
-            clearBtn.remove();
-        }
+    let message = 'Payment failed. Please try again.';
+    if (reason === 'expired') {
+        message = 'QR code expired. Please generate a new one.';
     }
     
-    showToast('GCash verification cleared', 'info');
-}
-
-function clearBankVerification() {
-    localStorage.removeItem('verifiedBankPayment');
+    qrDisplay.innerHTML = `
+        <div class="qr-error">
+            <span class="error-icon">❌</span>
+            <p>${message}</p>
+            <button class="qr-retry-btn" onclick="initializeQRPayment()">Generate New QR</button>
+        </div>
+    `;
     
-    const bankForm = document.querySelector('.bank-form');
-    if (bankForm) {
-        bankForm.classList.remove('verified');
-        
-        const verifiedBadge = bankForm.querySelector('.verified-badge');
-        if (verifiedBadge) {
-            verifiedBadge.remove();
-        }
-        
-        const inputs = bankForm.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.disabled = false;
-            input.style.backgroundColor = '';
-        });
-        
-        const verifyBtn = document.getElementById('verifyBank');
-        if (verifyBtn) {
-            verifyBtn.textContent = 'Verify Transfer';
-            verifyBtn.disabled = false;
-            verifyBtn.style.backgroundColor = '';
-        }
-        
-        // Remove clear button
-        const clearBtn = bankForm.querySelector('.clear-verification');
-        if (clearBtn) {
-            clearBtn.remove();
-        }
-    }
-    
-    showToast('Bank verification cleared', 'info');
+    // Clear stored data
+    localStorage.removeItem('currentQRCode');
 }
 
-function initializePaymentVerification() {
-    // Check for existing verifications on page load
-    checkExistingGCashVerification();
-}
-
-function addClearVerificationButtons() {
-    // Add to GCash form if verified and button doesn't exist
-    const gcashForm = document.querySelector('.gcash-form.verified');
-    if (gcashForm && !gcashForm.querySelector('.clear-verification')) {
-        const clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.className = 'clear-verification';
-        clearBtn.innerHTML = `
-            <span class="clear-icon">↻</span>
-            Clear Verification
+function updateQRStatusMessage(message) {
+    const statusEl = document.querySelector('.qr-status');
+    if (statusEl) {
+        statusEl.innerHTML = `
+            <span class="loading-spinner"></span>
+            ${message}
         `;
-        clearBtn.onclick = clearGCashVerification;
-        gcashForm.appendChild(clearBtn);
     }
-    
-    // Add to Bank form if verified and button doesn't exist
-    const bankForm = document.querySelector('.bank-form.verified');
-    if (bankForm && !bankForm.querySelector('.clear-verification')) {
-        const clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.className = 'clear-verification';
-        clearBtn.innerHTML = `
-            <span class="clear-icon">↻</span>
-            Clear Verification
-        `;
-        clearBtn.onclick = clearBankVerification;
-        bankForm.appendChild(clearBtn);
-    }
-}
-
-async function checkPaymentVerification() {
-    // Payment verification disabled for testing - all payment methods allowed
-    return true;
-    
-    // Original verification code (disabled):
-    // if (selectedPaymentMethod === 'gcash') {
-    //     const verifiedPayment = localStorage.getItem('verifiedGCashPayment');
-    //     return !!verifiedPayment;
-    // } else if (selectedPaymentMethod === 'bank') {
-    //     const verifiedPayment = localStorage.getItem('verifiedBankPayment');
-    //     return !!verifiedPayment;
-    // }
-    // return true; // Cash payments don't need verification
-}
-
-function getVerifiedPaymentDetails() {
-    if (selectedPaymentMethod === 'gcash') {
-        const payment = localStorage.getItem('verifiedGCashPayment');
-        return payment ? JSON.parse(payment) : null;
-    } else if (selectedPaymentMethod === 'bank') {
-        const payment = localStorage.getItem('verifiedBankPayment');
-        return payment ? JSON.parse(payment) : null;
-    }
-    
-    return null;
 }
 
 // ========== PAYMENT FUNCTIONS ==========
@@ -640,29 +542,51 @@ function initializePaymentMethods() {
         });
     });
 
-    document.querySelectorAll('.bank-option').forEach(option => {
-        option.addEventListener('click', function() {
-            const bank = this.getAttribute('data-bank');
-            selectBank(bank);
-        });
-    });
-
-    const verifyGCashBtn = document.getElementById('verifyGCash');
-    if (verifyGCashBtn) {
-        verifyGCashBtn.addEventListener('click', verifyGCashPayment);
-    }
-    
-    const verifyBankBtn = document.getElementById('verifyBank');
-    if (verifyBankBtn) {
-        verifyBankBtn.addEventListener('click', verifyBankPayment);
-    }
-    
     selectPaymentMethod('cash');
-    selectBank('bpi');
-    
-    // Initialize payment verification
-    initializePaymentVerification();
 }
+
+function selectPaymentMethod(method) {
+    selectedPaymentMethod = method;
+    
+    document.querySelectorAll('.payment-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const activeBtn = document.querySelector(`.payment-btn[data-method="${method}"]`);
+    if (activeBtn && !activeBtn.disabled) {
+        activeBtn.classList.add('active');
+    }
+    
+    updatePaymentForms();
+}
+
+function updatePaymentForms() {
+    document.querySelectorAll('.payment-note, .payment-form').forEach(element => {
+        element.classList.remove('active');
+    });
+    
+    switch(selectedPaymentMethod) {
+        case 'cash':
+            document.querySelector('.cash-note').classList.add('active');
+            // Clear any QR payment state
+            if (qrPaymentCheckInterval) {
+                clearInterval(qrPaymentCheckInterval);
+                qrPaymentCheckInterval = null;
+            }
+            break;
+        case 'qr':
+            document.querySelector('.qr-form').classList.add('active');
+            initializeQRPayment();
+            break;
+    }
+}
+
+// Legacy placeholder to preserve the function name; real processOrder is defined later.
+async function processOrder() {
+    // This placeholder is intentionally empty.
+}
+
+
 
 function selectPaymentMethod(method) {
     selectedPaymentMethod = method;
@@ -705,17 +629,41 @@ function updatePaymentForms() {
     document.querySelectorAll('.payment-note, .payment-form').forEach(element => {
         element.classList.remove('active');
     });
-    
+
+    const processOrderBtn = document.querySelector('.process-order');
+    if (processOrderBtn) {
+        processOrderBtn.disabled = true;
+    }
+
     switch(selectedPaymentMethod) {
         case 'cash':
             document.querySelector('.cash-note').classList.add('active');
+            if (processOrderBtn) {
+                processOrderBtn.disabled = false;
+            }
+            break;
+        case 'qr':
+            document.querySelector('.qr-form').classList.add('active');
+            initializeQRPayment();
+            if (processOrderBtn) {
+                processOrderBtn.disabled = false;
+            }
             break;
         case 'gcash':
             document.querySelector('.gcash-form').classList.add('active');
             updateGCashAmount();
+            if (processOrderBtn) {
+                processOrderBtn.disabled = false;
+            }
             break;
         case 'bank':
             document.querySelector('.bank-form').classList.add('active');
+            if (processOrderBtn) {
+                processOrderBtn.disabled = false;
+            }
+            break;
+        default:
+            // if payment method is unknown, keep button disabled as safety
             break;
     }
 }
@@ -855,12 +803,19 @@ function updateBillingPanel() {
     const subtotalElement = document.querySelector('.subtotal');
     const totalElement = document.querySelector('.total');
     const deliveryFeeRow = document.querySelector('.delivery-fee-row');
+    const deliveryFeeElement = document.querySelector('.delivery-charge');
     const orderType = document.querySelector('.order-btn.active').dataset.type;
     
     elements.billingItems.innerHTML = '';
     
     if (orderType === 'delivery') {
         deliveryFeeRow.style.display = 'flex';
+        // Show calculating state
+        if (deliveryCharge === 0) {
+            deliveryFeeElement.textContent = 'Php Calculating...';
+        } else {
+            deliveryFeeElement.textContent = `Php ${deliveryCharge.toFixed(2)}`;
+        }
     } else {
         deliveryFeeRow.style.display = 'none';
     }
@@ -941,7 +896,29 @@ async function processOrder() {
         showToast('Your cart is empty!', 'error');
         return;
     }
-    
+
+    if (selectedPaymentMethod === 'qr') {
+        const generatedQR = localStorage.getItem('currentQRCode');
+        const paymentStatusRaw = localStorage.getItem('paymentVerificationStatus');
+
+        if (!generatedQR || !paymentStatusRaw) {
+            showToast('Please generate QR code first', 'error');
+            return;
+        }
+
+        try {
+            const paymentStatus = JSON.parse(paymentStatusRaw);
+            if (!paymentStatus.status || (paymentStatus.status !== 'manual_pending' && paymentStatus.status !== 'verified')) {
+                showToast('Please scan QR code before placing order.', 'error');
+                return;
+            }
+        } catch (e) {
+            console.error('QR payment status parse error', e);
+            showToast('Payment verification failed', 'error');
+            return;
+        }
+    }
+
     // Payment verification disabled for testing
     // Orders can be placed without verification
     // if (selectedPaymentMethod !== 'cash') {
@@ -1155,29 +1132,53 @@ function getCSRFToken() {
     if (csrfInput) {
         csrfToken = csrfInput.value;
     }
-    
-    // Method 2: From cookie
-    if (!csrfToken) {
-        const cookieValue = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrftoken='))
-            ?.split('=')[1];
-        if (cookieValue) {
-            csrfToken = cookieValue;
-        }
-    }
-    
-    // Method 3: From meta tag
-    if (!csrfToken) {
-        const metaToken = document.querySelector('meta[name="csrf-token"]');
-        if (metaToken) {
-            csrfToken = metaToken.getAttribute('content');
-        }
-    }
-    
+
     return csrfToken;
 }
 
+function getVerifiedPaymentDetails() {
+    // Return structured payment details for verified non-cash methods
+    const method = selectedPaymentMethod;
+    if (method === 'qr') {
+        const verified = localStorage.getItem('verifiedQRPayment');
+        if (!verified) return null;
+
+        try {
+            return JSON.parse(verified);
+        } catch (e) {
+            console.error('Could not parse verified QR payment data:', e);
+            return null;
+        }
+    }
+
+    if (method === 'gcash') {
+        const store = localStorage.getItem('verifiedGCashPayment');
+        if (!store) return null;
+
+        try {
+            return JSON.parse(store);
+        } catch (e) {
+            console.error('Could not parse verified GCash payment data:', e);
+            return null;
+        }
+    }
+
+    if (method === 'bank') {
+        const store = localStorage.getItem('verifiedBankPayment');
+        if (!store) return null;
+
+        try {
+            return JSON.parse(store);
+        } catch (e) {
+            console.error('Could not parse verified Bank payment data:', e);
+            return null;
+        }
+    }
+
+    // Cash and other methods are not verified by payment details
+    return null;
+}
+    
 // ========== SAVE ORDER TO HISTORY ==========
 function saveOrderToHistory(orderData) {
     let orderHistory = JSON.parse(localStorage.getItem('motherJulieOrderHistory')) || [];
@@ -1201,6 +1202,8 @@ function initializeLocationModal() {
     const mapContainer = document.getElementById('mapContainer');
     const locationError = document.getElementById('locationError');
     const confirmLocationBtn = document.getElementById('confirmLocationBtn');
+    const cancelLocationBtn = document.getElementById('cancelLocationBtn');
+    const modalClose = document.getElementById('modalClose');
     const selectedLocationDisplay = document.getElementById('selectedLocationDisplay');
 
     let map;
@@ -1209,16 +1212,15 @@ function initializeLocationModal() {
     let autocomplete;
     let selectedLocation = null;
     let isMapVisible = false;
+    let locationSearchTimeout = null;
 
-    // Open modal
+    // ========== OPEN MODAL ==========
     document.querySelector('.location-search').addEventListener('click', () => {
         locationModal.style.display = 'flex';
         locationInput.focus();
     });
 
-    const modalClose = document.getElementById('modalClose');
-    const cancelLocationBtn = document.getElementById('cancelLocationBtn');
-
+    // ========== CLOSE MODAL FUNCTIONS ==========
     modalClose.addEventListener('click', () => closeModal());
     cancelLocationBtn.addEventListener('click', () => closeModal());
 
@@ -1231,7 +1233,391 @@ function initializeLocationModal() {
         resetModal();
     }
 
-    // Show/Hide Map
+    function resetModal() {
+        if (locationInput) locationInput.value = '';
+        if (suggestions) suggestions.innerHTML = '';
+        if (locationError) locationError.innerHTML = '';
+        if (confirmLocationBtn) confirmLocationBtn.disabled = true;
+        if (selectedLocationDisplay) selectedLocationDisplay.innerHTML = '';
+        
+        // Hide map if visible
+        if (mapContainer && mapContainer.classList.contains('active')) {
+            mapContainer.classList.remove('active');
+            if (showMapBtn) {
+                showMapBtn.classList.remove('active');
+                showMapBtn.textContent = "🗺️ Show Map";
+            }
+        }
+        
+        // Clear marker
+        if (marker) {
+            marker.setMap(null);
+            marker = null;
+        }
+        selectedLocation = null;
+    }
+
+    // ========== CONFIRM LOCATION ==========
+    confirmLocationBtn.addEventListener('click', () => {
+        // Use the global selectedDeliveryLocation object if available (set by setSelectedLocation)
+        const hasSelectedDeliveryLocation = selectedDeliveryLocation && selectedDeliveryLocation.address;
+        const activeSelectedLocation = hasSelectedDeliveryLocation ? selectedDeliveryLocation.address : selectedLocation;
+
+        if (activeSelectedLocation) {
+            const locText = document.querySelector('.loc-text');
+            if (locText) {
+                const cityMatch = activeSelectedLocation.match(/([^,]+)/);
+                const displayLocation = cityMatch ? cityMatch[1] : 'Manila';
+                locText.textContent = displayLocation;
+            }
+
+            showToast(`📍 Location set to: ${activeSelectedLocation}`, 'success');
+            closeModal();
+        } else {
+            locationError.textContent = 'Please select a location first';
+            locationError.classList.add('active');
+            setTimeout(() => locationError.classList.remove('active'), 3000);
+        }
+    });
+
+    // ========== IMPROVED CURRENT LOCATION WITH ACCURACY THRESHOLD ==========
+function getCurrentLocation(desiredAccuracy = 30) { // Want at least 30m accuracy for GPS lock
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('Geolocation is not supported by your browser'));
+            return;
+        }
+        
+        currentLocationBtn.disabled = true;
+        currentLocationBtn.classList.add('loading');
+        currentLocationBtn.innerHTML = '📍 Getting GPS lock (5-8 seconds)...';
+        
+        let bestPosition = null;
+        let bestAccuracy = Infinity;
+        let watchId = null;
+        let timeoutId = null;
+        let isDone = false;
+        let updateCount = 0;
+        const startTime = Date.now();
+        
+        // Success callback for watchPosition - waits for good GPS lock
+        const onPositionUpdate = (position) => {
+            if (isDone) return;
+            
+            updateCount++;
+            const accuracy = position.coords.accuracy;
+            const pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            
+            const elapsedSeconds = (Date.now() - startTime) / 1000;
+            const elapsedStr = elapsedSeconds.toFixed(1);
+            console.log(`📍 GPS Update #${updateCount} (${elapsedStr}s) - Accuracy: ${accuracy}m, Lat: ${pos.lat}, Lng: ${pos.lng}`);
+            
+            // Always track best position, regardless of accuracy
+            if (accuracy < bestAccuracy) {
+                bestAccuracy = accuracy;
+                bestPosition = pos;
+                
+                // Show current status
+                if (accuracy <= desiredAccuracy) {
+                    // Excellent GPS lock - use immediately after 2 updates to confirm!
+                    if (updateCount >= 2) {
+                        console.log(`✅ Excellent GPS lock confirmed: ${accuracy}m`);
+                        isDone = true;
+                        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+                        if (timeoutId) clearTimeout(timeoutId);
+                        stopAndResolve(pos, accuracy);
+                        return;
+                    }
+                    // Still waiting to confirm
+                    locationError.textContent = `📍 Acquiring GPS... (±${Math.round(accuracy)}m, update #${updateCount})`;
+                    locationError.classList.add('active');
+                    locationError.style.background = '#e3f2fd';
+                    locationError.style.color = '#1565c0';
+                } else if (accuracy <= 500) {
+                    // Good/fair accuracy - show progress
+                    locationError.textContent = `📍 Acquiring GPS... (±${Math.round(accuracy)}m, update #${updateCount})`;
+                    locationError.classList.add('active');
+                    locationError.style.background = '#e3f2fd';
+                    locationError.style.color = '#1565c0';
+                } else if (elapsedSeconds >= 4) {
+                    // After 4 seconds, show even poor accuracy updates (WiFi-based)
+                    locationError.textContent = `📍 Using available location (±${Math.round(accuracy)}m)`;
+                    locationError.classList.add('active');
+                    locationError.style.background = '#fff3cd';
+                    locationError.style.color = '#856404';
+                } else {
+                    // First 4 seconds with > 500m accuracy - still waiting
+                    locationError.textContent = `📍 Waiting for GPS lock... (currently ±${Math.round(accuracy)}m)`;
+                    locationError.classList.add('active');
+                    locationError.style.background = '#e3f2fd';
+                    locationError.style.color = '#1565c0';
+                }
+            }
+        };
+        
+        // Error callback
+        const onError = (error) => {
+            if (isDone) return;
+            isDone = true;
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+            if (timeoutId) clearTimeout(timeoutId);
+            
+            console.error('Geolocation error:', error.code, error.message);
+            if (error.code === 1) {
+                stopAndReject(new Error('Permission denied. Please enable location access in browser settings.'));
+            } else if (error.code === 3) {
+                stopAndReject(new Error('Location request timed out. Please ensure location services are enabled.'));
+            } else {
+                stopAndReject(new Error('Could not get location. Please try again.'));
+            }
+        };
+        
+        // Stop watching and resolve with best position
+        const stopAndResolve = (position, accuracy) => {
+            currentLocationBtn.disabled = false;
+            currentLocationBtn.classList.remove('loading');
+            currentLocationBtn.innerHTML = '📍 Use Current Location';
+            
+            // Show accuracy message
+            let accuracyMessage = '';
+            if (accuracy < 15) {
+                accuracyMessage = '✅ Excellent accuracy!';
+            } else if (accuracy < 30) {
+                accuracyMessage = '✅ Great accuracy';
+            } else if (accuracy < 50) {
+                accuracyMessage = '✅ Good accuracy';
+            } else if (accuracy < 100) {
+                accuracyMessage = '✅ Fair accuracy';
+            } else {
+                accuracyMessage = '⚠️ Low accuracy - may be approximate';
+            }
+            
+            locationError.textContent = `${accuracyMessage} (±${Math.round(accuracy)}m)`;
+            locationError.style.background = accuracy < 50 ? '#d4edda' : '#fff3cd';
+            locationError.style.color = accuracy < 50 ? '#155724' : '#856404';
+            locationError.classList.add('active');
+            
+            setTimeout(() => {
+                locationError.classList.remove('active');
+            }, 4000);
+            
+            resolve(position);
+        };
+        
+        // Stop watching and reject
+        const stopAndReject = (error) => {
+            currentLocationBtn.disabled = false;
+            currentLocationBtn.classList.remove('loading');
+            currentLocationBtn.innerHTML = '📍 Use Current Location';
+            reject(error);
+        };
+        
+        // Use watchPosition to continuously improve accuracy
+        // Aggressive timeout to force GPS to work properly
+        watchId = navigator.geolocation.watchPosition(
+            onPositionUpdate,
+            onError,
+            {
+                enableHighAccuracy: true,    // Force GPS (not WiFi/cellular)
+                timeout: 8000,               // Wait up to 8 seconds per attempt
+                maximumAge: 0                // CRITICAL: Never use cached positions
+            }
+        );
+        
+        // After 8 seconds, use the best position we've gotten
+        timeoutId = setTimeout(() => {
+            if (!isDone) {
+                isDone = true;
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+                
+                if (bestPosition) {
+                    console.log(`⏱️ Using best position after 8s: ±${bestAccuracy}m (${updateCount} updates)`);
+                    stopAndResolve(bestPosition, bestAccuracy);
+                } else {
+                    stopAndReject(new Error('Could not get accurate location. Please check GPS is enabled and try again.'));
+                }
+            }
+        }, 8000); // 8 second absolute max
+    });
+}
+
+    // ========== CURRENT LOCATION BUTTON ==========
+currentLocationBtn.addEventListener('click', async () => {
+    try {
+        locationError.classList.remove('active');
+        locationError.textContent = '';
+        
+        // Try to get accurate location (within 50 meters)
+        const position = await getCurrentLocation(50);
+        
+        if (!map) {
+            initMap();
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        map.setCenter(position);
+        map.setZoom(18); // Zoom in closer for better verification
+        placeMarker(position);
+        reverseGeocode(position);
+        
+        if (!mapContainer.classList.contains('active')) {
+            isMapVisible = true;
+            mapContainer.classList.add('active');
+            showMapBtn.classList.add('active');
+            showMapBtn.textContent = '🗺️ Hide Map';
+        }
+        
+    } catch (error) {
+        console.error('Location error:', error);
+        locationError.textContent = error.message;
+        locationError.classList.add('active');
+        locationError.style.background = '#ffebee';
+        locationError.style.color = '#c62828';
+        
+        setTimeout(() => {
+            locationError.classList.remove('active');
+        }, 5000);
+    }
+});
+    // ========== SEARCH FUNCTION ==========
+    function searchLocation(query) {
+        if (!geocoder) {
+            geocoder = new google.maps.Geocoder();
+        }
+        
+        suggestions.innerHTML = '<div class="suggestion-item loading">Searching...</div>';
+        suggestions.classList.add('active');
+        
+        geocoder.geocode({ 
+            address: query, 
+            region: 'PH', 
+            bounds: { north: 14.9, south: 14.2, east: 121.2, west: 120.8 } 
+        }, (results, status) => {
+            if (status === 'OK' && results.length > 0) {
+                suggestions.innerHTML = '';
+                
+                const metroManilaResults = results.filter(result => {
+                    const address = result.formatted_address.toLowerCase();
+                    return address.includes('manila') || 
+                           address.includes('makati') || 
+                           address.includes('quezon city') || 
+                           address.includes('pasig') ||
+                           address.includes('taguig') ||
+                           address.includes('mandaluyong') ||
+                           address.includes('san juan') ||
+                           address.includes('pasay') ||
+                           address.includes('paranaque') ||
+                           address.includes('las pinas') ||
+                           address.includes('muntinglupa') ||
+                           address.includes('valenzuela') ||
+                           address.includes('caloocan') ||
+                           address.includes('malabon') ||
+                           address.includes('navotas') ||
+                           address.includes('marikina');
+                });
+                
+                const resultsToShow = metroManilaResults.length > 0 ? metroManilaResults : results.slice(0, 5);
+                
+                if (resultsToShow.length === 0) {
+                    suggestions.innerHTML = '<div class="suggestion-item no-results">No locations found in Metro Manila</div>';
+                    return;
+                }
+                
+                resultsToShow.forEach(result => {
+                    const suggestion = document.createElement('div');
+                    suggestion.className = 'suggestion-item';
+                    suggestion.textContent = result.formatted_address;
+                    suggestion.addEventListener('click', () => {
+                        selectLocationFromSearch(result);
+                    });
+                    suggestions.appendChild(suggestion);
+                });
+            } else {
+                suggestions.innerHTML = '<div class="suggestion-item error">No results found. Try a different search.</div>';
+                
+                if (status === 'ZERO_RESULTS') {
+                    locationError.textContent = 'No locations found. Please check your search.';
+                    locationError.classList.add('active');
+                } else if (status === 'OVER_QUERY_LIMIT') {
+                    locationError.textContent = 'Search quota exceeded. Please try again later.';
+                    locationError.classList.add('active');
+                } else if (status === 'REQUEST_DENIED') {
+                    locationError.textContent = 'Search request denied. Please check API configuration.';
+                    locationError.classList.add('active');
+                }
+                
+                setTimeout(() => locationError.classList.remove('active'), 5000);
+            }
+        });
+    }
+
+    function selectLocationFromSearch(result) {
+        const location = result.geometry.location;
+        
+        if (!map) initMap();
+        
+        map.setCenter(location);
+        map.setZoom(16);
+        placeMarker(location);
+        setSelectedLocation({
+            address: result.formatted_address,
+            lat: location.lat(),
+            lng: location.lng()
+        });
+        
+        suggestions.innerHTML = '';
+        suggestions.classList.remove('active');
+        locationError.classList.remove('active');
+        locationInput.value = result.formatted_address;
+    }
+
+    // ========== SUGGESTIONS WHILE TYPING ==========
+    locationInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+
+        if (locationSearchTimeout) {
+            clearTimeout(locationSearchTimeout);
+        }
+
+        if (query.length < 3) {
+            suggestions.innerHTML = '';
+            suggestions.classList.remove('active');
+            return;
+        }
+
+        locationSearchTimeout = setTimeout(() => {
+            searchLocation(query);
+        }, 350);
+    });
+
+    // ========== SEARCH BUTTON ==========
+    searchBtn.addEventListener('click', () => {
+        const query = locationInput.value.trim();
+        if (query.length < 3) {
+            locationError.textContent = 'Please enter at least 3 characters';
+            locationError.classList.add('active');
+            setTimeout(() => locationError.classList.remove('active'), 3000);
+            return;
+        }
+        searchLocation(query);
+    });
+
+    locationInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const query = locationInput.value.trim();
+            if (query.length >= 3) {
+                searchLocation(query);
+            }
+        }
+    });
+
+    // ========== SHOW/HIDE MAP ==========
     showMapBtn.addEventListener('click', () => {
         isMapVisible = !isMapVisible;
         mapContainer.classList.toggle('active', isMapVisible);
@@ -1246,68 +1632,136 @@ function initializeLocationModal() {
         }
     });
 
-function initMap() {
-    const defaultLocation = { lat: 14.5995, lng: 120.9842 };
+    // ========== MAP FUNCTIONS ==========
+    function initMap() {
+        const defaultLocation = { lat: 14.5995, lng: 120.9842 };
 
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: defaultLocation,
-        zoom: 12,
-    });
-
-    geocoder = new google.maps.Geocoder();
-
-    map.addListener("click", (e) => {
-        placeMarker(e.latLng);
-        reverseGeocode(e.latLng);
-    });
-
-    autocomplete = new google.maps.places.Autocomplete(locationInput);
-
-    autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (!place.geometry) return;
-
-        map.setCenter(place.geometry.location);
-        map.setZoom(15);
-        placeMarker(place.geometry.location);
-        setSelectedLocation(place.formatted_address);
-    });
-}
-
-function placeMarker(location) {
-    if (marker) {
-        marker.setPosition(location);
-    } else {
-        marker = new google.maps.Marker({
-            position: location,
-            map: map,
-            draggable: true
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: defaultLocation,
+            zoom: 12,
         });
 
-        marker.addListener("dragend", () => {
-            reverseGeocode(marker.getPosition());
+        geocoder = new google.maps.Geocoder();
+
+        map.addListener("click", (e) => {
+            placeMarker(e.latLng);
+            reverseGeocode(e.latLng);
+        });
+
+        // Use Places Autocomplete (deprecated but working)
+        autocomplete = new google.maps.places.Autocomplete(locationInput);
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
+
+            map.setCenter(place.geometry.location);
+            map.setZoom(15);
+            placeMarker(place.geometry.location);
+            setSelectedLocation({
+                address: place.formatted_address,
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+            });
         });
     }
 
-    map.setCenter(location);
-}
-
-function reverseGeocode(latLng) {
-    geocoder.geocode({ location: latLng }, (results, status) => {
-        if (status === "OK" && results[0]) {
-            setSelectedLocation(results[0].formatted_address);
+    function placeMarker(location) {
+        if (marker) {
+            marker.setPosition(location);
         } else {
-            setSelectedLocation("Unknown Location");
+            marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                draggable: true
+            });
+
+            marker.addListener("dragend", () => {
+                reverseGeocode(marker.getPosition());
+            });
+        }
+
+        map.setCenter(location);
+    }
+
+    function reverseGeocode(latLng) {
+        locationError.textContent = 'Getting address...';
+        locationError.classList.add('active');
+        locationError.style.background = '#e3f2fd';
+        locationError.style.color = '#1565c0';
+        
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            locationError.classList.remove('active');
+            
+            if (status === "OK" && results[0]) {
+                const address = results[0].formatted_address;
+                const isInMetroManila = address.toLowerCase().includes('manila') || 
+                                        address.toLowerCase().includes('metro manila') ||
+                                        address.toLowerCase().includes('ncr');
+                
+                if (isInMetroManila) {
+                    setSelectedLocation({
+                        address: address,
+                        lat: latLng.lat(),
+                        lng: latLng.lng()
+                    });
+                    
+                    locationError.textContent = '✓ Location found!';
+                    locationError.classList.add('active');
+                    locationError.style.background = '#e8f5e9';
+                    locationError.style.color = '#2e7d32';
+                    
+                    setTimeout(() => locationError.classList.remove('active'), 2000);
+                } else {
+                    locationError.textContent = 'Selected location is outside Metro Manila. Please choose a location within Metro Manila.';
+                    locationError.classList.add('active');
+                    locationError.style.background = '#fff3cd';
+                    locationError.style.color = '#856404';
+                    
+                    if (marker) {
+                        marker.setMap(null);
+                        marker = null;
+                    }
+                }
+            } else {
+                console.error('Geocoder failed due to: ' + status);
+                locationError.textContent = 'Could not find address for this location.';
+                locationError.classList.add('active');
+                locationError.style.background = '#ffebee';
+                locationError.style.color = '#c62828';
+            }
+        });
+    }
+
+    function setSelectedLocation(location) {
+        selectedDeliveryLocation = location;
+        updateSelectedLocationDisplay(location.address || '');
+        confirmLocationBtn.disabled = false;
+
+        if (document.querySelector('.order-btn.active')?.dataset.type === 'delivery') {
+            calculateDeliveryFee(location);
+        }
+    }
+
+    function updateSelectedLocationDisplay(address) {
+        if (selectedLocationDisplay) {
+            selectedLocationDisplay.innerHTML = `
+                <div class="selected-address">
+                    <strong>Selected Location:</strong><br>
+                    ${address}
+                </div>
+            `;
+            selectedLocationDisplay.classList.add('active');
+        }
+    }
+
+    // ========== CLICK OUTSIDE SUGGESTIONS ==========
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-box') && !e.target.closest('.suggestions')) {
+            suggestions.classList.remove('active');
         }
     });
-
-    function setSelectedLocation(address) {
-    selectedLocation = address;
-    updateSelectedLocationDisplay(address);
-    confirmLocationBtn.disabled = false;
 }
 
-}
 // ========== SIDEBAR NAVIGATION ==========
 function initializeSidebarNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
@@ -1785,6 +2239,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         button.addEventListener('click', function() {
             document.querySelectorAll('.order-btn').forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
+            if (this.dataset.type === 'delivery' && selectedDeliveryLocation) {
+                calculateDeliveryFee(selectedDeliveryLocation);
+            } else if (this.dataset.type !== 'delivery') {
+                deliveryCharge = 0;
+            }
             updateBillingPanel();
             updatePaymentMethodsBasedOnOrderType();
         });
@@ -1830,4 +2289,3 @@ function getOrderData() {
 }
 
 
-}
