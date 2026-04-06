@@ -256,9 +256,8 @@
                 <div class="payment-form qr-form">
                     <h4>Scan to Pay with QR Ph</h4>
                     <div class="qr-display">
-                        <div class="qr-placeholder">
-                            <div class="qr-icon">📱</div>
-                            <p>Select QR Ph to generate payment code</p>
+                        <div class="qr-code-container">
+                            <img src="{% static 'orders_menupics/qr.png' %}" alt="QR Ph Payment Code" class="qr-code-image">
                         </div>
                     </div>
                 </div>
@@ -294,7 +293,7 @@
             wrap: "{% static 'orders_menupics/wrap.png' %}",
             appetizer: "{% static 'orders_menupics/appetizer.png' %}",
             addToCart: "{% static 'orders_menupics/addtocart.png' %}",
-            qrPh: "{% static 'orders_menupics/menu.png' %}",
+            qrPh: "{% static 'orders_menupics/qr.png' %}",
             
             // Desserts
             maisConYelo: "{% static 'orders_menupics/mais.png' %}",
@@ -333,3 +332,5 @@
     <script src="{% static 'orders_menu.js' %}"></script>
 </body>
 </html>
+
+
