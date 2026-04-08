@@ -7,7 +7,7 @@ const PAYMONGO_SECRET_KEY = 'sk_test_your_secret_key_here'; // Replace with your
 
 // GLOBAL INITMAP FUNCTION - MUST be at the top level
 window.initMap = function() {
-    console.log('✅ Google Maps API loaded successfully');
+    console.log(' Google Maps API loaded successfully');
     // The map will be initialized when the modal opens
 };
 
@@ -16,16 +16,18 @@ window.initMap = function() {
 let cart = JSON.parse(localStorage.getItem('motherJulieCart')) || [];
 let orderCount = cart.reduce((total, item) => total + item.quantity, 0) || 0;
 let deliveryCharge = 0;  // Dynamic delivery fee - will be calculated via Lalamove API
+let deliveryRouteKm = null;
 let selectedPaymentMethod = 'cash';
 let selectedBank = 'bpi';
 let selectedDeliveryLocation = null;  // Store selected location for delivery calculation
+const DELIVERY_LOCATION_STORAGE_KEY = 'motherJulieSelectedDeliveryLocation';
 
-// Branch coordinates for delivery origin (approximate, adjust as needed)
-const BRANCH_LOCATIONS = [
-    { name: 'Old Torres Branch', lat: 14.5869, lng: 120.9799 },
-    { name: 'Perfecto Branch', lat: 14.6150, lng: 120.9929 },
-    { name: 'Velasquez Branch', lat: 14.5905, lng: 120.9814 }
-];
+// Fixed pickup point for delivery estimates
+const DELIVERY_PICKUP_POINT = {
+    name: '1983 Old Torres St, Tondo, Manila, 1012 Metro Manila',
+    lat: 14.5869,
+    lng: 120.9799
+};
 
 // DOM Elements
 const elements = {
@@ -60,9 +62,39 @@ function clearCartFromStorage() {
     updateBillingPanel();
 }
 
+function saveDeliveryLocation(location) {
+    localStorage.setItem(DELIVERY_LOCATION_STORAGE_KEY, JSON.stringify(location));
+}
+
+function loadDeliveryLocation() {
+    const savedLocation = localStorage.getItem(DELIVERY_LOCATION_STORAGE_KEY);
+    if (!savedLocation) return null;
+
+    try {
+        return JSON.parse(savedLocation);
+    } catch (error) {
+        console.error('Error parsing saved delivery location:', error);
+        localStorage.removeItem(DELIVERY_LOCATION_STORAGE_KEY);
+        return null;
+    }
+}
+
+function updateTopbarLocation(address) {
+    const locText = document.querySelector('.loc-text');
+    if (!locText) return;
+
+    if (!address) {
+        locText.textContent = 'Manila';
+        return;
+    }
+
+    const cityMatch = address.match(/([^,]+)/);
+    locText.textContent = cityMatch ? cityMatch[1].trim() : address;
+}
+
 // ========== MINIMALIST TOAST NOTIFICATIONS ==========
 function showToast(message, type = 'success', duration = 3000) {
-    console.log('🔴 DEBUG: showToast called - message:', message, 'type:', type, 'duration:', duration);
+    console.log(' DEBUG: showToast called - message:', message, 'type:', type, 'duration:', duration);
     
     // Create toast container if it doesn't exist
     if (!elements.toastContainer) {
@@ -154,61 +186,45 @@ function getMinimalSuccessMessage(orderType, paymentMethod) {
     return baseMessages[orderType] || 'Order placed successfully!';
 }
 
-function getNearestBranch(lat, lng) {
-    let closest = null;
-    let minDistance = Number.MAX_VALUE;
-
-    const toRadians = degrees => degrees * (Math.PI / 180);
-    const earthRadiusKm = 6371;
-
-    const dLat = (lat1, lat2) => toRadians(lat2 - lat1);
-    const dLng = (lng1, lng2) => toRadians(lng2 - lng1);
-
-    const haversineDistance = (a, b) => {
-        const dLatVal = dLat(a.lat, b.lat);
-        const dLngVal = dLng(a.lng, b.lng);
-        const sinLat = Math.sin(dLatVal / 2);
-        const sinLng = Math.sin(dLngVal / 2);
-        const p = sinLat * sinLat + Math.cos(toRadians(a.lat)) * Math.cos(toRadians(b.lat)) * sinLng * sinLng;
-        return earthRadiusKm * 2 * Math.atan2(Math.sqrt(p), Math.sqrt(1 - p));
-    };
-
-    BRANCH_LOCATIONS.forEach(branch => {
-        const distance = haversineDistance({ lat, lng }, branch);
-        if (distance < minDistance) {
-            minDistance = distance;
-            closest = branch;
-        }
-    });
-
-    return closest;
-}
-
 async function calculateDeliveryFee(destination) {
     try {
         console.log('DEBUG calculateDeliveryFee destination:', destination);
 
         if (!destination || !destination.lat || !destination.lng) {
             deliveryCharge = 0;
+            deliveryRouteKm = null;
             return;
         }
 
-        const branch = getNearestBranch(destination.lat, destination.lng);
+        showToast(`Calculating delivery fee from ${DELIVERY_PICKUP_POINT.name}...`, 'info', 3000);
 
-        if (!branch) {
-            deliveryCharge = 0;
-            showToast('Could not determine nearest branch for delivery fee.', 'error', 5000);
-            return;
+        let routeDistanceKm = null;
+        if (window.google?.maps?.DirectionsService) {
+            try {
+                const directionsService = new google.maps.DirectionsService();
+                const directionsResult = await directionsService.route({
+                    origin: new google.maps.LatLng(DELIVERY_PICKUP_POINT.lat, DELIVERY_PICKUP_POINT.lng),
+                    destination: new google.maps.LatLng(destination.lat, destination.lng),
+                    travelMode: google.maps.TravelMode.DRIVING,
+                });
+
+                const routeLeg = directionsResult?.routes?.[0]?.legs?.[0];
+                const routeMeters = routeLeg?.distance?.value;
+                if (routeMeters) {
+                    routeDistanceKm = routeMeters / 1000;
+                }
+            } catch (directionsError) {
+                console.warn('Directions API unavailable, falling back to coordinate estimate:', directionsError);
+            }
         }
-
-        showToast('Calculating delivery fee via Lalamove...', 'info', 3000);
 
         const response = await fetch('/api/calculate-delivery-fee/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                origin: { lat: branch.lat, lng: branch.lng },
-                destination: { lat: destination.lat, lng: destination.lng }
+                origin: { lat: DELIVERY_PICKUP_POINT.lat, lng: DELIVERY_PICKUP_POINT.lng },
+                destination: { lat: destination.lat, lng: destination.lng },
+                distance_km: routeDistanceKm
             })
         });
 
@@ -232,12 +248,15 @@ async function calculateDeliveryFee(destination) {
         }
 
         deliveryCharge = Number(data.deliveryFee) || 0;
+        deliveryRouteKm = Number(data.distanceKm || routeDistanceKm || 0) || null;
         updateBillingPanel();
 
-        showToast(`Delivery fee ${deliveryCharge > 0 ? 'set to' : 'reset to'} Php ${deliveryCharge.toFixed(2)}.`, 'success', 3000);
+        const sourceNote = routeDistanceKm ? '' : ' Using map-coordinate estimate.';
+        showToast(`Delivery fee ${deliveryCharge > 0 ? 'set to' : 'reset to'} Php ${deliveryCharge.toFixed(2)}.${sourceNote}`, 'success', 3000);
     } catch (err) {
         console.error('Delivery fee calculation error:', err);
         deliveryCharge = 0;
+        deliveryRouteKm = null;
         updateBillingPanel();
         showToast(`Could not calculate delivery fee. ${err.message}`, 'error', 8000);
     }
@@ -315,52 +334,36 @@ async function initializeQRPayment() {
     const amount = parseFloat(totalElement.textContent.replace(/[^0-9.]/g, ''));
     
     if (amount < 1) {
-        showToast('Minimum amount is ₱1.00', 'error');
+        showToast('Minimum amount is 1.00', 'error');
         return;
     }
     
-    try {
-        // Show loading state
-        const qrDisplay = document.querySelector('.qr-display');
-        qrDisplay.innerHTML = '<div class="qr-loading">Generating QR code...</div>';
-        
-        // Single-step QRPH generation (manual confirmation flow)
-        const qrResult = await generateQRPhCode();
-        const qrImageUrl =
-            qrResult?.attributes?.image_url ||
-            qrResult?.attributes?.qr_image_url ||
-            qrResult?.attributes?.code?.image_url ||
-            qrResult?.image_url ||
-            null;
-        const qrCodeId = qrResult?.id || qrResult?.attributes?.code?.id || '';
+    const qrDisplay = document.querySelector('.qr-display');
+    qrDisplay.innerHTML = '<div class="qr-loading">Loading business QR code...</div>';
 
-        if (qrImageUrl) {
-            displayQRCode(qrImageUrl, amount, qrCodeId);
-            localStorage.setItem('paymentVerificationStatus', JSON.stringify({
-                method: 'qr',
-                status: 'manual_pending',
-                timestamp: new Date().toISOString()
-            }));
-            const processOrderBtn = document.querySelector('.process-order');
-            if (processOrderBtn) {
-                processOrderBtn.disabled = false;
-            }
-        } else {
-            throw new Error('QR code generation failed');
-        }
-        
-    } catch (error) {
-        console.error('QR Payment initialization error:', error);
-        showToast(error?.message || 'Failed to initialize QR payment. Please try again.', 'error');
-        
-        const qrDisplay = document.querySelector('.qr-display');
-        qrDisplay.innerHTML = `
-            <div class="qr-error">
-                <span class="error-icon">❌</span>
-                <p>Failed to generate QR code</p>
-                <button class="qr-retry-btn" onclick="initializeQRPayment()">Try Again</button>
-            </div>
-        `;
+    const qrResult = await generateQRPhCode();
+    const qrImageUrl =
+        qrResult?.attributes?.image_url ||
+        qrResult?.attributes?.qr_image_url ||
+        qrResult?.attributes?.code?.image_url ||
+        qrResult?.image_url ||
+        null;
+    const qrCodeId = qrResult?.id || qrResult?.attributes?.code?.id || 'business-static-qr';
+
+    if (!qrImageUrl) {
+        throw new Error('Business QR image is missing');
+    }
+
+    displayQRCode(qrImageUrl, amount, qrCodeId);
+    localStorage.setItem('paymentVerificationStatus', JSON.stringify({
+        method: 'qr',
+        status: 'awaiting_customer_confirmation',
+        timestamp: new Date().toISOString()
+    }));
+
+    const processOrderBtn = document.querySelector('.process-order');
+    if (processOrderBtn) {
+        processOrderBtn.disabled = false;
     }
 }
 
@@ -383,17 +386,19 @@ function displayQRCode(imageUrl, amount, codeId) {
     qrDisplay.innerHTML = `
         <div class="qr-code-container">
             <img src="${imageUrl}" alt="QR Ph Code" class="qr-code-image">
-            <div class="qr-amount">Amount: ₱${amount.toFixed(2)}</div>
-            <div class="qr-expiry">⏱️ Expires in 30 minutes</div>
+            <div class="qr-amount">Amount: ${amount.toFixed(2)}</div>
             <div class="qr-instructions">
                 <p>1. Open your banking app or e-wallet</p>
                 <p>2. Scan the QR code above</p>
-                <p>3. Confirm payment in your app, then place your order</p>
+                <p>3. Send the exact amount shown above</p>
+                <p>4. Enter your payment reference number below</p>
+                <p>5. Tap "I Have Paid" after sending payment</p>
             </div>
+            <input type="text" class="qr-reference-input" id="qrReferenceInput" placeholder="Enter payment reference number">
             <div class="qr-status checking">
-                <span class="loading-spinner"></span>
-                Ready to place order after scan
+                Waiting for customer confirmation
             </div>
+            <button type="button" class="qr-retry-btn" onclick="confirmManualQRPayment()">I Have Paid</button>
         </div>
     `;
     
@@ -402,8 +407,62 @@ function displayQRCode(imageUrl, amount, codeId) {
         codeId: codeId,
         amount: amount,
         timestamp: new Date().toISOString(),
-        expiresIn: 30 * 60 * 1000 // 30 minutes
+        type: 'business_static_qr'
     }));
+}
+
+function confirmManualQRPayment() {
+    const qrInfo = JSON.parse(localStorage.getItem('currentQRCode') || '{}');
+    const referenceInput = document.getElementById('qrReferenceInput');
+    const paymentReference = (referenceInput?.value || '').trim().toUpperCase();
+    const referencePattern = /^MJ[a-zA-Z0-9]{4,28}$/i;
+
+    if (!paymentReference) {
+        showToast('Please enter your payment reference number first.', 'error');
+        if (referenceInput) {
+            referenceInput.focus();
+        }
+        return;
+    }
+    if (!referencePattern.test(paymentReference)) {
+        showToast('Reference must start with MJ and use 6-30 letters or numbers only.', 'error');
+        if (referenceInput) {
+            referenceInput.focus();
+        }
+        return;
+    }
+    if (referenceInput) {
+        referenceInput.value = paymentReference;
+    }
+
+    const paymentDetails = {
+        method: 'qr',
+        paymentIntentId: qrInfo.codeId || 'business-static-qr',
+        amount: document.querySelector('.total').textContent,
+        timestamp: new Date().toISOString(),
+        status: 'customer_marked_paid',
+        verificationMode: 'manual_business_confirmation',
+        paymentReference: paymentReference
+    };
+
+    localStorage.setItem('verifiedQRPayment', JSON.stringify(paymentDetails));
+    localStorage.setItem('paymentVerificationStatus', JSON.stringify({
+        method: 'qr',
+        status: 'manual_confirmed',
+        timestamp: new Date().toISOString()
+    }));
+
+    const statusEl = document.querySelector('.qr-status');
+    if (statusEl) {
+        statusEl.textContent = 'Payment marked as sent. Business confirmation is manual.';
+    }
+
+    const processOrderBtn = document.querySelector('.process-order');
+    if (processOrderBtn) {
+        processOrderBtn.disabled = false;
+    }
+
+    showToast('Payment marked as sent. You can place your order now.', 'success');
 }
 
 function startPaymentStatusCheck(paymentIntentId) {
@@ -482,7 +541,7 @@ function handleSuccessfulQRPayment(paymentIntentId) {
     
     qrDisplay.innerHTML = `
         <div class="payment-success">
-            <span class="success-icon">✓</span>
+            <span class="success-icon"></span>
             <div>
                 <strong>Payment Successful!</strong><br>
                 Amount: ${document.querySelector('.total').textContent}<br>
@@ -497,7 +556,7 @@ function handleSuccessfulQRPayment(paymentIntentId) {
         processOrderBtn.disabled = false;
     }
     
-    showToast('✅ Payment successful! You can now place your order.', 'success');
+    showToast(' Payment successful! You can now place your order.', 'success');
 }
 
 function handleFailedQRPayment(reason) {
@@ -511,7 +570,7 @@ function handleFailedQRPayment(reason) {
     
     qrDisplay.innerHTML = `
         <div class="qr-error">
-            <span class="error-icon">❌</span>
+            <span class="error-icon"></span>
             <p>${message}</p>
             <button class="qr-retry-btn" onclick="initializeQRPayment()">Generate New QR</button>
         </div>
@@ -644,7 +703,6 @@ function updatePaymentForms() {
             break;
         case 'qr':
             document.querySelector('.qr-form').classList.add('active');
-            initializeQRPayment();
             if (processOrderBtn) {
                 processOrderBtn.disabled = false;
             }
@@ -738,7 +796,7 @@ function addToCart(cardElement) {
     updateBillingPanel();
     saveCartToStorage();
     
-    showToast(`✓ ${itemName} added`, 'success');
+    showToast(` ${itemName} added`, 'success');
 }
 
 function updateQuantity(index, change) {
@@ -767,7 +825,7 @@ function removeFromCart(index) {
         updateOrdersCount();
         updateBillingPanel();
         saveCartToStorage();
-        showToast(`🗑️ ${itemName} removed`, 'info');
+        showToast(` ${itemName} removed`, 'info');
     }
 }
 
@@ -804,26 +862,35 @@ function updateBillingPanel() {
     const totalElement = document.querySelector('.total');
     const deliveryFeeRow = document.querySelector('.delivery-fee-row');
     const deliveryFeeElement = document.querySelector('.delivery-charge');
+    const deliveryFeeNote = document.getElementById('deliveryFeeNote');
     const orderType = document.querySelector('.order-btn.active').dataset.type;
     
     elements.billingItems.innerHTML = '';
     
     if (orderType === 'delivery') {
         deliveryFeeRow.style.display = 'flex';
+        if (deliveryFeeNote) {
+            deliveryFeeNote.style.display = 'block';
+        }
         // Show calculating state
         if (deliveryCharge === 0) {
             deliveryFeeElement.textContent = 'Php Calculating...';
         } else {
-            deliveryFeeElement.textContent = `Php ${deliveryCharge.toFixed(2)}`;
+            const routeSuffix = deliveryRouteKm ? ` (${deliveryRouteKm.toFixed(1)} km route)` : '';
+            deliveryFeeElement.textContent = `Php ${deliveryCharge.toFixed(2)}${routeSuffix}`;
         }
     } else {
         deliveryFeeRow.style.display = 'none';
+        if (deliveryFeeNote) {
+            deliveryFeeNote.style.display = 'none';
+        }
+        deliveryRouteKm = null;
     }
     
     if (cart.length === 0) {
         elements.billingItems.innerHTML = `
             <div class="empty-cart-message">
-                <div class="empty-icon">🛒</div>
+                <div class="empty-icon"></div>
                 <p>No items in cart</p>
                 <small>Add some delicious items to get started!</small>
             </div>
@@ -848,10 +915,10 @@ function updateBillingPanel() {
                 <div class="item-price">Php ${item.price.toFixed(2)} each</div>
             </div>
             <div class="item-controls">
-                <button class="quantity-btn minus" data-index="${index}">-</button>
+                <button class="quantity-btn minus" data-index="${index}" aria-label="Decrease quantity">−</button>
                 <span class="quantity-display">${item.quantity}</span>
-                <button class="quantity-btn plus" data-index="${index}">+</button>
-                <button class="remove-btn" data-index="${index}">✕</button>
+                <button class="quantity-btn plus" data-index="${index}" aria-label="Increase quantity">+</button>
+                <button class="remove-btn" data-index="${index}" aria-label="Remove item">🗑</button>
             </div>
         `;
         elements.billingItems.appendChild(itemElement);
@@ -897,38 +964,6 @@ async function processOrder() {
         return;
     }
 
-    if (selectedPaymentMethod === 'qr') {
-        const generatedQR = localStorage.getItem('currentQRCode');
-        const paymentStatusRaw = localStorage.getItem('paymentVerificationStatus');
-
-        if (!generatedQR || !paymentStatusRaw) {
-            showToast('Please generate QR code first', 'error');
-            return;
-        }
-
-        try {
-            const paymentStatus = JSON.parse(paymentStatusRaw);
-            if (!paymentStatus.status || (paymentStatus.status !== 'manual_pending' && paymentStatus.status !== 'verified')) {
-                showToast('Please scan QR code before placing order.', 'error');
-                return;
-            }
-        } catch (e) {
-            console.error('QR payment status parse error', e);
-            showToast('Payment verification failed', 'error');
-            return;
-        }
-    }
-
-    // Payment verification disabled for testing
-    // Orders can be placed without verification
-    // if (selectedPaymentMethod !== 'cash') {
-    //     const isVerified = await checkPaymentVerification();
-    //     if (!isVerified) {
-    //         showToast('Please verify your payment first', 'error');
-    //         return;
-    //     }
-    // }
-    
     const orderType = document.querySelector('.order-btn.active').dataset.type;
     const total = document.querySelector('.total').textContent;
     
@@ -949,10 +984,20 @@ async function processOrder() {
         orderType: orderType,
         paymentMethod: selectedPaymentMethod,
         customerName: window.currentUsername || 'Guest',
+        customerEmail: window.currentUserEmail || '',
+        paymentReference: selectedPaymentMethod === 'qr'
+            ? (getVerifiedPaymentDetails()?.paymentReference || '')
+            : '',
         paymentVerified: selectedPaymentMethod !== 'cash',
         paymentDetails: selectedPaymentMethod !== 'cash' ? 
             getVerifiedPaymentDetails() : null
     };
+
+    if (selectedPaymentMethod === 'qr') {
+        localStorage.setItem('pendingQrOrder', JSON.stringify(orderData));
+        window.location.href = '/qr-payment/';
+        return;
+    }
     
     console.log('Sending order data:', orderData);
     
@@ -1007,8 +1052,8 @@ async function processOrder() {
 
 // ========== SUCCESSFUL ORDER HANDLING ==========
 function handleSuccessfulOrder(orderId, orderType, total) {
-    console.log('🔴 DEBUG: handleSuccessfulOrder STARTED');
-    console.log('🔴 DEBUG: orderId=', orderId, 'orderType=', orderType, 'total=', total);
+    console.log(' DEBUG: handleSuccessfulOrder STARTED');
+    console.log(' DEBUG: orderId=', orderId, 'orderType=', orderType, 'total=', total);
     
     // Save order data
     const trackingData = {
@@ -1036,21 +1081,21 @@ function handleSuccessfulOrder(orderId, orderType, total) {
     
     closeBillingPanel();
     
-    console.log('🟡 DEBUG: About to show PROCESSING toast');
+    console.log(' DEBUG: About to show PROCESSING toast');
     showToast('Processing your order...', 'info', 2000);
     
-    console.log('🟡 DEBUG: Setting 2-second timeout for SUCCESS toast');
+    console.log(' DEBUG: Setting 2-second timeout for SUCCESS toast');
     setTimeout(() => {
-        console.log('🟢 DEBUG: 2-second timeout FIRED');
+        console.log(' DEBUG: 2-second timeout FIRED');
         
         const successMessage = getMinimalSuccessMessage(orderType, selectedPaymentMethod);
-        console.log('🟢 DEBUG: successMessage =', successMessage);
+        console.log(' DEBUG: successMessage =', successMessage);
         
-        console.log('🟢 DEBUG: About to show SUCCESS toast');
+        console.log(' DEBUG: About to show SUCCESS toast');
         showToast(successMessage, 'success', 3000);
         
         setTimeout(() => {
-            console.log('🔵 DEBUG: Redirect timeout fired');
+            console.log(' DEBUG: Redirect timeout fired');
             redirectToOrderPage(orderType, orderId);
         }, 1500);
     }, 2000);
@@ -1109,17 +1154,17 @@ function processOrderFallback() {
 }
 
 function redirectToOrderPage(orderType, orderId) {
-    console.log('🔴 DEBUG: redirectToOrderPage called - orderType:', orderType, 'orderId:', orderId);
+    console.log(' DEBUG: redirectToOrderPage called - orderType:', orderType, 'orderId:', orderId);
     
     if (orderType === 'delivery') {
-        console.log('🟢 DEBUG: Redirecting to DELIVERY page');
+        console.log(' DEBUG: Redirecting to DELIVERY page');
         window.location.href = `/delivery/?orderId=${orderId}`;
-    } else if (orderType === 'pickup') {
-        console.log('🟢 DEBUG: Redirecting to PICKUP page');
+    } else if (orderType === 'pickup' || orderType === 'dine-in') {
+        console.log(' DEBUG: Redirecting to PICKUP page');
         window.location.href = `/pick_up/?orderId=${orderId}`;
     } else {
-        console.log('🟡 DEBUG: Dine-in order - staying on current page');
-        // Dine-in stays on the same page
+        console.log(' DEBUG: Dine-in order - staying on current page');
+        window.location.href = '/orders_menu/';
     }
 }
 
@@ -1214,6 +1259,19 @@ function initializeLocationModal() {
     let isMapVisible = false;
     let locationSearchTimeout = null;
 
+    function normalizeLatLng(location) {
+        if (!location) return null;
+
+        const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
+        const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
+
+        if (typeof lat !== 'number' || typeof lng !== 'number') {
+            return null;
+        }
+
+        return { lat, lng };
+    }
+
     // ========== OPEN MODAL ==========
     document.querySelector('.location-search').addEventListener('click', () => {
         locationModal.style.display = 'flex';
@@ -1245,7 +1303,7 @@ function initializeLocationModal() {
             mapContainer.classList.remove('active');
             if (showMapBtn) {
                 showMapBtn.classList.remove('active');
-                showMapBtn.textContent = "🗺️ Show Map";
+                showMapBtn.textContent = " Show Map";
             }
         }
         
@@ -1264,14 +1322,9 @@ function initializeLocationModal() {
         const activeSelectedLocation = hasSelectedDeliveryLocation ? selectedDeliveryLocation.address : selectedLocation;
 
         if (activeSelectedLocation) {
-            const locText = document.querySelector('.loc-text');
-            if (locText) {
-                const cityMatch = activeSelectedLocation.match(/([^,]+)/);
-                const displayLocation = cityMatch ? cityMatch[1] : 'Manila';
-                locText.textContent = displayLocation;
-            }
+            updateTopbarLocation(activeSelectedLocation);
 
-            showToast(`📍 Location set to: ${activeSelectedLocation}`, 'success');
+            showToast(` Location set to: ${activeSelectedLocation}`, 'success');
             closeModal();
         } else {
             locationError.textContent = 'Please select a location first';
@@ -1290,7 +1343,7 @@ function getCurrentLocation(desiredAccuracy = 30) { // Want at least 30m accurac
         
         currentLocationBtn.disabled = true;
         currentLocationBtn.classList.add('loading');
-        currentLocationBtn.innerHTML = '📍 Getting GPS lock (5-8 seconds)...';
+        currentLocationBtn.innerHTML = ' Getting GPS lock...';
         
         let bestPosition = null;
         let bestAccuracy = Infinity;
@@ -1313,7 +1366,7 @@ function getCurrentLocation(desiredAccuracy = 30) { // Want at least 30m accurac
             
             const elapsedSeconds = (Date.now() - startTime) / 1000;
             const elapsedStr = elapsedSeconds.toFixed(1);
-            console.log(`📍 GPS Update #${updateCount} (${elapsedStr}s) - Accuracy: ${accuracy}m, Lat: ${pos.lat}, Lng: ${pos.lng}`);
+            console.log(` GPS Update #${updateCount} (${elapsedStr}s) - Accuracy: ${accuracy}m, Lat: ${pos.lat}, Lng: ${pos.lng}`);
             
             // Always track best position, regardless of accuracy
             if (accuracy < bestAccuracy) {
@@ -1324,7 +1377,7 @@ function getCurrentLocation(desiredAccuracy = 30) { // Want at least 30m accurac
                 if (accuracy <= desiredAccuracy) {
                     // Excellent GPS lock - use immediately after 2 updates to confirm!
                     if (updateCount >= 2) {
-                        console.log(`✅ Excellent GPS lock confirmed: ${accuracy}m`);
+                        console.log(` Excellent GPS lock confirmed: ${accuracy}m`);
                         isDone = true;
                         if (watchId !== null) navigator.geolocation.clearWatch(watchId);
                         if (timeoutId) clearTimeout(timeoutId);
@@ -1332,25 +1385,25 @@ function getCurrentLocation(desiredAccuracy = 30) { // Want at least 30m accurac
                         return;
                     }
                     // Still waiting to confirm
-                    locationError.textContent = `📍 Acquiring GPS... (±${Math.round(accuracy)}m, update #${updateCount})`;
+                    locationError.textContent = ' Acquiring GPS...';
                     locationError.classList.add('active');
                     locationError.style.background = '#e3f2fd';
                     locationError.style.color = '#1565c0';
                 } else if (accuracy <= 500) {
                     // Good/fair accuracy - show progress
-                    locationError.textContent = `📍 Acquiring GPS... (±${Math.round(accuracy)}m, update #${updateCount})`;
+                    locationError.textContent = ' Acquiring GPS...';
                     locationError.classList.add('active');
                     locationError.style.background = '#e3f2fd';
                     locationError.style.color = '#1565c0';
                 } else if (elapsedSeconds >= 4) {
                     // After 4 seconds, show even poor accuracy updates (WiFi-based)
-                    locationError.textContent = `📍 Using available location (±${Math.round(accuracy)}m)`;
+                    locationError.textContent = ' Getting your location...';
                     locationError.classList.add('active');
                     locationError.style.background = '#fff3cd';
                     locationError.style.color = '#856404';
                 } else {
                     // First 4 seconds with > 500m accuracy - still waiting
-                    locationError.textContent = `📍 Waiting for GPS lock... (currently ±${Math.round(accuracy)}m)`;
+                    locationError.textContent = ' Waiting for GPS lock...';
                     locationError.classList.add('active');
                     locationError.style.background = '#e3f2fd';
                     locationError.style.color = '#1565c0';
@@ -1379,23 +1432,23 @@ function getCurrentLocation(desiredAccuracy = 30) { // Want at least 30m accurac
         const stopAndResolve = (position, accuracy) => {
             currentLocationBtn.disabled = false;
             currentLocationBtn.classList.remove('loading');
-            currentLocationBtn.innerHTML = '📍 Use Current Location';
+            currentLocationBtn.innerHTML = ' Use Current Location';
             
             // Show accuracy message
             let accuracyMessage = '';
             if (accuracy < 15) {
-                accuracyMessage = '✅ Excellent accuracy!';
+                accuracyMessage = ' Excellent accuracy!';
             } else if (accuracy < 30) {
-                accuracyMessage = '✅ Great accuracy';
+                accuracyMessage = ' Great accuracy';
             } else if (accuracy < 50) {
-                accuracyMessage = '✅ Good accuracy';
+                accuracyMessage = ' Good accuracy';
             } else if (accuracy < 100) {
-                accuracyMessage = '✅ Fair accuracy';
+                accuracyMessage = ' Fair accuracy';
             } else {
-                accuracyMessage = '⚠️ Low accuracy - may be approximate';
+                accuracyMessage = ' Low accuracy - may be approximate';
             }
             
-            locationError.textContent = `${accuracyMessage} (±${Math.round(accuracy)}m)`;
+            locationError.textContent = `${accuracyMessage} (${Math.round(accuracy)}m)`;
             locationError.style.background = accuracy < 50 ? '#d4edda' : '#fff3cd';
             locationError.style.color = accuracy < 50 ? '#155724' : '#856404';
             locationError.classList.add('active');
@@ -1411,7 +1464,7 @@ function getCurrentLocation(desiredAccuracy = 30) { // Want at least 30m accurac
         const stopAndReject = (error) => {
             currentLocationBtn.disabled = false;
             currentLocationBtn.classList.remove('loading');
-            currentLocationBtn.innerHTML = '📍 Use Current Location';
+            currentLocationBtn.innerHTML = ' Use Current Location';
             reject(error);
         };
         
@@ -1437,7 +1490,7 @@ function getCurrentLocation(desiredAccuracy = 30) { // Want at least 30m accurac
                 }
                 
                 if (bestPosition) {
-                    console.log(`⏱️ Using best position after 8s: ±${bestAccuracy}m (${updateCount} updates)`);
+                    console.log(` Using best position after 8s: ${bestAccuracy}m (${updateCount} updates)`);
                     stopAndResolve(bestPosition, bestAccuracy);
                 } else {
                     stopAndReject(new Error('Could not get accurate location. Please check GPS is enabled and try again.'));
@@ -1470,7 +1523,7 @@ currentLocationBtn.addEventListener('click', async () => {
             isMapVisible = true;
             mapContainer.classList.add('active');
             showMapBtn.classList.add('active');
-            showMapBtn.textContent = '🗺️ Hide Map';
+            showMapBtn.textContent = ' Hide Map';
         }
         
     } catch (error) {
@@ -1624,11 +1677,11 @@ currentLocationBtn.addEventListener('click', async () => {
 
         if (isMapVisible) {
             showMapBtn.classList.add("active");
-            showMapBtn.textContent = "🗺️ Hide Map";
+            showMapBtn.textContent = " Hide Map";
             if (!map) initMap();
         } else {
             showMapBtn.classList.remove("active");
-            showMapBtn.textContent = "🗺️ Show Map";
+            showMapBtn.textContent = " Show Map";
         }
     });
 
@@ -1684,12 +1737,21 @@ currentLocationBtn.addEventListener('click', async () => {
     }
 
     function reverseGeocode(latLng) {
+        const normalizedLocation = normalizeLatLng(latLng);
+        if (!normalizedLocation) {
+            locationError.textContent = 'Could not read the selected location.';
+            locationError.classList.add('active');
+            locationError.style.background = '#ffebee';
+            locationError.style.color = '#c62828';
+            return;
+        }
+
         locationError.textContent = 'Getting address...';
         locationError.classList.add('active');
         locationError.style.background = '#e3f2fd';
         locationError.style.color = '#1565c0';
         
-        geocoder.geocode({ location: latLng }, (results, status) => {
+        geocoder.geocode({ location: normalizedLocation }, (results, status) => {
             locationError.classList.remove('active');
             
             if (status === "OK" && results[0]) {
@@ -1701,11 +1763,11 @@ currentLocationBtn.addEventListener('click', async () => {
                 if (isInMetroManila) {
                     setSelectedLocation({
                         address: address,
-                        lat: latLng.lat(),
-                        lng: latLng.lng()
+                        lat: normalizedLocation.lat,
+                        lng: normalizedLocation.lng
                     });
                     
-                    locationError.textContent = '✓ Location found!';
+                    locationError.textContent = ' Location found!';
                     locationError.classList.add('active');
                     locationError.style.background = '#e8f5e9';
                     locationError.style.color = '#2e7d32';
@@ -1734,7 +1796,9 @@ currentLocationBtn.addEventListener('click', async () => {
 
     function setSelectedLocation(location) {
         selectedDeliveryLocation = location;
+        saveDeliveryLocation(location);
         updateSelectedLocationDisplay(location.address || '');
+        updateTopbarLocation(location.address || '');
         confirmLocationBtn.disabled = false;
 
         if (document.querySelector('.order-btn.active')?.dataset.type === 'delivery') {
@@ -2047,7 +2111,7 @@ function convertProductToMenuItem(product) {
             sizes[0].checked = true;
         }
         
-        priceText = sizes.map(s => `Php ${s.price} (${s.value})`).join(' • ');
+        priceText = sizes.map(s => `Php ${s.price} (${s.value})`).join('  ');
     } else {
         priceText = `Php ${product.price}`;
     }
@@ -2197,6 +2261,13 @@ function updateProductStocks(updatedStocks) {
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', async function() {
     loadCartFromStorage();
+    const savedDeliveryLocation = loadDeliveryLocation();
+    if (savedDeliveryLocation && savedDeliveryLocation.address) {
+        selectedDeliveryLocation = savedDeliveryLocation;
+        updateTopbarLocation(savedDeliveryLocation.address);
+    } else {
+        updateTopbarLocation('');
+    }
     
     // Load products from API first
     await loadProductsFromAPI();
@@ -2287,5 +2358,6 @@ function getOrderData() {
     
     return null;
 }
+
 
 

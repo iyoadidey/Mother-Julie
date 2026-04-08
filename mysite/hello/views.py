@@ -16,6 +16,7 @@ import time
 import json
 import random
 import threading
+import math
 try:
     import requests
 except ImportError:
@@ -36,6 +37,177 @@ def _paymongo_auth_header(api_key):
     """Build valid PayMongo Basic auth header from key."""
     token = base64.b64encode(f"{api_key}:".encode("utf-8")).decode("utf-8")
     return f"Basic {token}"
+
+
+def _haversine_distance_km(origin, destination):
+    """Compute straight-line distance in kilometers between two lat/lng pairs."""
+    lat1 = math.radians(float(origin['lat']))
+    lon1 = math.radians(float(origin['lng']))
+    lat2 = math.radians(float(destination['lat']))
+    lon2 = math.radians(float(destination['lng']))
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return 6371 * c
+
+
+def _calculate_local_delivery_fee(origin, destination, distance_km=None):
+    """Fallback fee calculation when Lalamove credentials/API are unavailable."""
+    if distance_km is None:
+        distance_km = _haversine_distance_km(origin, destination)
+    remaining_km = max(distance_km - settings.DELIVERY_FEE_INCLUDED_KM, 0)
+    fee = settings.DELIVERY_FEE_BASE + (remaining_km * settings.DELIVERY_FEE_PER_KM_AFTER_INCLUDED)
+    return round(fee, 2), round(distance_km, 2)
+
+
+def _build_receipt_email_html(order_id, customer_name, order_type_display, payment_method, total_amount, items_text):
+    """Build HTML e-receipt email content."""
+    return f"""<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background:#f7f7f8;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;color:#111;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+        <td align="center" style="padding:24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="560" style="background:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;">
+            <tr>
+              <td align="center" style="padding:28px 28px 8px 28px;">
+                <h1 style="margin:16px 0 0 0;font-size:22px;line-height:28px;color:#d63384;">Your E-Receipt</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 28px 0 28px;font-size:14px;line-height:22px;color:#333;">
+                <p>Dear {customer_name},</p>
+                <p>Thank you for your order with Mother Julie. Here is your e-receipt:</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 28px 0 28px;font-size:14px;line-height:22px;color:#333;">
+                <div style="background-color:#f8f9fa;padding:15px;border-radius:5px;margin:20px 0;">
+                  <p style="margin:8px 0;"><strong>Order ID:</strong> {order_id}</p>
+                  <p style="margin:8px 0;"><strong>Order Type:</strong> {order_type_display}</p>
+                  <p style="margin:8px 0;"><strong>Payment Method:</strong> {payment_method}</p>
+                  <p style="margin:8px 0;"><strong>Status:</strong> <span style="color:#d63384;font-weight:bold;">Order Placed</span></p>
+                  <p style="margin:8px 0;"><strong>Total Amount:</strong> Php {total_amount:.2f}</p>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 28px 0 28px;font-size:14px;line-height:22px;color:#333;">
+                <h4 style="color:#333;margin-top:20px;margin-bottom:10px;">Order Items:</h4>
+                <div style="background-color:#ffffff;padding:10px;border-left:3px solid #d63384;margin-top:10px;">
+                  {items_text.replace(chr(10), '<br>')}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 28px 24px 28px;font-size:14px;line-height:22px;color:#333;">
+                <p>Please keep this email for your reference.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>"""
+
+
+def _build_receipt_email_plain(customer_name, order_id, order_type_display, payment_method, total_amount, items_text):
+    """Build plain text e-receipt email content."""
+    return f"""Dear {customer_name},
+
+Thank you for your order with Mother Julie. Here is your e-receipt:
+
+Order ID: {order_id}
+Order Type: {order_type_display}
+Payment Method: {payment_method}
+Status: Order Placed
+Total Amount: Php {total_amount:.2f}
+
+Order Items:
+{items_text}
+
+Please keep this email for your reference."""
+
+
+def _format_payment_method_display(payment_method):
+    """Format payment method labels for customer-facing text."""
+    normalized = str(payment_method or '').strip().lower().replace('_', ' ')
+    payment_method_map = {
+        'qr': 'QR',
+        'qr ph': 'QR PH',
+        'qrph': 'QR PH',
+        'gcash': 'GCash',
+    }
+    return payment_method_map.get(normalized, normalized.title())
+
+
+def _send_order_receipt_email_sync(subject, html_message, plain_message, customer_email, order_id):
+    """Send e-receipt email in a background thread."""
+    close_old_connections()
+    try:
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[customer_email]
+        )
+        email.attach_alternative(html_message, "text/html")
+        email.send(fail_silently=False)
+        print(f"[RECEIPT] E-receipt sent to {customer_email} for order {order_id}")
+    except Exception as exc:
+        print(f"[RECEIPT ERROR] Failed to send e-receipt for order {order_id}: {exc}")
+
+
+def send_order_receipt_email(order, items, send_async=False):
+    """Send e-receipt email after an order is successfully placed."""
+    customer_email = (order.customer_email or '').strip()
+    if not customer_email:
+        print(f"[RECEIPT] Skipping e-receipt for order {order.order_id}: no customer email")
+        return
+
+    items_list = []
+    for item in items:
+        item_text = f"- {item.get('name', '')} x {int(item.get('quantity', 1))}"
+        if item.get('size'):
+            item_text += f" (Size: {item.get('size')})"
+        item_text += f" - Php {float(item.get('total', 0)):.2f}"
+        items_list.append(item_text)
+    items_text = "\n".join(items_list)
+
+    order_type_display = dict(Order.ORDER_TYPE_CHOICES).get(order.order_type, order.order_type)
+    payment_method_display = _format_payment_method_display(order.payment_method)
+    subject = f"[E-RECEIPT] Order {order.order_id} - Mother Julie"
+    html_message = _build_receipt_email_html(
+        order.order_id,
+        order.customer_name,
+        order_type_display,
+        payment_method_display,
+        float(order.total_amount),
+        items_text
+    )
+    plain_message = _build_receipt_email_plain(
+        order.customer_name,
+        order.order_id,
+        order_type_display,
+        payment_method_display,
+        float(order.total_amount),
+        items_text
+    )
+
+    if send_async:
+        email_thread = threading.Thread(
+            target=_send_order_receipt_email_sync,
+            args=(subject, html_message, plain_message, customer_email, order.order_id),
+            daemon=False,
+            name=f"ReceiptEmailThread-{order.order_id}"
+        )
+        email_thread.start()
+        return
+
+    _send_order_receipt_email_sync(subject, html_message, plain_message, customer_email, order.order_id)
 
 def signin(request):
     """Handle user signin"""
@@ -130,6 +302,41 @@ def terms_view(request):
 def dashboard_view(request):
     """Dashboard page - accessible to everyone (logged in or not)"""
     return render(request, 'dashboard.html')
+
+
+@login_required
+def edit_account_view(request):
+    """Allow authenticated users to update their account details."""
+    user = request.user
+
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip().lower()
+
+        errors = []
+        if not username:
+            errors.append('Username is required.')
+        elif User.objects.exclude(pk=user.pk).filter(username=username).exists():
+            errors.append('That username is already taken.')
+
+        if email and User.objects.exclude(pk=user.pk).filter(email__iexact=email).exists():
+            errors.append('That email is already in use.')
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            user.first_name = first_name
+            user.last_name = last_name
+            user.username = username
+            user.email = email
+            user.save()
+            messages.success(request, 'Your account details were updated successfully.')
+            return redirect('dashboard')
+
+    return render(request, 'edit_account.html')
 
 
 @login_required
@@ -228,6 +435,12 @@ def orders_menu_view(request):
     return render(request, 'orders_menu.html', {
         'visible_product_names': visible_product_names,
     })
+
+
+@login_required
+def qr_payment_view(request):
+    """Dedicated QR payment page before creating an order."""
+    return render(request, 'qr_payment.html')
 
 
 @csrf_exempt
@@ -561,6 +774,8 @@ def api_create_order(request):
                 }
             except Product.DoesNotExist:
                 pass
+
+        send_order_receipt_email(order, items, send_async=False)
         
         return JsonResponse({
             'success': True, 
@@ -576,7 +791,7 @@ def api_create_order(request):
 
 @csrf_exempt
 def api_calculate_delivery_fee(request):
-    """Calculate delivery fee using Lalamove API"""
+    """Calculate delivery fee using Lalamove when available, otherwise use local fallback."""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
 
@@ -584,19 +799,40 @@ def api_calculate_delivery_fee(request):
         data = json.loads(request.body.decode('utf-8'))
         origin = data.get('origin')
         destination = data.get('destination')
+        provided_distance_km = data.get('distance_km')
 
         if not origin or not destination:
             return JsonResponse({'success': False, 'error': 'Origin and destination must be provided'}, status=400)
 
+        try:
+            origin = {
+                'lat': float(origin.get('lat')),
+                'lng': float(origin.get('lng')),
+            }
+            destination = {
+                'lat': float(destination.get('lat')),
+                'lng': float(destination.get('lng')),
+            }
+        except (TypeError, ValueError):
+            return JsonResponse({'success': False, 'error': 'Invalid origin or destination coordinates'}, status=400)
+
         api_key = settings.LALAMOVE_API_KEY
         api_secret = settings.LALAMOVE_API_SECRET
         mode = settings.LALAMOVE_MODE
+        try:
+            route_distance_km = float(provided_distance_km) if provided_distance_km is not None else None
+        except (TypeError, ValueError):
+            route_distance_km = None
 
-        if not api_key or not api_secret:
-            return JsonResponse({'success': False, 'error': 'Lalamove API key/secret are not configured'}, status=500)
+        fallback_fee, distance_km = _calculate_local_delivery_fee(origin, destination, route_distance_km)
 
-        if requests is None:
-            return JsonResponse({'success': False, 'error': 'Python requests library is not installed'}, status=500)
+        if not api_key or not api_secret or requests is None:
+            return JsonResponse({
+                'success': True,
+                'deliveryFee': fallback_fee,
+                'source': 'local_fallback',
+                'distanceKm': distance_km,
+            })
 
         host = 'https://rest.lalamove.com' if mode == 'production' else 'https://rest.sandbox.lalamove.com'
         endpoint_path = '/v3/quotations'
@@ -604,8 +840,8 @@ def api_calculate_delivery_fee(request):
 
         payload = {
             'stop': [
-                { 'location': { 'lat': float(origin.get('lat')), 'lng': float(origin.get('lng')) } },
-                { 'location': { 'lat': float(destination.get('lat')), 'lng': float(destination.get('lng')) } }
+                {'location': origin},
+                {'location': destination}
             ],
             'serviceType': 'MOTORCYCLE',
             'specialRequests': []
@@ -628,19 +864,48 @@ def api_calculate_delivery_fee(request):
         response_data = response.json() if response.content else {}
 
         if response.status_code not in (200, 201):
-            return JsonResponse({'success': False, 'error': 'Lalamove API returned error', 'details': response_data}, status=response.status_code)
+            return JsonResponse({
+                'success': True,
+                'deliveryFee': fallback_fee,
+                'source': 'local_fallback',
+                'distanceKm': distance_km,
+                'warning': 'Lalamove API returned an error. Using local fallback fee.',
+                'details': response_data,
+            })
 
         # Lalamove quotation response usually contains totalFee in PHP
         delivery_fee = 0.0
         if isinstance(response_data, dict):
             delivery_fee = float(response_data.get('totalFee', response_data.get('data', {}).get('totalFee', 0)))
 
-        return JsonResponse({'success': True, 'deliveryFee': delivery_fee, 'raw': response_data})
+        if delivery_fee <= 0:
+            delivery_fee = fallback_fee
+            source = 'local_fallback'
+        else:
+            source = 'lalamove'
+
+        return JsonResponse({
+            'success': True,
+            'deliveryFee': round(float(delivery_fee), 2),
+            'source': source,
+            'distanceKm': distance_km,
+            'raw': response_data,
+        })
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        try:
+            fallback_fee, distance_km = _calculate_local_delivery_fee(origin, destination)
+            return JsonResponse({
+                'success': True,
+                'deliveryFee': fallback_fee,
+                'source': 'local_fallback',
+                'distanceKm': distance_km,
+                'warning': str(e),
+            })
+        except Exception:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @csrf_exempt
@@ -1473,6 +1738,7 @@ def api_get_analytics(request):
             order_stats.append({
                 'order_id': order.order_id,
                 'customer': order.customer_name,
+                'payment_reference': order.payment_reference or '',
                 'order_type': order.order_type,
                 'order_placed': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 'delivery_pickup_date': order.updated_at.strftime('%Y-%m-%d %H:%M:%S'),

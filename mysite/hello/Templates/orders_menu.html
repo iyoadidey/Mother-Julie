@@ -225,6 +225,9 @@
                 <span>Delivery Fee:</span>
                 <span class="delivery-charge" id="deliveryFee">Php 50.00</span>
             </div>
+            <div class="delivery-fee-note" id="deliveryFeeNote" style="display: none;">
+                Estimated from 1983 Old Torres St, Tondo, Manila to your selected map location.
+            </div>
             <div class="summary-row total-row">
                 <span>Total:</span>
                 <span class="total" id="totalAmount">Php 0.00</span>
@@ -254,12 +257,7 @@
             <div class="payment-details">
                 <div class="payment-note cash-note active">Pay with cash at the counter</div>
                 <div class="payment-form qr-form">
-                    <h4>Scan to Pay with QR Ph</h4>
-                    <div class="qr-display">
-                        <div class="qr-code-container">
-                            <img src="{% static 'orders_menupics/qr.png' %}" alt="QR Ph Payment Code" class="qr-code-image">
-                        </div>
-                    </div>
+                    <p>You will continue to the QR payment page after clicking Place Order.</p>
                 </div>
             </div>
         </div>
@@ -285,6 +283,9 @@
     </div>
 
     <script>
+        window.currentUsername = "{% if user.is_authenticated %}{{ user.username|escapejs }}{% endif %}";
+        window.currentUserEmail = "{% if user.is_authenticated %}{{ user.email|default:''|escapejs }}{% endif %}";
+
         const STATIC_URLS = {
             menu: "{% static 'orders_menupics/menu.png' %}",
             dessert: "{% static 'orders_menupics/dessert.png' %}",

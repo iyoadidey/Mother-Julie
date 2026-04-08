@@ -35,9 +35,9 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "customer_name", "order_type", "total_amount", "status", "created_at")
+    list_display = ("id", "customer_name", "order_type", "payment_reference", "total_amount", "status", "created_at")
     list_filter = ("status", "order_type", "created_at")
-    search_fields = ("id", "customer_name")
+    search_fields = ("id", "customer_name", "payment_reference", "order_id")
     inlines = [OrderItemInline]
     readonly_fields = ("created_at", "updated_at")
     actions = ["mark_completed", "mark_pending", "mark_cancelled"]

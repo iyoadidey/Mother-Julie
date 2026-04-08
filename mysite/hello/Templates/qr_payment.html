@@ -1,0 +1,307 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mother Julie - QR Payment</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sansita:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #fff5f9 0%, #ffe2f0 100%);
+            color: #2b2b2b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .payment-shell {
+            width: min(100%, 980px);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 24px;
+        }
+        .panel {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 24px;
+            box-shadow: 0 20px 45px rgba(224, 91, 145, 0.14);
+            padding: 28px;
+        }
+        .panel h1, .panel h2 {
+            font-family: 'Sansita', sans-serif;
+            color: #ff4f95;
+        }
+        .panel h1 {
+            font-size: 34px;
+            margin-bottom: 10px;
+        }
+        .lead {
+            color: #6b5661;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+        .qr-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+        .qr-wrap img {
+            width: min(100%, 320px);
+            border-radius: 20px;
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+        }
+        .amount {
+            font-size: 28px;
+            font-weight: 800;
+            color: #ff2f84;
+        }
+        .steps {
+            margin-top: 10px;
+            color: #5a4951;
+            line-height: 1.7;
+        }
+        .steps p + p { margin-top: 6px; }
+        .summary-title {
+            font-size: 26px;
+            margin-bottom: 14px;
+        }
+        .summary-block {
+            background: #fff7fb;
+            border: 1px solid #ffd4e6;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .summary-row:last-child { margin-bottom: 0; }
+        .items-list {
+            margin-top: 12px;
+            display: grid;
+            gap: 10px;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #f2b7d1;
+        }
+        .item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #7a3d5f;
+        }
+        input {
+            width: 100%;
+            border: 1px solid #f2b7d1;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 15px;
+            outline: none;
+        }
+        input:focus {
+            border-color: #ff5fa2;
+            box-shadow: 0 0 0 4px rgba(255, 95, 162, 0.12);
+        }
+        .help-text {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #7a3d5f;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 14px 18px;
+            font-weight: 800;
+            cursor: pointer;
+            flex: 1;
+        }
+        .btn-primary {
+            background: linear-gradient(180deg, #ff72b4, #ff4f95);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f6d9e6;
+            color: #7a3d5f;
+        }
+        .status {
+            margin-top: 16px;
+            min-height: 24px;
+            font-size: 14px;
+            color: #7a3d5f;
+        }
+        @media (max-width: 840px) {
+            .payment-shell {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-shell">
+        <section class="panel">
+            <h1>Pay First</h1>
+            <p class="lead">Scan the business QR code below, complete the transfer in your banking app or e-wallet, then enter the payment reference to place your order.</p>
+            <div class="qr-wrap">
+                <img src="{% static 'orders_menupics/qr.png' %}" alt="Mother Julie QR Payment">
+                <div class="amount" id="paymentAmount">Php 0.00</div>
+            </div>
+            <div class="steps">
+                <p>1. Scan the QR code.</p>
+                <p>2. Pay the exact order total shown here.</p>
+                <p>3. Copy the payment reference from your app.</p>
+                <p>4. Enter the reference and finish the order.</p>
+            </div>
+        </section>
+
+        <aside class="panel">
+            <h2 class="summary-title">Order Summary</h2>
+            <div class="summary-block">
+                <div class="summary-row"><span>Order Type</span><strong id="orderType">-</strong></div>
+                <div class="summary-row"><span>Total</span><strong id="orderTotal">Php 0.00</strong></div>
+            </div>
+            <div class="summary-block">
+                <label for="paymentReference">Payment Reference</label>
+                <input id="paymentReference" type="text" placeholder="Enter payment reference number" maxlength="30">
+                <div class="help-text">Use 6-30 letters or numbers only.</div>
+                <div class="items-list" id="itemsList"></div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-secondary" id="backBtn" type="button">Back to Menu</button>
+                <button class="btn btn-primary" id="confirmBtn" type="button">I Paid, Place Order</button>
+            </div>
+            <div class="status" id="statusText">Waiting for customer confirmation</div>
+        </aside>
+    </div>
+
+    <script>
+        const pendingOrder = JSON.parse(localStorage.getItem('pendingQrOrder') || 'null');
+        const amountEl = document.getElementById('paymentAmount');
+        const totalEl = document.getElementById('orderTotal');
+        const orderTypeEl = document.getElementById('orderType');
+        const itemsListEl = document.getElementById('itemsList');
+        const statusEl = document.getElementById('statusText');
+        const referenceInput = document.getElementById('paymentReference');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const backBtn = document.getElementById('backBtn');
+        const referencePattern = /^[a-zA-Z0-9]{6,30}$/;
+
+        if (!pendingOrder || !pendingOrder.items || !pendingOrder.items.length) {
+            window.location.href = "{% url 'orders_menu' %}";
+        } else {
+            amountEl.textContent = `Php ${Number(pendingOrder.totalAmount || 0).toFixed(2)}`;
+            totalEl.textContent = `Php ${Number(pendingOrder.totalAmount || 0).toFixed(2)}`;
+            orderTypeEl.textContent = pendingOrder.orderType || '-';
+            itemsListEl.innerHTML = pendingOrder.items.map(item => {
+                const sizeText = item.size ? ` (${item.size})` : '';
+                return `<div class="item"><span>${item.name}${sizeText} x${item.quantity}</span><strong>Php ${(item.total || 0).toFixed(2)}</strong></div>`;
+            }).join('');
+        }
+
+        backBtn.addEventListener('click', () => {
+            window.location.href = "{% url 'orders_menu' %}";
+        });
+
+        confirmBtn.addEventListener('click', async () => {
+            const paymentReference = (referenceInput.value || '').trim().toUpperCase();
+            if (!paymentReference) {
+                statusEl.textContent = 'Enter your payment reference number first.';
+                referenceInput.focus();
+                return;
+            }
+            if (!referencePattern.test(paymentReference)) {
+                statusEl.textContent = 'Payment reference must use 6-30 letters or numbers only.';
+                referenceInput.focus();
+                return;
+            }
+            referenceInput.value = paymentReference;
+
+            const orderPayload = {
+                ...pendingOrder,
+                paymentReference,
+                paymentVerified: true,
+                paymentDetails: {
+                    method: 'qr',
+                    paymentReference,
+                    verificationMode: 'manual_business_confirmation',
+                    status: 'customer_marked_paid',
+                    timestamp: new Date().toISOString()
+                }
+            };
+
+            confirmBtn.disabled = true;
+            statusEl.textContent = 'Submitting your order...';
+
+            try {
+                const response = await fetch('/api/orders/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderPayload)
+                });
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || 'Failed to create order');
+                }
+
+                const trackingData = {
+                    orderId: result.orderId,
+                    items: orderPayload.items,
+                    orderType: orderPayload.orderType,
+                    paymentMethod: 'qr',
+                    total: `Php ${Number(orderPayload.totalAmount || 0).toFixed(2)}`,
+                    orderPlaced: new Date().toLocaleString(),
+                    status: 'order_placed',
+                    paymentVerified: true,
+                    paymentDetails: orderPayload.paymentDetails
+                };
+
+                localStorage.setItem('currentOrder', JSON.stringify(trackingData));
+                const history = JSON.parse(localStorage.getItem('motherJulieOrderHistory') || '[]');
+                history.unshift(trackingData);
+                localStorage.setItem('motherJulieOrderHistory', JSON.stringify(history.slice(0, 50)));
+                localStorage.removeItem('pendingQrOrder');
+                localStorage.removeItem('verifiedQRPayment');
+                localStorage.removeItem('paymentVerificationStatus');
+                localStorage.removeItem('currentQRCode');
+                localStorage.removeItem('motherJulieCart');
+
+                if (orderPayload.orderType === 'delivery') {
+                    window.location.href = `/delivery/?orderId=${result.orderId}`;
+                } else if (orderPayload.orderType === 'pickup') {
+                    window.location.href = `/pick_up/?orderId=${result.orderId}`;
+                } else {
+                    window.location.href = "{% url 'orders_menu' %}";
+                }
+            } catch (error) {
+                confirmBtn.disabled = false;
+                statusEl.textContent = error.message || 'Unable to place order.';
+            }
+        });
+    </script>
+</body>
+</html>

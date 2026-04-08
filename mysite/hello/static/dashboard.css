@@ -144,6 +144,19 @@ nav ul li a:hover {
     object-fit: cover;
 }
 
+.account-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.account-link:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.24);
+}
+
 /* Logout Button Styles */
 .logout-form {
     margin: 0;

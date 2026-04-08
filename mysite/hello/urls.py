@@ -9,7 +9,9 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('terms/', views.terms_view, name='terms'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('account/edit/', views.edit_account_view, name='edit_account'),
     path('orders_menu/', views.orders_menu_view, name='orders_menu'),
+    path('qr-payment/', views.qr_payment_view, name='qr_payment'),
     path('logout/', views.logout_view, name='logout'),
     path('orders/redirect/', views.redirect_to_order, name='redirect_to_orders'),
 

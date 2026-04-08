@@ -368,6 +368,21 @@ function renderAllProductsByCategory() {
                 }
             }
             
+            const priceHtml = product.size_options && Object.keys(product.size_options).length > 0
+                ? `
+                    <div class="product-price">
+                        <div class="product-price-line">
+                            <span class="product-price-label">M:</span>
+                            <span class="product-price-value">P ${product.size_options.M || product.price}</span>
+                        </div>
+                        <div class="product-price-line">
+                            <span class="product-price-label">L:</span>
+                            <span class="product-price-value">P ${product.size_options.L || product.price}</span>
+                        </div>
+                    </div>
+                `
+                : `<div class="product-price"><div class="product-price-line"><span class="product-price-value">P ${product.price}</span></div></div>`;
+
             productElement.innerHTML = `
                 ${product.stock <= 0 ? '<div class="out-of-stock-dot" title="Out of Stock"></div>' : ''}
                 <div class="product-image-container">
@@ -375,10 +390,7 @@ function renderAllProductsByCategory() {
                 </div>
                 <div class="product-name-price">
                     <div class="product-name">${product.name}</div>
-                    ${product.size_options && Object.keys(product.size_options).length > 0 
-                        ? `<div class="product-price">M: P ${product.size_options.M || product.price} | L: P ${product.size_options.L || product.price}</div>`
-                        : `<div class="product-price">P ${product.price}</div>`
-                    }
+                    ${priceHtml}
                     <div class="product-stock" style="color: ${product.stock <= 0 ? '#dc3545' : product.stock <= 10 ? '#ffc107' : '#28a745'}; ${product.stock <= 0 ? 'font-weight: bold;' : ''}">Stock: ${product.stock}</div>
                     <div class="product-category">Category: ${formatCategory(product.category || 'uncategorized')}</div>
                 </div>
@@ -430,6 +442,7 @@ async function updateAnalytics() {
         if (!response.ok) throw new Error('Failed to fetch analytics');
         
         const data = await response.json();
+        const orderStats = Array.isArray(data.order_stats) ? data.order_stats : [];
         
         // Update display values
         document.getElementById('totalSales').textContent = `P ${data.total_sales.toFixed(2)}`;
@@ -443,30 +456,44 @@ async function updateAnalytics() {
         const orderStatsTable = document.getElementById('orderStatsTable');
         if (orderStatsTable) {
             orderStatsTable.innerHTML = '';
-            data.order_stats.forEach(order => {
+            orderStats.forEach(order => {
                 // Format items list
                 let itemsHtml = '';
-                if (order.items && order.items.length > 0) {
-                    itemsHtml = order.items.map(item => {
+                const orderItems = Array.isArray(order.items) ? order.items : [];
+                if (orderItems.length > 0) {
+                    itemsHtml = orderItems.map(item => {
                         const sizeText = item.size ? ` (${item.size})` : '';
-                        return `${item.name}${sizeText} x${item.quantity}`;
+                        return `${item.name || 'Item'}${sizeText} x${item.quantity || 0}`;
                     }).join('<br>');
                 } else {
-                    itemsHtml = `${order.items_count} item(s)`;
+                    itemsHtml = `${order.items_count || 0} item(s)`;
                 }
+
+                const paymentReference = order.payment_reference || order.paymentReference || '';
+                const safeStatus = typeof order.status === 'string' && order.status
+                    ? order.status
+                    : 'order_placed';
+                const safeCustomer = order.customer || 'Unknown Customer';
+                const safeOrderType = order.order_type || 'Unknown';
+                const safeOrderPlaced = order.order_placed || '-';
+                const safeSchedule = order.delivery_pickup_date || '-';
+                const safeTotalAmount = Number(order.total_amount || 0);
+                const customerCellHtml = paymentReference
+                    ? `${safeCustomer}<br><small>Ref: ${paymentReference}</small>`
+                    : safeCustomer;
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${order.order_id}</td>
-                    <td>${order.customer}</td>
-                    <td>${order.order_type}</td>
-                    <td>${order.order_placed}</td>
-                    <td>${order.delivery_pickup_date}</td>
+                    <td>${order.order_id || '-'}</td>
+                    <td>${customerCellHtml}</td>
+                    <td>${safeOrderType}</td>
+                    <td>${safeOrderPlaced}</td>
+                    <td>${safeSchedule}</td>
                     <td style="max-width: 250px; font-size: 12px;">${itemsHtml}</td>
-                    <td style="font-weight: bold;">Php ${parseFloat(order.total_amount || 0).toFixed(2)}</td>
-                    <td><span class="status-badge ${getStatusClass(order.status)}">${formatStatus(order.status)}</span></td>
+                    <td style="font-weight: bold;">Php ${safeTotalAmount.toFixed(2)}</td>
+                    <td><span class="status-badge ${getStatusClass(safeStatus)}">${formatStatus(safeStatus, safeOrderType)}</span></td>
                     <td>
-                        <button class="btn-delete-order" data-order-id="${order.order_id}" title="Delete Order">
+                        <button class="btn-delete-order" data-order-id="${order.order_id || ''}" title="Delete Order">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -560,6 +587,7 @@ async function deleteOrderFromStats(orderId) {
 // Update percentage display with proper formatting
 function updatePercentageDisplay(elementId, percentage) {
     const element = document.getElementById(elementId);
+    if (!element) return;
     const isPositive = percentage >= 0;
     const absPercentage = Math.abs(percentage);
     
@@ -1004,6 +1032,7 @@ async function loadOrdersFromBackend() {
                     customer: order.customer_name,
                     orderType: order.order_type,
                     paymentMethod: order.payment_method || 'Cash',
+                    paymentReference: order.payment_reference || '',
                     paymentStatus: 'Paid',
                     total: order.total_amount,
                     status: order.status,

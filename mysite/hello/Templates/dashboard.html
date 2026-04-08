@@ -43,7 +43,9 @@
             {% if user.is_authenticated %}
                 <div class="user-info">
                     <span class="user-welcome">{{ user.username }}</span>
-                    <img src="{% static 'dashboardpics/user-icon.png' %}" alt="User Account" class="user-icon">
+                    <a href="{% url 'edit_account' %}" class="account-link" aria-label="Edit account details" title="Edit account details">
+                        <img src="{% static 'dashboardpics/user-icon.png' %}" alt="User Account" class="user-icon">
+                    </a>
                     <form method="POST" action="{% url 'logout' %}" class="logout-form">
                         {% csrf_token %}
                         <button type="submit" class="logout-btn">LOGOUT</button>

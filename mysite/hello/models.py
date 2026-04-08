@@ -96,6 +96,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     customer_name = models.CharField(max_length=100)
     customer_email = models.EmailField(blank=True, null=True, help_text="Customer email for order notifications")
+    payment_reference = models.CharField(max_length=100, blank=True, null=True)
     order_type = models.CharField(max_length=20, choices=ORDER_TYPE_CHOICES)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)

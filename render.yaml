@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: mother-julie
+    runtime: python
+    rootDir: mysite
+    buildCommand: bash ../build.sh
+    startCommand: gunicorn mysite.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DEBUG
+        value: false
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      - key: DATABASE_URL
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USE_TLS
+        value: true
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: Mother Julie <noreply.motherjulie@gmail.com>
+      - key: SERVER_EMAIL
+        value: noreply.motherjulie@gmail.com
+      - key: LALAMOVE_API_KEY
+        sync: false
+      - key: LALAMOVE_API_SECRET
+        sync: false
+      - key: LALAMOVE_MODE
+        value: sandbox
+      - key: PAYMONGO_PUBLIC_KEY
+        sync: false
+      - key: PAYMONGO_SECRET_KEY
+        sync: false
+      - key: PAYMONGO_MODE
+        value: sandbox
+      - key: PAYMONGO_QRPH_BASIC_AUTH
+        sync: false
