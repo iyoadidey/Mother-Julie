@@ -65,5 +65,11 @@ urlpatterns = [
     path('api/frontend-content/<int:content_id>/update/', views.api_update_frontend_content, name='api_update_frontend_content'),
     path('api/frontend-content/<int:content_id>/delete/', views.api_delete_frontend_content, name='api_delete_frontend_content'),
 
+    # User Management APIs
+    path('api/users/', views.api_get_users, name='api_get_users'),
+    path('api/users/create/', views.api_create_user, name='api_create_user'),
+    path('api/users/<int:user_id>/update/', views.api_update_user, name='api_update_user'),
+    path('api/users/<int:user_id>/delete/', views.api_delete_user, name='api_delete_user'),
+
     path('debug/orders/', views.debug_orders, name='debug_orders')
 ]

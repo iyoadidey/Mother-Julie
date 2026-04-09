@@ -1227,6 +1227,10 @@
                 <span>Orders</span>
                 <span class="new-order-badge" id="newOrderBadge" style="display: none;">0</span>
             </div>
+            <div class="nav-item" data-page="users">
+                <i class="fas fa-users"></i>
+                <span>Users</span>
+            </div>
         </div>
         
         <div class="nav-section">
@@ -1498,6 +1502,88 @@
                 
                 <div id="ordersContainer">
                     <!-- Orders will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Users Management Page -->
+        <div class="page" id="users">
+            <div class="header">
+                <h1 class="page-title">User Management</h1>
+                <div class="user-info">
+                    <div class="user-avatar"></div>
+                    <div class="user-details">
+                        <div class="user-name" id="adminName">Admin User</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="users-card" style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div class="users-header" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="font-size: 20px; font-weight: bold; color: #333;">Users List</h2>
+                        <button id="addUserBtn" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="usersContainer" style="overflow-x: auto;">
+                    <!-- Users table will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Add/Edit User Modal -->
+            <div id="userModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 id="modalTitle" style="font-size: 22px; font-weight: bold;">Add New User</h2>
+                        <button id="closeModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+                    </div>
+                    
+                    <form id="userForm">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Username *</label>
+                            <input type="text" id="modalUsername" placeholder="Enter username" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Email *</label>
+                            <input type="email" id="modalEmail" placeholder="Enter email" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Password *</label>
+                            <input type="password" id="modalPassword" placeholder="Enter password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">First Name</label>
+                            <input type="text" id="modalFirstName" placeholder="Enter first name" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Last Name</label>
+                            <input type="text" id="modalLastName" placeholder="Enter last name" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <label style="display: flex; align-items: center; font-weight: bold; cursor: pointer;">
+                                <input type="checkbox" id="modalIsStaff" style="margin-right: 8px;">
+                                Is Staff
+                            </label>
+                            <label style="display: flex; align-items: center; font-weight: bold; cursor: pointer;">
+                                <input type="checkbox" id="modalIsSuperuser" style="margin-right: 8px;">
+                                Is Superuser
+                            </label>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" style="flex: 1; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Save User</button>
+                            <button type="button" id="cancelModal" style="flex: 1; padding: 12px; background: #ccc; color: #333; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

@@ -57,6 +57,10 @@ document.querySelectorAll('.nav-item').forEach(item => {
                 initializeOrders().then(() => {
                     startOrderPolling(); // Start polling when switching to orders page
                 });
+            } else if (pageId === 'users') {
+                stopOrderPolling();
+                stopReportPolling();
+                initializeUsers();
             } else {
                 stopOrderPolling(); // Stop polling when leaving orders page
                 if (pageId === 'dashboard') {
@@ -1807,6 +1811,269 @@ function stopOrderPolling() {
         orderPollInterval = null;
     }
 }
+
+// User Management Functions
+async function initializeUsers() {
+    try {
+        const response = await fetch('/api/users/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const users = await response.json();
+        displayUsersTable(users);
+    } catch (error) {
+        console.error('Error loading users:', error);
+        document.getElementById('usersContainer').innerHTML = 
+            `<div style="padding: 20px; color: red;">Error loading users: ${error.message}</div>`;
+    }
+}
+
+function displayUsersTable(users) {
+    const container = document.getElementById('usersContainer');
+    
+    if (users.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No users found</div>';
+        return;
+    }
+    
+    let html = `
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                <th style="padding: 12px; text-align: left; font-weight: bold;">ID</th>
+                <th style="padding: 12px; text-align: left; font-weight: bold;">Username</th>
+                <th style="padding: 12px; text-align: left; font-weight: bold;">Email</th>
+                <th style="padding: 12px; text-align: left; font-weight: bold;">Name</th>
+                <th style="padding: 12px; text-align: center; font-weight: bold;">Staff</th>
+                <th style="padding: 12px; text-align: center; font-weight: bold;">Superuser</th>
+                <th style="padding: 12px; text-align: center; font-weight: bold;">Active</th>
+                <th style="padding: 12px; text-align: center; font-weight: bold;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    users.forEach(user => {
+        const fullName = `${user.first_name} ${user.last_name}`.trim() || 'N/A';
+        html += `
+        <tr style="border-bottom: 1px solid #eee; hover: {background: #f9f9f9;}">
+            <td style="padding: 12px;">${user.id}</td>
+            <td style="padding: 12px; font-weight: bold;">${user.username}</td>
+            <td style="padding: 12px;">${user.email}</td>
+            <td style="padding: 12px;">${fullName}</td>
+            <td style="padding: 12px; text-align: center;">
+                <input type="checkbox" ${user.is_staff ? 'checked' : ''} 
+                       onchange="toggleUserStaff(${user.id}, this.checked)" style="cursor: pointer;">
+            </td>
+            <td style="padding: 12px; text-align: center;">
+                <input type="checkbox" ${user.is_superuser ? 'checked' : ''} 
+                       onchange="toggleUserSuperuser(${user.id}, this.checked)" style="cursor: pointer;">
+            </td>
+            <td style="padding: 12px; text-align: center;">
+                <input type="checkbox" ${user.is_active ? 'checked' : ''} 
+                       onchange="toggleUserActive(${user.id}, this.checked)" style="cursor: pointer;">
+            </td>
+            <td style="padding: 12px; text-align: center;">
+                <button onclick="deleteUser(${user.id}, '${user.username}')" 
+                        style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
+                    Delete
+                </button>
+            </td>
+        </tr>
+        `;
+    });
+    
+    html += `
+        </tbody>
+    </table>
+    `;
+    
+    container.innerHTML = html;
+}
+
+async function toggleUserStaff(userId, isStaff) {
+    try {
+        const response = await fetch(`/api/users/${userId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ is_staff: isStaff })
+        });
+        
+        if (!response.ok) {
+            alert('Error updating user');
+            await initializeUsers();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating user');
+        await initializeUsers();
+    }
+}
+
+async function toggleUserSuperuser(userId, isSuperuser) {
+    if (isSuperuser && !confirm('Make this user a superuser? They will have full admin access.')) {
+        await initializeUsers();
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/users/${userId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ is_superuser: isSuperuser })
+        });
+        
+        if (!response.ok) {
+            alert('Error updating user');
+            await initializeUsers();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating user');
+        await initializeUsers();
+    }
+}
+
+async function toggleUserActive(userId, isActive) {
+    try {
+        const response = await fetch(`/api/users/${userId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ is_active: isActive })
+        });
+        
+        if (!response.ok) {
+            alert('Error updating user');
+            await initializeUsers();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating user');
+        await initializeUsers();
+    }
+}
+
+async function deleteUser(userId, username) {
+    if (!confirm(`Are you sure you want to delete user "${username}"? This cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/users/${userId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (response.ok) {
+            await initializeUsers();
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.error || 'Could not delete user'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error deleting user');
+    }
+}
+
+// Modal functions
+function openUserModal() {
+    document.getElementById('userModal').style.display = 'flex';
+    document.getElementById('modalTitle').textContent = 'Add New User';
+    document.getElementById('userForm').reset();
+    document.getElementById('modalPassword').style.display = 'block';
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+    document.getElementById('userForm').reset();
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    // User modal handlers
+    const addUserBtn = document.getElementById('addUserBtn');
+    const closeModalBtn = document.getElementById('closeModal');
+    const cancelModalBtn = document.getElementById('cancelModal');
+    const userForm = document.getElementById('userForm');
+    
+    if (addUserBtn) {
+        addUserBtn.addEventListener('click', openUserModal);
+    }
+    
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeUserModal);
+    }
+    
+    if (cancelModalBtn) {
+        cancelModalBtn.addEventListener('click', closeUserModal);
+    }
+    
+    if (userForm) {
+        userForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('modalUsername').value.trim();
+            const email = document.getElementById('modalEmail').value.trim();
+            const password = document.getElementById('modalPassword').value.trim();
+            const firstName = document.getElementById('modalFirstName').value.trim();
+            const lastName = document.getElementById('modalLastName').value.trim();
+            const isStaff = document.getElementById('modalIsStaff').checked;
+            const isSuperuser = document.getElementById('modalIsSuperuser').checked;
+            
+            if (!username || !email || !password) {
+                alert('Username, email, and password are required');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/users/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        password,
+                        first_name: firstName,
+                        last_name: lastName,
+                        is_staff: isStaff,
+                        is_superuser: isSuperuser
+                    })
+                });
+                
+                if (response.ok) {
+                    closeUserModal();
+                    await initializeUsers();
+                    alert('User created successfully!');
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.error || 'Could not create user'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating user');
+            }
+        });
+    }
+});
 
 // Listen for order creation events (if using custom events)
 window.addEventListener('orderCreated', async function(event) {
