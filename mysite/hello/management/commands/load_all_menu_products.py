@@ -19,6 +19,7 @@ ALL_MENU_ITEMS = [
     {"name": "Chili Con Carne", "price": 179, "stock": 18, "category": "spud"},
     {"name": "Triple Cheese", "price": 129, "stock": 15, "category": "spud"},
     {"name": "Lasagna Jacket", "price": 129, "stock": 15, "category": "spud"},
+    # Pasta/Bread products
     {"name": "Garlic Bread", "price": 90, "stock": 25, "category": "pasta_bread"},
     {"name": "Lasagna", "price": 250, "stock": 10, "category": "pasta_bread"},
     # Wrap products
