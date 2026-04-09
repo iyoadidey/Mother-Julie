@@ -1,9 +1,14 @@
-"""Compatibility shim for deployments importing ``mysite.wsgi`` from repo root."""
-
+import sys
 import os
 
+# Path to your project folder
+path = '/home/iyoadidey/Mother-Julie/mysite'
+if path not in sys.path:
+    sys.path.append(path)
+
+# Set Django settings module
+os.environ['DJANGO_SETTINGS_MODULE'] = 'mysite.settings'
+
+# Get WSGI application
 from django.core.wsgi import get_wsgi_application
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
-
 application = get_wsgi_application()
