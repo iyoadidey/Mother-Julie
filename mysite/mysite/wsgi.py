@@ -1,14 +1,16 @@
-import sys
+"""
+WSGI config for mysite project.
+
+It exposes the WSGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
+"""
+
 import os
 
-# Path to your project folder
-path = '/home/iyoadidey/Mother-Julie/mysite'
-if path not in sys.path:
-    sys.path.append(path)
-
-# Set Django settings module
-os.environ['DJANGO_SETTINGS_MODULE'] = 'mysite.settings'
-
-# Get WSGI application
 from django.core.wsgi import get_wsgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
+
 application = get_wsgi_application()

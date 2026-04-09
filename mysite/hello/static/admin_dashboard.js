@@ -1606,6 +1606,24 @@ function getCSRFToken() {
     return csrfToken ? csrfToken.value : '';
 }
 
+function getCookie(name) {
+    if (!document.cookie) {
+        return getCSRFToken();
+    }
+
+    const cookieValue = document.cookie
+        .split(';')
+        .map(cookie => cookie.trim())
+        .find(cookie => cookie.startsWith(`${name}=`));
+
+    if (cookieValue) {
+        return decodeURIComponent(cookieValue.substring(name.length + 1));
+    }
+
+    // Fallback to hidden csrf token if cookie is unavailable.
+    return getCSRFToken();
+}
+
 // Event listeners for order management
 document.getElementById('orderTypeFilter').addEventListener('change', renderActiveOrders);
 document.getElementById('statusFilter').addEventListener('change', renderActiveOrders);
