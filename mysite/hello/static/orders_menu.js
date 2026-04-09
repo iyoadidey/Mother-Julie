@@ -1,4 +1,4 @@
-// ========== PAYMONGO CONFIGURATION ==========
+﻿// ========== PAYMONGO CONFIGURATION ==========
 const PAYMONGO_PUBLIC_KEY = 'pk_test_your_public_key_here'; // Replace with your actual public key
 const PAYMONGO_SECRET_KEY = 'sk_test_your_secret_key_here'; // Replace with your actual secret key (use only on backend)
 
@@ -1898,7 +1898,8 @@ function populateCategory(categoryId) {
         const categoryMap = {
             'desserts': 'DESSERTS',
             'spuds': 'SPUDS',
-            'pasta': 'PASTA / BREAD',
+            // Must match .category-subtitle text in orders_menu.html (ALL MENU section)
+            'pasta': 'PASTA/BREAD',
             'wrap': 'WRAP',
             'appetizers': 'APPETIZERS'
         };
@@ -1941,7 +1942,7 @@ function populateCategory(categoryId) {
     const categoryMap = {
         'desserts': 'DESSERTS',
         'spuds': 'SPUDS',
-        'pasta': 'PASTA / BREAD',
+        'pasta': 'PASTA/BREAD',
         'wrap': 'WRAP',
         'appetizers': 'APPETIZERS'
     };
