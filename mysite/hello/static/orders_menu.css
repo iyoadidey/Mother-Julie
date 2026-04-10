@@ -1809,11 +1809,14 @@ body {
 
 @media (max-width: 768px) {
     .topbar {
-        padding: 4px 12px;
+        padding: 4px 10px;
+        height: 60px;
+        flex-wrap: nowrap;
+        gap: 8px;
     }
     
     .topbar-center h1 {
-        font-size: 28px;
+        font-size: 24px;
     }
 
     /* Keep desktop arrangement: sidebar stays on the left */
@@ -1825,7 +1828,7 @@ body {
         top: 0;
         bottom: auto;
         z-index: 90;
-        padding: 64px 8px 16px;
+        padding: 112px 8px 16px;
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
@@ -1913,28 +1916,28 @@ body {
 
 @media (max-width: 480px) {
     .topbar {
-        height: auto;
-        padding: 8px 10px;
-        gap: 8px;
-        flex-wrap: wrap;
+        height: 60px;
+        padding: 4px 8px;
+        gap: 6px;
+        flex-wrap: nowrap;
     }
 
     .topbar-left .location {
-        font-size: 13px;
+        font-size: 11px;
     }
 
     .location-search {
-        padding: 7px 12px;
-        font-size: 0.75rem;
+        padding: 6px 8px;
+        font-size: 0.65rem;
     }
 
     .topbar-center h1 {
-        font-size: 22px;
+        font-size: 18px;
     }
 
     .title-logo {
-        width: 36px;
-        height: 36px;
+        width: 28px;
+        height: 28px;
     }
     
     .user-welcome {
@@ -1943,7 +1946,7 @@ body {
 
     .sidebar {
         width: 92px;
-        padding: 62px 6px 14px;
+        padding: 108px 6px 14px;
     }
 
     .sidebar .logo {
