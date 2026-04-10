@@ -47,9 +47,17 @@ function saveCartToStorage() {
 
 function loadCartFromStorage() {
     const savedCart = localStorage.getItem('motherJulieCart');
-    if (savedCart) {
+    if (!savedCart) return;
+    try {
         cart = JSON.parse(savedCart);
+        if (!Array.isArray(cart)) throw new Error('invalid cart shape');
         orderCount = cart.reduce((total, item) => total + item.quantity, 0);
+        updateOrdersCount();
+    } catch (e) {
+        console.error('Invalid motherJulieCart in localStorage, clearing:', e);
+        localStorage.removeItem('motherJulieCart');
+        cart = [];
+        orderCount = 0;
         updateOrdersCount();
     }
 }
@@ -1973,7 +1981,10 @@ let productsFromAPI = [];
 // Load products from API
 async function loadProductsFromAPI() {
     try {
-        const response = await fetch('/api/products/public/');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        const response = await fetch('/api/products/public/', { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (!response.ok) {
             throw new Error('Failed to load products');
         }
@@ -1989,7 +2000,10 @@ async function loadProductsFromAPI() {
         return productsFromAPI;
     } catch (error) {
         console.error('Error loading products from API:', error);
-        showToast('Failed to load products. Please refresh the page.', 'error');
+        const msg = error.name === 'AbortError'
+            ? 'Loading products timed out. Check your connection and refresh.'
+            : 'Failed to load products. Please refresh the page.';
+        showToast(msg, 'error');
         return [];
     }
 }
@@ -2269,36 +2283,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
         updateTopbarLocation('');
     }
-    
-    // Load products from API first
-    await loadProductsFromAPI();
-    
-    // Populate all categories with products from API
-    const categories = ['all', 'desserts', 'spuds', 'pasta', 'wrap', 'appetizers'];
-    categories.forEach(categoryId => {
-        populateCategory(categoryId);
-    });
-    
+
+    // Wire UI first so the page stays usable even if the products API is slow or hangs.
     initializeLocationModal();
     initializePaymentMethods();
     initializeSidebarNavigation();
     initializeAddToCartDelegation();
 
-    // Orders button
     if (elements.ordersButton) {
         elements.ordersButton.addEventListener('click', toggleBillingPanel);
     }
-    
-    // Billing panel close
-    elements.billingClose.addEventListener('click', function(e) {
-        e.stopPropagation();
-        closeBillingPanel();
-    });
 
-    // Close billing panel when clicking outside
+    if (elements.billingClose) {
+        elements.billingClose.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeBillingPanel();
+        });
+    }
+
     document.addEventListener('click', function(e) {
-        if (elements.billingPanel.classList.contains('open') && 
-            !elements.billingPanel.contains(e.target) && 
+        if (elements.billingPanel.classList.contains('open') &&
+            !elements.billingPanel.contains(e.target) &&
             e.target !== elements.ordersButton &&
             !e.target.closest('.quantity-btn') &&
             !e.target.closest('.remove-btn')) {
@@ -2306,7 +2311,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
-    // Order type selection
     document.querySelectorAll('.order-btn').forEach(button => {
         button.addEventListener('click', function() {
             document.querySelectorAll('.order-btn').forEach(btn => btn.classList.remove('active'));
@@ -2321,17 +2325,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     });
 
-    // Process order button
     const processOrderBtn = document.querySelector('.process-order');
     if (processOrderBtn) {
         processOrderBtn.addEventListener('click', processOrder);
     }
 
-    // Set default order type
-    document.querySelector('.order-btn[data-type="dine-in"]').classList.add('active');
-    
-    // Initialize payment restrictions
+    const dineInBtn = document.querySelector('.order-btn[data-type="dine-in"]');
+    if (dineInBtn) {
+        dineInBtn.classList.add('active');
+    }
     updatePaymentMethodsBasedOnOrderType();
+
+    await loadProductsFromAPI();
+
+    const categories = ['all', 'desserts', 'spuds', 'pasta', 'wrap', 'appetizers'];
+    categories.forEach(categoryId => {
+        populateCategory(categoryId);
+    });
 });
 
 // Helper function to get order data

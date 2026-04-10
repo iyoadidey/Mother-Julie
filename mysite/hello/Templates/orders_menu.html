@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="{% static 'orders_menu.css' %}" />
 </head>
 <body>
+    <!-- Stub so Maps callback never runs before orders_menu.js defines initMap (async load race). -->
+    <script>window.initMap = function () {};</script>
     <!-- Google Maps API -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCI62LECy4fzoUmiM4Py9IBU7r0dHAwnXk&callback=initMap&libraries=places,geocoding&loading=async" async defer></script>
 
