@@ -1829,9 +1829,10 @@ body {
         padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
         flex-direction: row;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         overflow-x: auto;
         overflow-y: hidden;
+        gap: 10px;
     }
 
     .sidebar .logo-link {
@@ -1843,6 +1844,9 @@ body {
         height: 54px;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.28);
+        position: sticky;
+        left: 0;
+        z-index: 3;
     }
 
     .sidebar .logo {
@@ -1859,6 +1863,12 @@ body {
         width: max-content;
         padding: 0;
         margin: 0;
+    }
+
+    .sidebar nav {
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 100%;
     }
 
     .nav-item {
@@ -1937,6 +1947,7 @@ body {
     .sidebar {
         height: calc(68px + env(safe-area-inset-bottom, 0px));
         padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+        gap: 8px;
     }
 
     .sidebar .logo-link {
