@@ -321,17 +321,47 @@
         }
         
         @media (max-width: 768px) {
+            body {
+                justify-content: flex-start;
+                padding: 12px;
+            }
+
             .container {
                 flex-direction: column;
             }
             
             .left-panel, .right-panel {
                 width: 100%;
+                padding: 16px;
             }
             
             .logo {
                 width: 200px;
                 height: 60px;
+            }
+
+            .logo-container {
+                margin-top: 42px;
+                margin-bottom: 16px;
+            }
+
+            .back-button {
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 1001;
+                padding: 7px 12px;
+                font-size: 12px;
+            }
+
+            .detail-row {
+                gap: 12px;
+            }
+
+            .detail-label,
+            .detail-value {
+                font-size: 12px;
+                word-break: break-word;
             }
 
             .order-items {

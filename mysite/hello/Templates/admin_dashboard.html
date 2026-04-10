@@ -1166,6 +1166,152 @@
                 justify-content: space-between;
             }
         }
+
+        @media (max-width: 640px) {
+            body {
+                display: block;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: calc(72px + env(safe-area-inset-bottom, 0px));
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                top: auto;
+                padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                z-index: 1100;
+                overflow-x: auto;
+                overflow-y: hidden;
+                box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
+            }
+
+            .logo,
+            .welcome,
+            .nav-title {
+                display: none;
+            }
+
+            .nav-section {
+                margin: 0;
+                display: flex;
+                flex-direction: row;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .nav-item {
+                min-width: 72px;
+                padding: 8px 6px;
+                border-radius: 10px;
+                margin-bottom: 0;
+                flex-direction: column;
+                justify-content: center;
+                gap: 4px;
+            }
+
+            .nav-item i {
+                margin-right: 0;
+                font-size: 16px;
+            }
+
+            .nav-item span {
+                font-size: 10px;
+                line-height: 1;
+            }
+
+            .out-of-stock-badge,
+            .new-order-badge {
+                position: absolute;
+                top: 4px;
+                right: 6px;
+                margin-left: 0;
+                min-width: 16px;
+                padding: 1px 5px;
+                font-size: 9px;
+            }
+
+            .logout-btn {
+                margin-top: 0;
+                min-width: 82px;
+                padding: 8px 10px;
+            }
+
+            .logout-btn i {
+                margin-right: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 14px;
+                padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+                overflow-x: hidden;
+            }
+
+            .header {
+                margin-bottom: 18px;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .orders-card {
+                max-height: none;
+                overflow: visible;
+                padding: 14px;
+            }
+
+            .orders-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .orders-table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .orders-table thead,
+            .orders-table tbody,
+            .orders-table tbody tr {
+                min-width: 900px;
+            }
+
+            .filter-controls {
+                flex-wrap: wrap;
+            }
+
+            .filter-controls select {
+                min-width: 140px;
+            }
+
+            .btn {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 8px;
+            }
+
+            .product-actions button {
+                min-width: 64px;
+            }
+
+            .modal-content {
+                width: calc(100vw - 20px);
+                max-height: calc(100vh - 20px);
+                padding: 16px;
+            }
+        }
     </style>
 </head>
 <body>

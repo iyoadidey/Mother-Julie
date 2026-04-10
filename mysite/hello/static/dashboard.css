@@ -771,3 +771,142 @@ footer {
     font-family: 'Sansita One', cursive, sans-serif;
  
 }
+
+/* ======================= RESPONSIVE ======================= */
+@media (max-width: 1024px) {
+    header nav {
+        height: auto;
+        min-height: 82px;
+        padding: 10px 18px;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .logo {
+        position: static;
+        transform: none;
+        order: -1;
+    }
+
+    .logo img {
+        height: 72px;
+    }
+
+    nav ul {
+        gap: 18px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .user-section {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hero-content {
+        height: auto;
+        gap: 24px;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero-text p {
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 14px;
+    }
+
+    header nav {
+        padding: 8px 12px;
+    }
+
+    .logo img {
+        height: 64px;
+    }
+
+    nav ul li a {
+        font-size: 0.82rem;
+    }
+
+    .user-info {
+        gap: 10px;
+        padding: 6px 10px;
+    }
+
+    .user-welcome {
+        display: none;
+    }
+
+    .hero {
+        padding: 36px 0 20px;
+    }
+
+    .hero-text h1 {
+        font-size: 2.1rem;
+    }
+
+    .hero-text p {
+        font-size: 0.98rem;
+    }
+
+    .btn-primary {
+        width: 100%;
+        max-width: 320px;
+        display: inline-block;
+        padding: 13px 22px;
+    }
+
+    .featured .items-grid {
+        height: auto;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 12px;
+    }
+
+    .featured .items-grid .item-card {
+        width: 82vw;
+        min-width: 82vw;
+        max-width: 82vw;
+        height: 300px;
+        scroll-snap-align: start;
+    }
+
+    .toast {
+        min-width: 0;
+        max-width: calc(100vw - 24px);
+    }
+}
+
+@media (max-width: 480px) {
+    nav ul {
+        gap: 12px;
+    }
+
+    nav ul li a {
+        font-size: 0.76rem;
+    }
+
+    .username,
+    .logout-btn {
+        padding: 7px 12px;
+        font-size: 0.72rem;
+    }
+
+    .hero-text h1 {
+        font-size: 1.7rem;
+    }
+
+    .featured .items-grid .item-card {
+        width: 88vw;
+        min-width: 88vw;
+        max-width: 88vw;
+        height: 260px;
+    }
+}

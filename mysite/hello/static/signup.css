@@ -271,6 +271,14 @@ body {
   .desktop1-container1 { padding: 25px; }
   .desktop1-agreement-row { flex-direction: column; gap: 8px; }
   .heart-container { margin-left: 0; }
+  .input-container {
+    flex-direction: column;
+    gap: 0;
+  }
+  .input-container input:first-child,
+  .input-container input:last-child {
+    width: 100%;
+  }
 }
 
 .desktop1-agreement-row {
@@ -341,4 +349,38 @@ body {
 
 .input-success {
     border-color: #00C851 !important;
+}
+
+@media (max-width: 768px) {
+  body {
+    align-items: flex-start;
+    padding: 18px 12px;
+  }
+
+  .desktop1-container1 {
+    max-width: 100%;
+    width: 100%;
+    padding: 26px 16px;
+    border-radius: 18px;
+  }
+
+  .motherjulielogo {
+    width: 120px;
+    margin-bottom: 12px;
+  }
+
+  .desktop1-text3 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  .desktop1-button {
+    margin-top: 16px;
+  }
+
+  .messages-container {
+    position: static;
+    max-width: 100%;
+    margin-top: 12px;
+  }
 }

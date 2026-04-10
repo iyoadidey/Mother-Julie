@@ -1835,7 +1835,22 @@ body {
     }
 
     .sidebar .logo-link {
-        display: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 54px;
+        height: 54px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.28);
+    }
+
+    .sidebar .logo {
+        width: 46px;
+        height: 46px;
+        margin: 0;
+        object-fit: contain;
+        mix-blend-mode: normal;
     }
 
     .sidebar nav ul {
@@ -1922,6 +1937,16 @@ body {
     .sidebar {
         height: calc(68px + env(safe-area-inset-bottom, 0px));
         padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .sidebar .logo-link {
+        width: 48px;
+        height: 48px;
+    }
+
+    .sidebar .logo {
+        width: 40px;
+        height: 40px;
     }
 
     .nav-item {
