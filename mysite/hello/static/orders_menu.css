@@ -1838,17 +1838,19 @@ body {
         display: block;
         align-items: center;
         justify-content: center;
-        width: auto;
+        width: 100%;
         height: auto;
-        border-radius: 0;
-        background: transparent;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.35);
+        padding: 6px 4px;
         position: static;
+        margin-bottom: 4px;
     }
 
     .sidebar .logo {
         width: 92px;
         height: auto;
-        margin-bottom: 4px;
+        margin: 0 auto;
         object-fit: contain;
         mix-blend-mode: overlay;
     }
@@ -1946,7 +1948,7 @@ body {
 
     .sidebar .logo {
         width: 72px;
-        margin-bottom: 2px;
+        margin: 0 auto;
     }
 
     .nav-item {

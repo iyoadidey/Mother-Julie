@@ -775,46 +775,38 @@ footer {
 /* ======================= RESPONSIVE ======================= */
 @media (max-width: 1024px) {
     header nav {
-        height: auto;
-        min-height: 82px;
-        padding: 10px 18px;
-        gap: 12px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .logo {
-        position: static;
-        transform: none;
-        order: -1;
+        height: 92px;
+        padding: 0 22px;
+        flex-wrap: nowrap;
+        justify-content: space-between;
     }
 
     .logo img {
-        height: 72px;
+        height: 86px;
     }
 
     nav ul {
-        gap: 18px;
-        flex-wrap: wrap;
-        justify-content: center;
+        gap: 24px;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
     }
 
     .user-section {
-        width: 100%;
-        justify-content: center;
+        width: auto;
+        justify-content: flex-end;
     }
 
     .hero-content {
         height: auto;
-        gap: 24px;
-        flex-direction: column;
-        text-align: center;
+        gap: 28px;
+        flex-direction: row;
+        text-align: left;
     }
 
     .hero-text p {
-        max-width: 720px;
-        margin-left: auto;
-        margin-right: auto;
+        max-width: 460px;
+        margin-left: 0;
+        margin-right: 0;
     }
 }
 
@@ -824,15 +816,16 @@ footer {
     }
 
     header nav {
-        padding: 8px 12px;
+        height: 84px;
+        padding: 0 14px;
     }
 
     .logo img {
-        height: 64px;
+        height: 74px;
     }
 
     nav ul li a {
-        font-size: 0.82rem;
+        font-size: 0.76rem;
     }
 
     .user-info {
@@ -849,7 +842,7 @@ footer {
     }
 
     .hero-text h1 {
-        font-size: 2.1rem;
+        font-size: 1.9rem;
     }
 
     .hero-text p {
@@ -857,8 +850,8 @@ footer {
     }
 
     .btn-primary {
-        width: 100%;
-        max-width: 320px;
+        width: auto;
+        max-width: none;
         display: inline-block;
         padding: 13px 22px;
     }
@@ -886,11 +879,15 @@ footer {
 
 @media (max-width: 480px) {
     nav ul {
-        gap: 12px;
+        gap: 9px;
     }
 
     nav ul li a {
-        font-size: 0.76rem;
+        font-size: 0.65rem;
+    }
+
+    .logo img {
+        height: 62px;
     }
 
     .username,
