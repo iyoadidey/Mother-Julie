@@ -1745,6 +1745,68 @@ body {
 }
 
 /* ========== RESPONSIVE DESIGN ========== */
+@media (min-width: 769px) and (max-width: 1366px) {
+    .topbar {
+        padding: 4px 14px;
+    }
+
+    .topbar-center {
+        gap: 10px;
+    }
+
+    .topbar-center h1 {
+        font-size: 32px;
+    }
+
+    .title-logo {
+        width: 40px;
+        height: 40px;
+    }
+
+    .sidebar {
+        width: 132px;
+    }
+
+    .sidebar .logo {
+        width: 118px;
+    }
+
+    .nav-item {
+        width: 96px;
+        padding: 12px 8px;
+        gap: 6px;
+    }
+
+    .nav-logo {
+        width: 40px;
+        height: 40px;
+    }
+
+    .nav-label {
+        font-size: 11px;
+        max-width: 84px;
+    }
+
+    .main {
+        margin-left: 132px;
+        padding: 14px;
+    }
+
+    .menu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+
+    .card {
+        height: 390px;
+    }
+
+    .billing-panel {
+        width: 340px;
+        right: -360px;
+    }
+}
+
 @media (max-width: 768px) {
     .topbar {
         padding: 4px 12px;
@@ -1757,14 +1819,14 @@ body {
     /* Collapse left sidebar into a bottom nav */
     .sidebar {
         width: 100%;
-        height: 72px;
+        height: calc(72px + env(safe-area-inset-bottom, 0px));
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
         top: auto;
         z-index: 200;
-        padding: 6px 10px;
+        padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
         flex-direction: row;
         align-items: center;
         justify-content: center;
@@ -1804,13 +1866,17 @@ body {
     .main {
         margin-left: 0;
         padding: 12px;
-        padding-bottom: 92px; /* space for bottom nav */
+        padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); /* space for bottom nav */
     }
     
     .billing-panel {
         width: 100%;
         right: -100%;
         border-radius: 0;
+        top: 0;
+        height: 100vh;
+        padding-top: calc(74px + env(safe-area-inset-top, 0px));
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     }
     
     .menu-grid {
@@ -1854,8 +1920,8 @@ body {
     }
 
     .sidebar {
-        height: 68px;
-        padding: 6px 8px;
+        height: calc(68px + env(safe-area-inset-bottom, 0px));
+        padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
     }
 
     .nav-item {
@@ -1877,7 +1943,7 @@ body {
     .main {
         margin-left: 0;
         padding: 10px;
-        padding-bottom: 88px;
+        padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
     }
     
     .menu-grid {
@@ -1886,7 +1952,7 @@ body {
     }
 
     .orders-btn {
-        top: 74px;
+        top: calc(74px + env(safe-area-inset-top, 0px));
         right: 12px;
         font-size: 12px;
     }
