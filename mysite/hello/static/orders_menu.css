@@ -1854,7 +1854,7 @@ body {
         height: 46px;
         margin: 0;
         object-fit: contain;
-        mix-blend-mode: normal;
+        mix-blend-mode: overlay;
     }
 
     .sidebar nav ul {
