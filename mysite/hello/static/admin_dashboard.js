@@ -141,10 +141,27 @@ async function initializeProducts() {
         if (!response.ok) {
             throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
         }
-        
-        const productsData = await response.json();
+
+        let productsData = await response.json();
+
+        // Fallback to the same public source used by orders_menu when admin API
+        // returns an unexpected payload or an empty list.
+        if (!Array.isArray(productsData) || productsData.length === 0) {
+            const publicResponse = await fetch('/api/products/public/');
+            if (publicResponse.ok) {
+                const publicData = await publicResponse.json();
+                if (Array.isArray(publicData) && publicData.length > 0) {
+                    productsData = publicData;
+                }
+            }
+        }
+
+        if (!Array.isArray(productsData)) {
+            throw new Error('Products API returned an invalid format');
+        }
+
         console.log('Products loaded from API:', productsData);
-        
+
         products = productsData.map(product => ({
             id: product.id,
             name: product.name,
