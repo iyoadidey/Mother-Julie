@@ -7,6 +7,7 @@ urlpatterns = [
     path('signin/', views.signin, name='signin'),
     path('login/', RedirectView.as_view(pattern_name='signin', permanent=False)),
     path('signup/', views.signup_view, name='signup'),
+    path('signup/verify-otp/', views.verify_signup_otp, name='verify_signup_otp'),
     path('terms/', views.terms_view, name='terms'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('account/edit/', views.edit_account_view, name='edit_account'),

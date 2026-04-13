@@ -25,12 +25,14 @@ import hmac
 import hashlib
 import base64
 
-from .models import SignupEvent, PasswordResetToken, Product, Order, OrderItem, FrontendContent
+from .models import SignupEvent, PasswordResetToken, PendingSignup, Product, Order, OrderItem, FrontendContent
 from django.db import transaction, close_old_connections
 from django.db.models import F
 from django.templatetags.static import static
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.staticfiles import finders
+from datetime import timedelta
+from django.contrib.auth.hashers import make_password
 
 
 def _paymongo_auth_header(api_key):
@@ -234,13 +236,30 @@ def signin(request):
     return render(request, "signin.html")
 
 
+def _send_signup_otp_email(recipient_email, otp_code):
+    subject = "Mother Julie account verification code"
+    message = (
+        "Welcome to Mother Julie!\n\n"
+        f"Your one-time verification code is: {otp_code}\n"
+        "This code expires in 10 minutes.\n\n"
+        "If you did not request this signup, please ignore this email."
+    )
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [recipient_email],
+        fail_silently=False,
+    )
+
+
 def signup_view(request):
-    """Handle user registration"""
+    """Start user registration and send OTP email verification."""
     if request.method == 'POST':
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        username = request.POST.get('username')
-        email = request.POST.get('email')
+        first_name = (request.POST.get('first_name') or '').strip()
+        last_name = (request.POST.get('last_name') or '').strip()
+        username = (request.POST.get('username') or '').strip()
+        email = (request.POST.get('email') or '').strip().lower()
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
         agreement = request.POST.get('agreement')
@@ -249,6 +268,11 @@ def signup_view(request):
         errors = []
         if password1 != password2:
             errors.append('Passwords do not match.')
+        if not first_name or not last_name or not username or not email:
+            errors.append('All fields are required.')
+        allowed_domains = ('@gmail.com', '@tip.edu.ph')
+        if not email.endswith(allowed_domains):
+            errors.append('Please use a valid Gmail or TIP email address.')
         if not agreement:
             errors.append('You must agree to the terms and conditions.')
         if User.objects.filter(email=email).exists():
@@ -262,29 +286,106 @@ def signup_view(request):
             return render(request, 'signup.html')
 
         try:
-            user = User.objects.create_user(
-                username=username,
+            otp_code = f"{random.randint(0, 999999):06d}"
+            PendingSignup.objects.update_or_create(
                 email=email,
-                password=password1,
-                first_name=first_name,
-                last_name=last_name
+                defaults={
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "username": username,
+                    "password_hash": make_password(password1),
+                    "otp_code": otp_code,
+                    "otp_expires_at": timezone.now() + timedelta(minutes=10),
+                    "otp_attempts": 0,
+                },
             )
-
-            SignupEvent.objects.create(
-                user=user,
-                email=email,
-                first_name=first_name,
-                last_name=last_name
-            )
-
-            messages.success(request, 'Account created successfully! Please sign in.')
-            return redirect('signin')
-
+            _send_signup_otp_email(email, otp_code)
+            request.session['pending_signup_email'] = email
+            messages.success(request, 'A verification code has been sent to your Gmail.')
+            return redirect('verify_signup_otp')
         except Exception as e:
-            messages.error(request, f'An error occurred during signup: {str(e)}')
+            messages.error(request, f'Unable to send verification code: {str(e)}')
             return render(request, 'signup.html')
 
     return render(request, 'signup.html')
+
+
+def verify_signup_otp(request):
+    """Verify OTP before creating user account."""
+    prefill_email = request.session.get('pending_signup_email', '')
+
+    if request.method == 'POST':
+        email = (request.POST.get('email') or '').strip().lower()
+        action = request.POST.get('action', 'verify')
+
+        try:
+            pending = PendingSignup.objects.get(email=email)
+        except PendingSignup.DoesNotExist:
+            messages.error(request, 'No pending signup found for this email. Please sign up again.')
+            return redirect('signup')
+
+        if action == 'resend':
+            otp_code = f"{random.randint(0, 999999):06d}"
+            pending.otp_code = otp_code
+            pending.otp_expires_at = timezone.now() + timedelta(minutes=10)
+            pending.otp_attempts = 0
+            pending.save(update_fields=['otp_code', 'otp_expires_at', 'otp_attempts', 'updated_at'])
+            _send_signup_otp_email(email, otp_code)
+            request.session['pending_signup_email'] = email
+            messages.success(request, 'A new verification code has been sent.')
+            return redirect('verify_signup_otp')
+
+        otp = (request.POST.get('otp') or '').strip()
+        if pending.is_otp_expired():
+            messages.error(request, 'Your verification code has expired. Please request a new code.')
+            return render(request, 'verify_signup_otp.html', {'email': email})
+
+        if pending.otp_attempts >= 5:
+            messages.error(request, 'Too many invalid attempts. Please request a new code.')
+            return render(request, 'verify_signup_otp.html', {'email': email})
+
+        if otp != pending.otp_code:
+            pending.otp_attempts = pending.otp_attempts + 1
+            pending.save(update_fields=['otp_attempts', 'updated_at'])
+            messages.error(request, 'Invalid verification code.')
+            return render(request, 'verify_signup_otp.html', {'email': email})
+
+        if User.objects.filter(email=pending.email).exists():
+            messages.error(request, 'An account with this email already exists.')
+            pending.delete()
+            return redirect('signin')
+
+        if User.objects.filter(username=pending.username).exists():
+            messages.error(request, 'Username already taken. Please sign up again.')
+            pending.delete()
+            return redirect('signup')
+
+        try:
+            user = User(
+                username=pending.username,
+                email=pending.email,
+                password=pending.password_hash,
+                first_name=pending.first_name,
+                last_name=pending.last_name
+            )
+            user.save()
+
+            SignupEvent.objects.create(
+                user=user,
+                email=pending.email,
+                first_name=pending.first_name,
+                last_name=pending.last_name
+            )
+            pending.delete()
+            request.session.pop('pending_signup_email', None)
+
+            messages.success(request, 'Account verified and created successfully! Please sign in.')
+            return redirect('signin')
+        except Exception as e:
+            messages.error(request, f'An error occurred while creating your account: {str(e)}')
+            return render(request, 'verify_signup_otp.html', {'email': email})
+
+    return render(request, 'verify_signup_otp.html', {'email': prefill_email})
 
 
 def logout_view(request):

@@ -39,6 +39,25 @@ class PasswordResetToken(models.Model):
         return f"Password reset for {self.user.username}"
 
 
+class PendingSignup(models.Model):
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    username = models.CharField(max_length=150)
+    password_hash = models.CharField(max_length=128)
+    otp_code = models.CharField(max_length=6)
+    otp_expires_at = models.DateTimeField()
+    otp_attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_otp_expired(self):
+        return timezone.now() > self.otp_expires_at
+
+    def __str__(self):
+        return f"PendingSignup({self.email})"
+
+
 class Product(models.Model):
     CATEGORY_CHOICES = [
         ('spud', 'Spud'),
