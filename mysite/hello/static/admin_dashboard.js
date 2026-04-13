@@ -136,28 +136,42 @@ let historicalData = {
 
 // Initialize products from backend
 async function initializeProducts() {
-    try {
-        const response = await fetch('/api/products/');
+    const fetchProductsArray = async (url) => {
+        const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+            throw new Error(`${url} returned ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+            return data;
+        }
+        if (data && Array.isArray(data.products)) {
+            return data.products;
+        }
+        throw new Error(`${url} returned invalid product payload`);
+    };
+
+    try {
+        let productsData = [];
+        let lastFetchError = null;
+
+        try {
+            productsData = await fetchProductsArray('/api/products/');
+        } catch (error) {
+            console.warn('Admin products endpoint failed, trying public endpoint:', error);
+            lastFetchError = error;
         }
 
-        let productsData = await response.json();
-
-        // Fallback to the same public source used by orders_menu when admin API
-        // returns an unexpected payload or an empty list.
         if (!Array.isArray(productsData) || productsData.length === 0) {
-            const publicResponse = await fetch('/api/products/public/');
-            if (publicResponse.ok) {
-                const publicData = await publicResponse.json();
-                if (Array.isArray(publicData) && publicData.length > 0) {
-                    productsData = publicData;
-                }
+            try {
+                productsData = await fetchProductsArray('/api/products/public/');
+            } catch (error) {
+                lastFetchError = error;
             }
         }
 
-        if (!Array.isArray(productsData)) {
-            throw new Error('Products API returned an invalid format');
+        if (!Array.isArray(productsData) || productsData.length === 0) {
+            throw new Error(lastFetchError ? lastFetchError.message : 'No products available');
         }
 
         console.log('Products loaded from API:', productsData);
