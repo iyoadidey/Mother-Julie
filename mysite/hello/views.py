@@ -1,3 +1,5 @@
+
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
@@ -17,6 +19,7 @@ import json
 import random
 import threading
 import math
+import importlib
 try:
     import requests
 except ImportError:
@@ -238,19 +241,57 @@ def signin(request):
 
 def _send_signup_otp_email(recipient_email, otp_code):
     subject = "Mother Julie account verification code"
-    message = (
+    html_content = f"""
+    <h2>Welcome to Mother Julie!</h2>
+    <p>Your verification code is:</p>
+    <h1>{otp_code}</h1>
+    <p>This code expires in 10 minutes.</p>
+    """
+    plain_content = (
         "Welcome to Mother Julie!\n\n"
-        f"Your one-time verification code is: {otp_code}\n"
-        "This code expires in 10 minutes.\n\n"
-        "If you did not request this signup, please ignore this email."
+        f"Your verification code is: {otp_code}\n"
+        "This code expires in 10 minutes."
     )
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [recipient_email],
-        fail_silently=False,
-    )
+
+    # Prefer Brevo transactional API when SDK + key are available.
+    try:
+        sib_api_v3_sdk = importlib.import_module("sib_api_v3_sdk")
+
+        if settings.BREVO_API_KEY:
+            configuration = sib_api_v3_sdk.Configuration()
+            configuration.api_key['api-key'] = settings.BREVO_API_KEY
+
+            api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
+                sib_api_v3_sdk.ApiClient(configuration)
+            )
+
+            send_email = sib_api_v3_sdk.SendSmtpEmail(
+                to=[{"email": recipient_email}],
+                sender={
+                    "name": "Mother Julie",
+                    "email": settings.DEFAULT_FROM_EMAIL
+                },
+                subject=subject,
+                html_content=html_content
+            )
+            api_instance.send_transac_email(send_email)
+            return True
+    except Exception as e:
+        print("Brevo send failed, falling back to SMTP:", e)
+
+    # Fallback to Django email backend (SMTP/Brevo relay, Gmail, etc.).
+    try:
+        send_mail(
+            subject,
+            plain_content,
+            settings.DEFAULT_FROM_EMAIL,
+            [recipient_email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print("OTP email fallback failed:", e)
+        return False
 
 
 def signup_view(request):
@@ -299,7 +340,13 @@ def signup_view(request):
                     "otp_attempts": 0,
                 },
             )
-            _send_signup_otp_email(email, otp_code)
+
+            success = _send_signup_otp_email(email, otp_code)
+
+            if not success:
+                messages.error(request, "Failed to send OTP email.")
+                return render(request, 'signup.html')
+
             request.session['pending_signup_email'] = email
             messages.success(request, 'A verification code has been sent to your Gmail.')
             return redirect('verify_signup_otp')
