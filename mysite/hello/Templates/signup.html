@@ -4,43 +4,9 @@
   <title>Mother Julie — Sign Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta charset="utf-8" />
-  <meta property="twitter:card" content="summary_large_image" />
 
-  <style data-tag="reset-style-sheet">
-    html { line-height: 1.15; }
-    body { margin: 0; }
-    * { box-sizing: border-box; border-width: 0; border-style: solid; -webkit-font-smoothing: antialiased; }
-    p,li,ul,pre,div,h1,h2,h3,h4,h5,h6,figure,blockquote,figcaption { margin: 0; padding: 0; }
-    button { background-color: transparent; }
-    button,input,optgroup,select,textarea { font-family: inherit; font-size: 100%; line-height: 1.15; margin: 0; }
-    button,select { text-transform: none; }
-    button,[type="button"],[type="reset"],[type="submit"] { -webkit-appearance: button; appearance: button; color: inherit; }
-    button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner { border-style: none; padding: 0; }
-    a { color: inherit; text-decoration: inherit; }
-    pre { white-space: normal; }
-    input { padding: 2px 4px; }
-    img { display: block; }
-    html { scroll-behavior: smooth; }
-  </style>
-
-  <style data-tag="default-style-sheet">
-    html { font-family: Inter; font-size: 16px; }
-    body {
-      font-weight: 400;
-      font-style: normal;
-      text-decoration: none;
-      text-transform: none;
-      letter-spacing: normal;
-      line-height: 1.15;
-      color: var(--dl-color-theme-neutral-dark);
-      background: var(--dl-color-theme-neutral-light);
-      fill: var(--dl-color-theme-neutral-dark);
-    }
-  </style>
-
-  <link rel="stylesheet" href="https://unpkg.com/animate.css@4.1.1/animate.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" data-tag="font" />
   {% load static %}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link href="{% static 'signup.css' %}" rel="stylesheet" />
 </head>
 
@@ -50,41 +16,36 @@
       <img src="{% static 'dashboardpics/mother_julie_logo.png' %}" alt="Mother Julie Logo" class="motherjulielogo" />
       <span class="desktop1-text3">SIGN UP</span>
 
-      <!-- Display Django messages -->
-      {% if messages %}
-      <div class="messages-container">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-          {{ message }}
-        </div>
-        {% endfor %}
+      <!-- Hidden div for Django messages -->
+      <div id="django-messages-data" style="display: none;">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="error-msg">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
       </div>
-      {% endif %}
 
-      <!-- FORM WITH CSRF TOKEN -->
       <form id="signup-form" action="{% url 'signup' %}" method="POST">
         {% csrf_token %}
-
+        <!-- rest of your form -->
         <div class="input-container">
-          <input type="text" placeholder="First Name" name="first_name" required />
-          <input type="text" placeholder="Last Name" name="last_name" required />
+          <input type="text" placeholder="First Name" name="first_name" value="{{ request.POST.first_name }}" required />
+          <input type="text" placeholder="Last Name" name="last_name" value="{{ request.POST.last_name }}" required />
         </div>
 
-        <input name="username" type="text" class="desktop1-input" placeholder="Username" required />
-        <input name="email" type="email" class="desktop1-input" placeholder="Email" required />
+        <input name="username" type="text" class="desktop1-input" placeholder="Username" value="{{ request.POST.username }}" required />
+        <input name="email" type="email" class="desktop1-input" placeholder="Email" value="{{ request.POST.email }}" required />
 
         <div class="password-wrapper">
           <input name="password1" type="password" class="desktop1-input" placeholder="Password" id="password1" required />
-            <img src="{% static 'eye-open.png' %}" class="toggle-password" data-target="password1" alt="Show Password" />
+          <img src="{% static 'eye-open.png' %}" class="toggle-password" data-target="password1" alt="Show Password" />
         </div>
 
         <div class="password-wrapper">
           <input name="password2" type="password" class="desktop1-input" placeholder="Confirm password" id="password2" required />
-            <img src="{% static 'eye-open.png' %}" class="toggle-password" data-target="password2" alt="Show Password" />
+          <img src="{% static 'eye-open.png' %}" class="toggle-password" data-target="password2" alt="Show Password" />
         </div>
 
-
-        <!-- Heart Checkbox Agreement -->
         <div class="desktop1-agreement-row">
           <div class="heart-container" title="Agree">
             <input type="checkbox" class="checkbox" id="agreement" name="agreement" required />
@@ -97,7 +58,6 @@
               </svg>
             </div>
           </div>
-
           <label for="agreement" class="agreement-text">
             By continuing, you agree to our <br>
             <a href="{% url 'terms' %}" class="desktop1-link">Terms & Conditions</a> and
@@ -109,7 +69,6 @@
           <span class="desktop1-text7">Sign Up</span>
         </button>
 
-        <!-- Already have an account section -->
         <p class="desktop1-bottom-link">
           Already have an account?
           <a href="{% url 'signin' %}" class="desktop1-link">Sign In</a>
@@ -118,73 +77,83 @@
     </div>
   </div>
 
-  <script src="{% static 'password_validation.js' %}"></script>
-
-  <!-- Username validation script -->
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-      const signupForm = document.getElementById('signup-form');
-      const usernameInput = document.querySelector('input[name="username"]');
-      
-      if (signupForm && usernameInput) {
-          signupForm.addEventListener('submit', function(e) {
-              const username = usernameInput.value.trim();
-              const usernameRegex = /^[a-zA-Z0-9_]+$/;
-              
-              if (!usernameRegex.test(username)) {
-                  e.preventDefault();
-                  alert('Username can only contain letters, numbers, and underscores.');
-                  usernameInput.focus();
-                  return false;
-              }
-              
-              if (username.length < 3) {
-                  e.preventDefault();
-                  alert('Username must be at least 3 characters long.');
-                  usernameInput.focus();
-                  return false;
-              }
-              
-              if (username.length > 20) {
-                  e.preventDefault();
-                  alert('Username cannot be longer than 20 characters.');
-                  usernameInput.focus();
-                  return false;
-              }
-          });
-          
-          usernameInput.addEventListener('input', function() {
-              const username = this.value;
-              const usernameRegex = /^[a-zA-Z0-9_]*$/;
-              
-              if (!usernameRegex.test(username)) {
-                  this.style.borderColor = 'red';
-                  this.value = username.replace(/[^a-zA-Z0-9_]/g, '');
-              } else {
-                  this.style.borderColor = '';
-              }
-          });
-      }
-  });
-  </script>
+  <!-- Toast element -->
+  <div id="toast">
+    <div class="toast-message"></div>
+  </div>
 
   <script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll(".toggle-password").forEach(function(icon) {
-    icon.addEventListener("click", function() {
-      const input = document.getElementById(this.dataset.target);
+    let currentToastTimeout = null;
+    
+    function getDjangoMessages() {
+        const container = document.getElementById('django-messages-data');
+        if (!container) return [];
+        
+        const messages = [];
+        const errorDivs = container.querySelectorAll('.error-msg');
+        errorDivs.forEach(function(div) {
+            const text = div.textContent.trim();
+            if (text) messages.push(text);
+        });
+        return messages;
+    }
+    
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        
+        const toastMessage = toast.querySelector('.toast-message');
+        
+        if (currentToastTimeout) {
+            clearTimeout(currentToastTimeout);
+        }
+        
+        toast.style.animation = 'none';
+        toast.style.display = 'none';
+        toast.offsetHeight;
+        
+        toastMessage.textContent = message;
+        toast.className = '';
+        toast.classList.add(type === 'success' ? 'toast-success' : 'toast-error');
+        
+        toast.style.display = 'block';
+        toast.style.animation = 'fadeIn 0.3s ease';
+        
+        currentToastTimeout = setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.5s ease forwards';
+            setTimeout(() => { 
+                if (toast.style.display !== 'none') {
+                    toast.style.display = 'none'; 
+                }
+                toast.style.animation = '';
+                currentToastTimeout = null;
+            }, 500);
+        }, 3000);
+    }
 
-      if (input.type === "password") {
-        input.type = "text";
-        this.src = "{% static 'eye-closed.png' %}"; // switch to closed eye
-      } else {
-        input.type = "password";
-        this.src = "{% static 'eye-open.png' %}"; // switch to open eye
-      }
+    document.querySelectorAll(".toggle-password").forEach(function(icon) {
+        icon.addEventListener("click", function() {
+            const input = document.getElementById(this.dataset.target);
+            if (input.type === "password") {
+                input.type = "text";
+                this.src = "{% static 'eye-closed.png' %}";
+            } else {
+                input.type = "password";
+                this.src = "{% static 'eye-open.png' %}";
+            }
+        });
     });
-  });
-});
-</script>
 
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = getDjangoMessages();
+        if (messages.length > 0) {
+            messages.forEach(function(message, index) {
+                setTimeout(function() {
+                    showToast(message, 'error');
+                }, index * 2000);
+            });
+        }
+    });
+  </script>
 </body>
 </html>

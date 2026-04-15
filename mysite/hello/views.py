@@ -316,12 +316,17 @@ def signup_view(request):
             errors.append('Please use a valid Gmail or TIP email address.')
         if not agreement:
             errors.append('You must agree to the terms and conditions.')
+        
+        # Check for existing email
         if User.objects.filter(email=email).exists():
             errors.append('An account with this email already exists.')
+        
+        # Check for existing username
         if User.objects.filter(username=username).exists():
             errors.append('Username already taken.')
 
         if errors:
+            # Add each error as a separate message
             for error in errors:
                 messages.error(request, error)
             return render(request, 'signup.html')
@@ -348,14 +353,13 @@ def signup_view(request):
                 return render(request, 'signup.html')
 
             request.session['pending_signup_email'] = email
-            messages.success(request, 'A verification code has been sent to your Gmail.')
+            messages.success(request, 'A verification code has been sent to your email.')
             return redirect('verify_signup_otp')
         except Exception as e:
             messages.error(request, f'Unable to send verification code: {str(e)}')
             return render(request, 'signup.html')
 
     return render(request, 'signup.html')
-
 
 def verify_signup_otp(request):
     """Verify OTP before creating user account."""
