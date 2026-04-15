@@ -116,10 +116,17 @@ STATICFILES_STORAGE = (
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-CSRF_TRUSTED_ORIGINS = env_list(
-    "CSRF_TRUSTED_ORIGINS",
-    default="https://iyoadidey.pythonanywhere.com,http://iyoadidey.pythonanywhere.com,http://localhost:8000,http://127.0.0.1:8000",
-)
+CSRF_TRUSTED_ORIGINS = [
+    'https://iyoadidey.pythonanywhere.com',
+    'http://iyoadidey.pythonanywhere.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+# Also add these if missing:
+CSRF_COOKIE_SECURE = False  # Since you're using HTTP, not HTTPS
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
 
 # Ensure cookies work properly
 SESSION_COOKIE_SECURE = not DEBUG
