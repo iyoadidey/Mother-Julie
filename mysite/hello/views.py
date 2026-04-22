@@ -214,27 +214,50 @@ def send_order_receipt_email(order, items, send_async=False):
 
     _send_order_receipt_email_sync(subject, html_message, plain_message, customer_email, order.order_id)
 
+@csrf_exempt
 def signin(request):
-    """Handle user signin"""
+    """Handle user signin - supports form data, AJAX, and JSON from mobile app"""
     if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        # Parse data from form or JSON
+        is_json = request.content_type == 'application/json'
+        
+        try:
+            if is_json:
+                data = json.loads(request.body.decode('utf-8'))
+                username = data.get("username", "").strip()
+                password = data.get("password", "")
+            else:
+                username = (request.POST.get("username") or "").strip()
+                password = request.POST.get("password") or ""
+        except (json.JSONDecodeError, ValueError) as e:
+            if is_json:
+                return JsonResponse({"success": False, "message": f"Invalid JSON: {str(e)}"}, status=400)
+            return render(request, "signin.html")
+        
+        # Validate inputs
+        if not username or not password:
+            if is_json or request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "message": "Username and password are required"}, status=400)
+            messages.error(request, "Username and password are required")
+            return render(request, "signin.html")
+        
         user = authenticate(request, username=username, password=password)
 
-        if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            # AJAX request
+        if is_json or request.headers.get("x-requested-with") == "XMLHttpRequest":
+            # JSON/AJAX request
             if user is not None:
                 login(request, user)
-                return JsonResponse({"success": True, "redirect_url": "/dashboard/"})
+                return JsonResponse({"success": True, "redirect_url": "/dashboard/", "message": "Login successful"})
             else:
-                return JsonResponse({"success": False, "message": "Invalid username or password"})
+                return JsonResponse({"success": False, "message": "Invalid username or password"}, status=401)
         else:
-            # Normal form submission fallback
+            # Normal form submission
             if user is not None:
                 login(request, user)
                 return redirect("dashboard")
             else:
                 messages.error(request, "Invalid username or password")
+                return render(request, "signin.html")
 
     return render(request, "signin.html")
 
@@ -294,16 +317,36 @@ def _send_signup_otp_email(recipient_email, otp_code):
         return False
 
 
+@csrf_exempt
 def signup_view(request):
-    """Start user registration and send OTP email verification."""
+    """Start user registration and send OTP email verification - supports form data and JSON from mobile app."""
     if request.method == 'POST':
-        first_name = (request.POST.get('first_name') or '').strip()
-        last_name = (request.POST.get('last_name') or '').strip()
-        username = (request.POST.get('username') or '').strip()
-        email = (request.POST.get('email') or '').strip().lower()
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
-        agreement = request.POST.get('agreement')
+        # Parse data from form or JSON
+        is_json = request.content_type == 'application/json'
+        
+        try:
+            if is_json:
+                data = json.loads(request.body.decode('utf-8'))
+                first_name = (data.get('first_name') or '').strip()
+                last_name = (data.get('last_name') or '').strip()
+                username = (data.get('username') or '').strip()
+                email = (data.get('email') or '').strip().lower()
+                password1 = data.get('password1') or ''
+                password2 = data.get('password2') or ''
+                agreement = data.get('agreement')
+            else:
+                first_name = (request.POST.get('first_name') or '').strip()
+                last_name = (request.POST.get('last_name') or '').strip()
+                username = (request.POST.get('username') or '').strip()
+                email = (request.POST.get('email') or '').strip().lower()
+                password1 = request.POST.get('password1')
+                password2 = request.POST.get('password2')
+                agreement = request.POST.get('agreement')
+        except (json.JSONDecodeError, ValueError) as e:
+            if is_json:
+                return JsonResponse({"success": False, "message": f"Invalid JSON: {str(e)}"}, status=400)
+            messages.error(request, f"Invalid request data: {str(e)}")
+            return render(request, 'signup.html')
 
         # Validation
         errors = []
@@ -326,7 +369,9 @@ def signup_view(request):
             errors.append('Username already taken.')
 
         if errors:
-            # Add each error as a separate message
+            # Return JSON or form response based on request type
+            if is_json:
+                return JsonResponse({"success": False, "errors": errors}, status=400)
             for error in errors:
                 messages.error(request, error)
             return render(request, 'signup.html')
@@ -349,29 +394,52 @@ def signup_view(request):
             success = _send_signup_otp_email(email, otp_code)
 
             if not success:
+                if is_json:
+                    return JsonResponse({"success": False, "message": "Failed to send OTP email."}, status=500)
                 messages.error(request, "Failed to send OTP email.")
                 return render(request, 'signup.html')
 
             request.session['pending_signup_email'] = email
+            if is_json:
+                return JsonResponse({"success": True, "message": "OTP sent to your email.", "email": email})
             messages.success(request, 'A verification code has been sent to your email.')
             return redirect('verify_signup_otp')
         except Exception as e:
+            if is_json:
+                return JsonResponse({"success": False, "message": f"Error: {str(e)}"}, status=500)
             messages.error(request, f'Unable to send verification code: {str(e)}')
             return render(request, 'signup.html')
 
     return render(request, 'signup.html')
 
+@csrf_exempt
 def verify_signup_otp(request):
-    """Verify OTP before creating user account."""
+    """Verify OTP before creating user account - supports form data and JSON from mobile app."""
     prefill_email = request.session.get('pending_signup_email', '')
 
     if request.method == 'POST':
-        email = (request.POST.get('email') or '').strip().lower()
-        action = request.POST.get('action', 'verify')
+        # Parse data from form or JSON
+        is_json = request.content_type == 'application/json'
+        
+        try:
+            if is_json:
+                data = json.loads(request.body.decode('utf-8'))
+                email = (data.get('email') or '').strip().lower()
+                action = data.get('action', 'verify')
+            else:
+                email = (request.POST.get('email') or '').strip().lower()
+                action = request.POST.get('action', 'verify')
+        except (json.JSONDecodeError, ValueError) as e:
+            if is_json:
+                return JsonResponse({"success": False, "message": f"Invalid JSON: {str(e)}"}, status=400)
+            messages.error(request, f"Invalid request data: {str(e)}")
+            return render(request, 'verify_signup_otp.html', {'email': email})
 
         try:
             pending = PendingSignup.objects.get(email=email)
         except PendingSignup.DoesNotExist:
+            if is_json:
+                return JsonResponse({"success": False, "message": "No pending signup found. Please sign up again."}, status=404)
             messages.error(request, 'No pending signup found for this email. Please sign up again.')
             return redirect('signup')
 
@@ -383,30 +451,42 @@ def verify_signup_otp(request):
             pending.save(update_fields=['otp_code', 'otp_expires_at', 'otp_attempts', 'updated_at'])
             _send_signup_otp_email(email, otp_code)
             request.session['pending_signup_email'] = email
+            if is_json:
+                return JsonResponse({"success": True, "message": "New OTP sent to your email."})
             messages.success(request, 'A new verification code has been sent.')
             return redirect('verify_signup_otp')
 
-        otp = (request.POST.get('otp') or '').strip()
+        otp = (request.POST.get('otp') if not is_json else data.get('otp') or '').strip()
         if pending.is_otp_expired():
+            if is_json:
+                return JsonResponse({"success": False, "message": "Verification code expired. Please request a new code."}, status=400)
             messages.error(request, 'Your verification code has expired. Please request a new code.')
             return render(request, 'verify_signup_otp.html', {'email': email})
 
         if pending.otp_attempts >= 5:
+            if is_json:
+                return JsonResponse({"success": False, "message": "Too many invalid attempts. Please request a new code."}, status=429)
             messages.error(request, 'Too many invalid attempts. Please request a new code.')
             return render(request, 'verify_signup_otp.html', {'email': email})
 
         if otp != pending.otp_code:
             pending.otp_attempts = pending.otp_attempts + 1
             pending.save(update_fields=['otp_attempts', 'updated_at'])
+            if is_json:
+                return JsonResponse({"success": False, "message": "Invalid verification code.", "attempts_remaining": 5 - pending.otp_attempts}, status=400)
             messages.error(request, 'Invalid verification code.')
             return render(request, 'verify_signup_otp.html', {'email': email})
 
         if User.objects.filter(email=pending.email).exists():
+            if is_json:
+                return JsonResponse({"success": False, "message": "Account already exists."}, status=409)
             messages.error(request, 'An account with this email already exists.')
             pending.delete()
             return redirect('signin')
 
         if User.objects.filter(username=pending.username).exists():
+            if is_json:
+                return JsonResponse({"success": False, "message": "Username already taken."}, status=409)
             messages.error(request, 'Username already taken. Please sign up again.')
             pending.delete()
             return redirect('signup')
@@ -430,9 +510,13 @@ def verify_signup_otp(request):
             pending.delete()
             request.session.pop('pending_signup_email', None)
 
+            if is_json:
+                return JsonResponse({"success": True, "message": "Account created successfully! You can now sign in."})
             messages.success(request, 'Account verified and created successfully! Please sign in.')
             return redirect('signin')
         except Exception as e:
+            if is_json:
+                return JsonResponse({"success": False, "message": f"Error creating account: {str(e)}"}, status=500)
             messages.error(request, f'An error occurred while creating your account: {str(e)}')
             return render(request, 'verify_signup_otp.html', {'email': email})
 
@@ -878,12 +962,34 @@ def api_create_order(request):
 
 
             for item in items:
+                product_id = item.get('product_id')
                 name = item.get('name', '')
                 qty = int(item.get('quantity', 1))
                 unit_price = item.get('price', 0)
                 total_price = item.get('total', 0)
                 size = item.get('size', '')
-                print(f"Creating order item: {name} x {qty}")  # ADD THIS
+
+                # Try to find product by ID first, then by name
+                product = None
+                if product_id:
+                    try:
+                        product = Product.objects.select_for_update().get(id=product_id)
+                    except Product.DoesNotExist:
+                        pass
+
+                if not product and name:
+                    try:
+                        product = Product.objects.select_for_update().get(name=name)
+                    except Product.DoesNotExist:
+                        pass
+
+                if product:
+                    # Use actual product data if not provided in request
+                    if not name: name = product.name
+                    if not unit_price: unit_price = product.price
+                    if not total_price: total_price = float(unit_price) * qty
+
+                print(f"Creating order item: {name} (ID: {product_id}) x {qty}")
 
                 # Save order line
                 OrderItem.objects.create(
@@ -895,20 +1001,16 @@ def api_create_order(request):
                     size=size
                 )
 
-                # Decrement stock on matching Product by name
-                try:
-                    product = Product.objects.select_for_update().get(name=name)
+                # Decrement stock
+                if product:
                     product.stock_quantity = F('stock_quantity') - qty
                     product.save(update_fields=['stock_quantity'])
                     product.refresh_from_db(fields=['stock_quantity'])
                     if product.stock_quantity < 0:
                         product.stock_quantity = 0
                         product.save(update_fields=['stock_quantity'])
-                    # Keep product visible but it will show as "Out of Stock" on frontend
-                except Product.DoesNotExist:
-                # If no product matches, skip stock updates
-                    print(f"Product '{name}' not found, skipping stock update")  # ADD THIS                
-                    pass
+                else:
+                    print(f"Product '{name}' (ID: {product_id}) not found, skipping stock update")
 
         print("=== DEBUG: Order creation SUCCESS ===")  # ADD THIS
         
@@ -1347,7 +1449,10 @@ def api_get_order_status(request, order_id):
             'order_type': order.order_type,
             'status': order.status,
             'total_amount': float(order.total_amount),
-            'order_placed': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'order_placed': timezone.localtime(order.created_at).strftime('%Y-%m-%d %H:%M:%S'),
+            'preparing_at': timezone.localtime(order.preparing_at).strftime('%Y-%m-%d %H:%M:%S') if order.preparing_at else None,
+            'ready_at': timezone.localtime(order.ready_at).strftime('%Y-%m-%d %H:%M:%S') if order.ready_at else None,
+            'picked_up_at': timezone.localtime(order.picked_up_at).strftime('%Y-%m-%d %H:%M:%S') if order.picked_up_at else None,
             'items': [
                 {
                     'name': item.product_name,
@@ -1892,8 +1997,8 @@ def api_get_analytics(request):
                 'customer': order.customer_name,
                 'payment_reference': order.payment_reference or '',
                 'order_type': order.order_type,
-                'order_placed': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                'delivery_pickup_date': order.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'order_placed': timezone.localtime(order.created_at).strftime('%Y-%m-%d %H:%M:%S'),
+                'delivery_pickup_date': timezone.localtime(order.updated_at).strftime('%Y-%m-%d %H:%M:%S'),
                 'items_count': items_count,
                 'items': order_items,
                 'total_amount': float(order.total_amount),
@@ -2274,8 +2379,8 @@ def api_get_reports(request, period):
             'sales_change': sales_change,
             'products_change': products_change,
             'products_list': products_list,
-            'period_start': start_date.strftime('%Y-%m-%d %H:%M:%S'),
-            'period_end': now.strftime('%Y-%m-%d %H:%M:%S')
+            'period_start': timezone.localtime(start_date).strftime('%Y-%m-%d %H:%M:%S'),
+            'period_end': timezone.localtime(now).strftime('%Y-%m-%d %H:%M:%S')
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -2313,8 +2418,8 @@ def api_get_all_frontend_content(request):
                 'content': content.content,
                 'is_active': content.is_active,
                 'order': content.order,
-                'created_at': content.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                'updated_at': content.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+                'created_at': timezone.localtime(content.created_at).strftime('%Y-%m-%d %H:%M:%S'),
+                'updated_at': timezone.localtime(content.updated_at).strftime('%Y-%m-%d %H:%M:%S')
             })
         
         return JsonResponse(contents_data, safe=False)
@@ -2451,8 +2556,8 @@ def api_get_users(request):
                 'is_staff': user.is_staff,
                 'is_superuser': user.is_superuser,
                 'is_active': user.is_active,
-                'date_joined': user.date_joined.strftime('%Y-%m-%d %H:%M:%S'),
-                'last_login': user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else 'Never'
+                'date_joined': timezone.localtime(user.date_joined).strftime('%Y-%m-%d %H:%M:%S'),
+                'last_login': timezone.localtime(user.last_login).strftime('%Y-%m-%d %H:%M:%S') if user.last_login else 'Never'
             })
         
         return JsonResponse(users_data, safe=False)

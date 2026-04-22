@@ -123,6 +123,11 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Tracking timestamps for real-time UI
+    preparing_at = models.DateTimeField(null=True, blank=True)
+    ready_at = models.DateTimeField(null=True, blank=True)
+    picked_up_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         ordering = ("-created_at",)
 
@@ -133,6 +138,21 @@ class Order(models.Model):
         # Generate order_id if not set
         if not self.order_id:
             self.order_id = 'MJ' + str(int(timezone.now().timestamp())) + str(random.randint(100, 999))
+
+        # Auto-fill tracking timestamps when status changes
+        if self.pk:
+            try:
+                old_status = Order.objects.get(pk=self.pk).status
+                if old_status != self.status:
+                    if self.status == 'preparing' and not self.preparing_at:
+                        self.preparing_at = timezone.now()
+                    elif self.status in ['ready_for_delivery', 'ready_for_pickup'] and not self.ready_at:
+                        self.ready_at = timezone.now()
+                    elif self.status in ['delivered', 'picked_up'] and not self.picked_up_at:
+                        self.picked_up_at = timezone.now()
+            except Order.DoesNotExist:
+                pass
+
         super().save(*args, **kwargs)
 
 
