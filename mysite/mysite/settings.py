@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-local-dev-key')
 # Local default is DEBUG on, but keep production off by default.
 # PythonAnywhere exposes PYTHONANYWHERE_DOMAIN in its environment.
 DEBUG = env_bool('DEBUG', default=not bool(os.getenv('PYTHONANYWHERE_DOMAIN')))
-ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", default="iyoadidey.pythonanywhere.com,127.0.0.1,localhost,192.168.100.13")
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", default="iyoadidey.pythonanywhere.com,127.0.0.1,localhost,10.200.1.127")
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
