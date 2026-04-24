@@ -220,15 +220,18 @@ def signin(request):
     if request.method == "POST":
         # Parse data from form or JSON
         is_json = request.content_type == 'application/json'
+        remember_me = False
         
         try:
             if is_json:
                 data = json.loads(request.body.decode('utf-8'))
                 username = data.get("username", "").strip()
                 password = data.get("password", "")
+                remember_me = data.get("remember_me", False)
             else:
                 username = (request.POST.get("username") or "").strip()
                 password = request.POST.get("password") or ""
+                remember_me = request.POST.get("remember_me") == 'on'
         except (json.JSONDecodeError, ValueError) as e:
             if is_json:
                 return JsonResponse({"success": False, "message": f"Invalid JSON: {str(e)}"}, status=400)
@@ -247,14 +250,32 @@ def signin(request):
             # JSON/AJAX request
             if user is not None:
                 login(request, user)
-                return JsonResponse({"success": True, "redirect_url": "/dashboard/", "message": "Login successful"})
+                # Set session expiry based on remember me
+                if remember_me:
+                    request.session.set_expiry(1209600)  # 2 weeks
+                else:
+                    request.session.set_expiry(0)  # Session expires when browser closes
+                # Redirect to admin dashboard if superuser or staff
+                if user.is_superuser or user.is_staff:
+                    return JsonResponse({"success": True, "redirect_url": "/admin_dashboard/", "message": "Login successful"})
+                else:
+                    return JsonResponse({"success": True, "redirect_url": "/dashboard/", "message": "Login successful"})
             else:
                 return JsonResponse({"success": False, "message": "Invalid username or password"}, status=401)
         else:
             # Normal form submission
             if user is not None:
                 login(request, user)
-                return redirect("dashboard")
+                # Set session expiry based on remember me
+                if remember_me:
+                    request.session.set_expiry(1209600)  # 2 weeks
+                else:
+                    request.session.set_expiry(0)  # Session expires when browser closes
+                # Redirect to admin dashboard if superuser or staff
+                if user.is_superuser or user.is_staff:
+                    return redirect("admin_dashboard")
+                else:
+                    return redirect("dashboard")
             else:
                 messages.error(request, "Invalid username or password")
                 return render(request, "signin.html")
@@ -832,6 +853,8 @@ def upload_product_image(request):
 @csrf_exempt
 def api_update_product_image(request, product_id):
     """Update product image"""
+    if not request.user.is_authenticated or not (request.user.is_superuser or request.user.is_staff):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
     
@@ -861,56 +884,45 @@ def api_update_product_image(request, product_id):
 
 
 def admin_dashboard(request):
-    """Admin dashboard"""
+    """Admin/Staff dashboard"""
     if not request.user.is_authenticated:
-        return redirect('signin_admindashboard')
+        return redirect('signin')
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('dashboard')
+    context = {
+        'is_superuser': request.user.is_superuser,
+        'is_staff': request.user.is_staff,
+    }
+    return render(request, 'admin_dashboard.html', context)
+
+
+@login_required(login_url='signin')
+def monthly_reports_view(request):
+    """Render monthly reports page with interactive month selector and line graph"""
+    if not request.user.is_authenticated:
+        return redirect('signin')
+    # Admin-only (superuser). Staff should not access reports.
     if not request.user.is_superuser:
         messages.error(request, 'You do not have permission to access this page.')
-        return redirect('signin_admindashboard')
-    return render(request, 'admin_dashboard.html')
+        return redirect('dashboard')
+    
+    context = {
+        'is_superuser': request.user.is_superuser,
+        'is_staff': request.user.is_staff,
+    }
+    return render(request, 'monthly_reports.html', context)
 
 
-def signin_admindashboard(request):
-    """Handle admin dashboard signin"""
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        remember_me = request.POST.get("remember_me") == 'on'
-        user = authenticate(request, username=username, password=password)
 
-        if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            # AJAX request
-            if user is not None and user.is_superuser:
-                login(request, user)
-                # Set session expiry based on remember me
-                if remember_me:
-                    request.session.set_expiry(1209600)  # 2 weeks
-                else:
-                    request.session.set_expiry(0)  # Session expires when browser closes
-                return JsonResponse({"success": True, "redirect_url": "/admin_dashboard/"})
-            else:
-                return JsonResponse({"success": False, "message": "Invalid credentials or insufficient permissions"})
-        else:
-            # Normal form submission fallback
-            if user is not None and user.is_superuser:
-                login(request, user)
-                # Set session expiry based on remember me
-                if remember_me:
-                    request.session.set_expiry(1209600)  # 2 weeks
-                else:
-                    request.session.set_expiry(0)  # Session expires when browser closes
-                return redirect("admin_dashboard")
-            else:
-                messages.error(request, "Invalid credentials or insufficient permissions")
 
-    return render(request, "signin_admindashboard.html")
 
 
 def admin_logout(request):
     """Handle admin logout"""
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
-    return redirect('signin_admindashboard')
+    return redirect('signin')
 
 
 @csrf_exempt
@@ -2038,6 +2050,8 @@ def api_get_product_stock(request, product_id):
 @csrf_exempt
 def api_get_products(request):
     """Get all products (admin)"""
+    if not request.user.is_authenticated or not (request.user.is_superuser or request.user.is_staff):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     try:
         products = Product.objects.all().order_by('name')
         products_data = []
@@ -2128,6 +2142,8 @@ def api_get_products_public(request):
 @csrf_exempt
 def api_create_product(request):
     """Create a new product"""
+    if not request.user.is_authenticated or not (request.user.is_superuser or request.user.is_staff):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
     
@@ -2189,6 +2205,8 @@ def api_create_product(request):
 @csrf_exempt
 def api_update_product(request, product_id):
     """Update a product"""
+    if not request.user.is_authenticated or not (request.user.is_superuser or request.user.is_staff):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
     
@@ -2279,6 +2297,8 @@ def api_update_product(request, product_id):
 @csrf_exempt
 def api_delete_product(request, product_id):
     """Delete a product"""
+    if not request.user.is_authenticated or not (request.user.is_superuser or request.user.is_staff):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
     
@@ -2295,6 +2315,9 @@ def api_delete_product(request, product_id):
 @csrf_exempt
 def api_get_reports(request, period):
     """Get reports for daily, weekly, monthly, yearly"""
+    # Admin-only analytics
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
     try:
         from django.db.models import Sum, Q
         from datetime import datetime, timedelta
@@ -2383,6 +2406,98 @@ def api_get_reports(request, period):
             'period_end': timezone.localtime(now).strftime('%Y-%m-%d %H:%M:%S')
         })
     except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_get_monthly_reports(request, year=None, month=None):
+    """Get daily sales data for a specific month for line graph visualization"""
+    # Admin-only analytics
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    try:
+        from django.db.models import Sum
+        from datetime import datetime, timedelta
+        from calendar import monthrange
+        
+        now = timezone.now()
+        
+        # Use provided year/month or current
+        if year is None or month is None:
+            year = now.year
+            month = now.month
+        else:
+            year = int(year)
+            month = int(month)
+        
+        # Validate month/year
+        if month < 1 or month > 12:
+            return JsonResponse({'error': 'Invalid month'}, status=400)
+        
+        # Get first and last day of month using the current timezone
+        month_info = monthrange(year, month)
+        first_day = timezone.make_aware(datetime(year, month, 1, 0, 0, 0))
+        last_day = timezone.make_aware(datetime(year, month, month_info[1], 23, 59, 59))
+        
+        # Get orders for this month
+        month_orders = Order.objects.exclude(status='cancelled').filter(
+            created_at__gte=first_day,
+            created_at__lte=last_day
+        )
+        
+        # Get daily sales for this month
+        daily_sales = {}
+        for day in range(1, month_info[1] + 1):
+            day_start = timezone.make_aware(datetime(year, month, day, 0, 0, 0))
+            day_end = timezone.make_aware(datetime(year, month, day, 23, 59, 59))
+            
+            day_orders = month_orders.filter(
+                created_at__gte=day_start,
+                created_at__lte=day_end
+            )
+            day_sales = day_orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+            daily_sales[day] = float(day_sales)
+        
+        # Calculate statistics
+        total_sales = month_orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        
+        # Find highest and lowest sales days
+        sales_list = [(day, amount) for day, amount in daily_sales.items()]
+        highest_day = max(sales_list, key=lambda x: x[1]) if sales_list else (0, 0)
+        lowest_day = min(sales_list, key=lambda x: x[1]) if sales_list else (0, 0)
+        
+        # Get all available months for dropdown
+        all_months = []
+        all_orders = Order.objects.exclude(status='cancelled').values_list('created_at', flat=True).order_by('-created_at')
+        months_set = set()
+        for order_date in all_orders:
+            if order_date:
+                # Extract year and month from the order date
+                order_year = order_date.year
+                order_month = order_date.month
+                months_set.add((order_year, order_month))
+        
+        # Sort months in reverse chronological order
+        for y, m in sorted(months_set, reverse=True)[:12]:  # Last 12 months
+            months_name = datetime(y, m, 1).strftime('%B %Y')
+            all_months.append({'year': y, 'month': m, 'name': months_name})
+        
+        return JsonResponse({
+            'year': year,
+            'month': month,
+            'month_name': datetime(year, month, 1).strftime('%B %Y'),
+            'daily_sales': daily_sales,
+            'total_sales': float(total_sales),
+            'highest_sales_day': highest_day[0],
+            'highest_sales_amount': highest_day[1],
+            'lowest_sales_day': lowest_day[0] if lowest_day[1] > 0 else 0,
+            'lowest_sales_amount': lowest_day[1],
+            'available_months': all_months
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error in api_get_monthly_reports: {str(e)}")
+        print(traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)
 
 
@@ -2539,7 +2654,8 @@ def api_delete_frontend_content(request, content_id):
 @csrf_exempt
 def api_get_users(request):
     """Get all users for admin dashboard"""
-    if not request.user.is_authenticated or not request.user.is_staff:
+    # Admin-only: staff should not access user management.
+    if not request.user.is_authenticated or not request.user.is_superuser:
         return JsonResponse({'error': 'Unauthorized'}, status=403)
     
     try:
@@ -2586,6 +2702,9 @@ def api_update_user(request, user_id):
             user.is_staff = data['is_staff']
         if 'is_superuser' in data:
             user.is_superuser = data['is_superuser']
+            # Keep roles consistent: superusers should always be staff.
+            if user.is_superuser:
+                user.is_staff = True
         if 'is_active' in data:
             user.is_active = data['is_active']
         if 'first_name' in data:
@@ -2659,6 +2778,10 @@ def api_create_user(request):
         last_name = data.get('last_name', '').strip()
         is_staff = data.get('is_staff', False)
         is_superuser = data.get('is_superuser', False)
+
+        # Keep roles consistent: superusers should always be staff.
+        if is_superuser:
+            is_staff = True
         
         # Validation
         if not username or not password or not email:

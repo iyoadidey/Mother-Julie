@@ -959,6 +959,88 @@
             color: #666;
             font-size: 14px;
         }
+
+        .history-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            max-height: 70vh;
+            padding-right: 4px;
+        }
+
+        .history-order-card {
+            background: #f8f9fb;
+            border: 1px solid #eceef4;
+            border-left: 4px solid #FF5C9D;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .history-status {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .history-status.completed {
+            background: #e8f7ee;
+            color: #1c8f4d;
+        }
+
+        .history-status.cancelled {
+            background: #fdecee;
+            color: #c8344e;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid #eceef4;
+            padding: 8px 0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .history-item-image {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #e4e4e4;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .history-item-name {
+            font-size: 13px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 420px;
+        }
+
+        .history-item-total {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            flex-shrink: 0;
+        }
         
         .order-management {
             display: flex;
@@ -1312,7 +1394,7 @@
         }
     </style>
 </head>
-<body>
+<body data-is-superuser="{% if is_superuser %}true{% else %}false{% endif %}">
     <!-- Toast Notification Container -->
     <div id="toastContainer"></div>
     
@@ -1326,41 +1408,50 @@
         
         <div class="nav-section">
             <div class="nav-title">Dashboard</div>
-            <div class="nav-item active" data-page="dashboard">
+            {% if is_superuser %}
+            <div class="nav-item" data-page="dashboard">
+                <i class="fas fa-history"></i>
+                <span>Order History</span>
+            </div>
+            <div class="nav-item active" data-page="daily">
                 <i class="fas fa-chart-pie"></i>
-                <span>Analytics</span>
+                <span>Daily Reports</span>
+            </div>
+            {% else %}
+            <div class="nav-item active" data-page="dashboard">
+                <i class="fas fa-history"></i>
+                <span>Order History</span>
+            </div>
+            {% endif %}
+            <div class="nav-item" data-page="orders">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+                <span class="new-order-badge" id="newOrderBadge" style="display: none;">0</span>
             </div>
             <div class="nav-item" data-page="products">
                 <i class="fas fa-box-open"></i>
                 <span>Products</span>
                 <span class="out-of-stock-badge" id="outOfStockBadge" style="display: none;">0</span>
             </div>
-            <div class="nav-item" data-page="orders">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Orders</span>
-                <span class="new-order-badge" id="newOrderBadge" style="display: none;">0</span>
+            {% if is_superuser %}
+            <div class="nav-item" data-page="users">
+                <i class="fas fa-users"></i>
+                <span>Users</span>
             </div>
+            {% endif %}
         </div>
         
+        {% if is_superuser %}
         <div class="nav-section">
             <div class="nav-title">Reports</div>
-            <div class="nav-item" data-page="daily">
-                <i class="fas fa-calendar-day"></i>
-                <span>Daily</span>
-            </div>
-            <div class="nav-item" data-page="weekly">
-                <i class="fas fa-calendar-week"></i>
-                <span>Weekly</span>
-            </div>
-            <div class="nav-item" data-page="monthly">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Monthly</span>
-            </div>
-            <div class="nav-item" data-page="yearly">
-                <i class="fas fa-calendar"></i>
-                <span>Yearly</span>
-            </div>
+            <a href="/monthly_reports/" style="text-decoration: none; color: inherit;">
+                <div class="nav-item" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer;">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Sales Analytics 📊</span>
+                </div>
+            </a>
         </div>
+        {% endif %}
         
         <div class="logout-btn" id="logoutBtn">
             <i class="fas fa-sign-out-alt"></i>
@@ -1370,55 +1461,21 @@
     
     <!-- Main Content Area -->
     <div class="main-content">
-        <!-- Dashboard Page -->
-        <div class="page active" id="dashboard">
+        <!-- Dashboard Page (Order History) -->
+        <div class="page {% if not is_superuser %}active{% endif %}" id="dashboard">
             <div class="header">
-                <h1 class="page-title">Dashboard</h1>
+                <h1 class="page-title">Order History</h1>
             </div>
-            
-            <div class="dashboard-grid">
-                <div class="card">
-                    <div class="card-header">
-                        <span>Total Sales</span>
-                        <i class="fas fa-shopping-bag"></i>
-                    </div>
-                    <div class="metric-value" id="totalSales">P 0.00</div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <span>Total Product Sold</span>
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="metric-value" id="totalProductSold">0</div>
-                </div>
-            </div>
-            
-            <!-- Order Statistics Table -->
+
             <div class="orders-card">
                 <div class="orders-header">
-                    <div class="orders-title">Order Statistics</div>
-                    <div class="orders-count" id="orderStatsCount">0 Orders</div>
+                    <div class="orders-title">Completed and Cancelled Orders</div>
+                    <div class="orders-count" id="orderHistoryCount">0 Orders</div>
                 </div>
-                
-                <table class="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Order Type</th>
-                            <th>Order Placed</th>
-                            <th>Delivery/Pickup Date</th>
-                            <th>Items</th>
-                            <th>Total Price</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderStatsTable">
-                        <!-- Order statistics will be populated here -->
-                    </tbody>
-                </table>
+
+                <div id="orderHistoryContainer" class="history-container">
+                    <div class="no-orders">Loading order history...</div>
+                </div>
             </div>
         </div>
         
@@ -1555,6 +1612,81 @@
                 <!-- Products will be populated here by category -->
             </div>
         </div>
+
+        {% if is_superuser %}
+        <div class="page" id="users">
+            <div class="header">
+                <h1 class="page-title">User Management</h1>
+            </div>
+
+            <div class="orders-card" id="createUserCard">
+                <div class="orders-header">
+                    <div class="orders-title">Create User</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newUsername">Username</label>
+                        <input type="text" id="newUsername" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <label for="newEmail">Email</label>
+                        <input type="email" id="newEmail" placeholder="Email">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newPassword">Password</label>
+                        <input type="password" id="newPassword" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <label for="newFirstName">First Name</label>
+                        <input type="text" id="newFirstName" placeholder="First Name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newLastName">Last Name</label>
+                        <input type="text" id="newLastName" placeholder="Last Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="newIsStaff">Role</label>
+                        <select id="newIsStaff">
+                            <option value="user">Regular User</option>
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin (Superuser)</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="createUserBtn">Create User</button>
+            </div>
+
+            <div class="orders-card">
+                <div class="orders-header">
+                    <div class="orders-title">All Users</div>
+                    <div class="orders-count" id="usersCount">0 Users</div>
+                </div>
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Date Joined</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <tr>
+                            <td colspan="8" class="no-orders">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
         
         <!-- Order Management Page -->
         <div class="page" id="orders">
@@ -1605,7 +1737,7 @@
         </div>
         
         <!-- Other Report Pages -->
-        <div class="page" id="daily">
+        <div class="page {% if is_superuser %}active{% endif %}" id="daily">
             <div class="header">
                 <h1 class="page-title">Daily Reports</h1>
             </div>
@@ -1637,6 +1769,46 @@
             <div class="header">
                 <h1 class="page-title">Weekly Reports</h1>
             </div>
+            
+            <!-- Week Filter -->
+            <div class="orders-card" style="margin-bottom: 25px;">
+                <div class="orders-header">
+                    <div class="orders-title">Select Week (Monday - Sunday)</div>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                        <button type="button" class="week-day-btn" data-day="0" style="padding: 12px; border: 2px solid #FF5C9D; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #FF5C9D; transition: all 0.3s;">
+                            <div style="font-size: 12px; color: #999;">Mon</div>
+                            <div id="dayLabel0">--</div>
+                        </button>
+                        <button type="button" class="week-day-btn" data-day="1" style="padding: 12px; border: 2px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #555; transition: all 0.3s;">
+                            <div style="font-size: 12px; color: #999;">Tue</div>
+                            <div id="dayLabel1">--</div>
+                        </button>
+                        <button type="button" class="week-day-btn" data-day="2" style="padding: 12px; border: 2px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #555; transition: all 0.3s;">
+                            <div style="font-size: 12px; color: #999;">Wed</div>
+                            <div id="dayLabel2">--</div>
+                        </button>
+                        <button type="button" class="week-day-btn" data-day="3" style="padding: 12px; border: 2px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #555; transition: all 0.3s;">
+                            <div style="font-size: 12px; color: #999;">Thu</div>
+                            <div id="dayLabel3">--</div>
+                        </button>
+                        <button type="button" class="week-day-btn" data-day="4" style="padding: 12px; border: 2px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #555; transition: all 0.3s;">
+                            <div style="font-size: 12px; color: #999;">Fri</div>
+                            <div id="dayLabel4">--</div>
+                        </button>
+                        <button type="button" class="week-day-btn" data-day="5" style="padding: 12px; border: 2px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #555; transition: all 0.3s;">
+                            <div style="font-size: 12px; color: #999;">Sat</div>
+                            <div id="dayLabel5">--</div>
+                        </button>
+                        <button type="button" class="week-day-btn" data-day="6" style="padding: 12px; border: 2px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #555; transition: all 0.3s;">
+                            <div style="font-size: 12px; color: #999;">Sun</div>
+                            <div id="dayLabel6">--</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div class="dashboard-grid">
                 <div class="card">
                     <div class="card-header">

@@ -60,9 +60,12 @@ document.querySelectorAll('.nav-item').forEach(item => {
             } else {
                 stopOrderPolling(); // Stop polling when leaving orders page
                 if (pageId === 'dashboard') {
+                    initializeOrders();
                     updateAnalytics();
                 } else if (pageId === 'products') {
                     initializeProducts();
+                } else if (pageId === 'users') {
+                    loadUsers();
                 } else if (pageId === 'daily' || pageId === 'weekly' || pageId === 'monthly' || pageId === 'yearly') {
                     loadReport(pageId);
                     startReportPolling(pageId);
@@ -124,6 +127,8 @@ if (document.getElementById('editProductImage')) {
 let products = [];
 let activeOrders = [];
 let editingProductId = null;
+let usersData = [];
+const isCurrentUserSuperuser = document.body?.dataset?.isSuperuser === 'true';
 
 // Historical data for accurate percentage calculations
 let historicalData = {
@@ -474,62 +479,82 @@ async function updateAnalytics() {
         
         const data = await response.json();
         const orderStats = Array.isArray(data.order_stats) ? data.order_stats : [];
+        const totalSalesValue = Number(data.total_sales || 0);
+        const totalProductsSoldValue = Number(data.total_products_sold || 0);
+        const salesChangeValue = Number(data.sales_change || 0);
+        const productsChangeValue = Number(data.products_change || 0);
+        const orderCountValue = Number(data.order_count || 0);
         
         // Update display values
-        document.getElementById('totalSales').textContent = `P ${data.total_sales.toFixed(2)}`;
-        document.getElementById('totalProductSold').textContent = data.total_products_sold;
+        const totalSalesEl = document.getElementById('totalSales');
+        const totalProductSoldEl = document.getElementById('totalProductSold');
+        if (totalSalesEl) {
+            totalSalesEl.textContent = `P ${totalSalesValue.toFixed(2)}`;
+        }
+        if (totalProductSoldEl) {
+            totalProductSoldEl.textContent = totalProductsSoldValue;
+        }
         
         // Update percentage changes
-        updatePercentageDisplay('salesChange', data.sales_change);
-        updatePercentageDisplay('productSoldChange', data.products_change);
+        if (document.getElementById('salesChange')) {
+            updatePercentageDisplay('salesChange', salesChangeValue);
+        }
+        if (document.getElementById('productSoldChange')) {
+            updatePercentageDisplay('productSoldChange', productsChangeValue);
+        }
         
         // Update order statistics table
         const orderStatsTable = document.getElementById('orderStatsTable');
         if (orderStatsTable) {
             orderStatsTable.innerHTML = '';
             orderStats.forEach(order => {
-                // Format items list
-                let itemsHtml = '';
-                const orderItems = Array.isArray(order.items) ? order.items : [];
-                if (orderItems.length > 0) {
-                    itemsHtml = orderItems.map(item => {
-                        const sizeText = item.size ? ` (${item.size})` : '';
-                        return `${item.name || 'Item'}${sizeText} x${item.quantity || 0}`;
-                    }).join('<br>');
-                } else {
-                    itemsHtml = `${order.items_count || 0} item(s)`;
-                }
+                try {
+                    // Format items list
+                    let itemsHtml = '';
+                    const orderItems = Array.isArray(order.items) ? order.items : [];
+                    if (orderItems.length > 0) {
+                        itemsHtml = orderItems.map(item => {
+                            const sizeText = item.size ? ` (${item.size})` : '';
+                            return `${item.name || 'Item'}${sizeText} x${item.quantity || 0}`;
+                        }).join('<br>');
+                    } else {
+                        itemsHtml = `${order.items_count || 0} item(s)`;
+                    }
 
-                const paymentReference = order.payment_reference || order.paymentReference || '';
-                const safeStatus = typeof order.status === 'string' && order.status
-                    ? order.status
-                    : 'order_placed';
-                const safeCustomer = order.customer || 'Unknown Customer';
-                const safeOrderType = order.order_type || 'Unknown';
-                const safeOrderPlaced = order.order_placed || '-';
-                const safeSchedule = order.delivery_pickup_date || '-';
-                const safeTotalAmount = Number(order.total_amount || 0);
-                const customerCellHtml = paymentReference
-                    ? `${safeCustomer}<br><small>Ref: ${paymentReference}</small>`
-                    : safeCustomer;
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${order.order_id || '-'}</td>
-                    <td>${customerCellHtml}</td>
-                    <td>${safeOrderType}</td>
-                    <td>${safeOrderPlaced}</td>
-                    <td>${safeSchedule}</td>
-                    <td style="max-width: 250px; font-size: 12px;">${itemsHtml}</td>
-                    <td style="font-weight: bold;">Php ${safeTotalAmount.toFixed(2)}</td>
-                    <td><span class="status-badge ${getStatusClass(safeStatus)}">${formatStatus(safeStatus, safeOrderType)}</span></td>
-                    <td>
-                        <button class="btn-delete-order" data-order-id="${order.order_id || ''}" title="Delete Order">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                orderStatsTable.appendChild(row);
+                    const paymentReference = order.payment_reference || order.paymentReference || '';
+                    const safeStatus = typeof order.status === 'string' && order.status
+                        ? order.status
+                        : 'order_placed';
+                    const safeCustomer = order.customer || 'Unknown Customer';
+                    const safeOrderType = order.order_type || 'Unknown';
+                    const safeOrderPlaced = order.order_placed || '-';
+                    const safeSchedule = order.delivery_pickup_date || '-';
+                    const safeTotalAmount = Number(order.total_amount || 0);
+                    const customerCellHtml = paymentReference
+                        ? `${safeCustomer}<br><small>Ref: ${paymentReference}</small>`
+                        : safeCustomer;
+                    const safeOrderId = order.order_id || '';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${safeOrderId || '-'}</td>
+                        <td>${customerCellHtml}</td>
+                        <td>${safeOrderType}</td>
+                        <td>${safeOrderPlaced}</td>
+                        <td>${safeSchedule}</td>
+                        <td style="max-width: 250px; font-size: 12px;">${itemsHtml}</td>
+                        <td style="font-weight: bold;">Php ${safeTotalAmount.toFixed(2)}</td>
+                        <td><span class="status-badge ${getStatusClass(safeStatus)}">${formatStatus(safeStatus, safeOrderType)}</span></td>
+                        <td>
+                            <button class="btn-delete-order" data-order-id="${safeOrderId}" title="Delete Order">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    orderStatsTable.appendChild(row);
+                } catch (rowError) {
+                    console.warn('Skipping invalid analytics order row:', rowError, order);
+                }
             });
             
             // Add event listeners to delete buttons
@@ -544,12 +569,12 @@ async function updateAnalytics() {
         // Update order count
         const orderStatsCount = document.getElementById('orderStatsCount');
         if (orderStatsCount) {
-            orderStatsCount.textContent = `${data.order_count} Orders`;
+            orderStatsCount.textContent = `${orderCountValue} Orders`;
         }
         
     } catch (error) {
         console.error('Error updating analytics:', error);
-        showToast('Failed to load analytics data', 'error');
+        showToast(`Failed to load analytics data: ${error.message}`, 'error');
     }
 }
 
@@ -639,6 +664,15 @@ function formatCategory(category) {
     return categoryMap[category] || category.charAt(0).toUpperCase() + category.slice(1);
 }
 
+function escapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Format status for display
 function formatStatus(status, orderType = null) {
     // Special handling for dine-in orders
@@ -664,6 +698,328 @@ function formatStatus(status, orderType = null) {
         'cancelled': 'Cancelled'
     };
     return statusMap[status] || status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getOrderItemImage(itemName) {
+    const productImageMap = {
+        'Mais Con Yelo': '/static/orders_menupics/mais.png',
+        'Biscoff Classic': '/static/orders_menupics/biscoff.png',
+        'Buko Pandan': '/static/orders_menupics/buko.png',
+        'Mango Graham': '/static/orders_menupics/mango_graham.png',
+        'Ube Macapuno': '/static/orders_menupics/ube_macapuno.png',
+        'Rocky Road': '/static/orders_menupics/rocky_road.png',
+        'Coffee Jelly': '/static/orders_menupics/coffee_jelly.png',
+        'Dulce de Leche': '/static/orders_menupics/dulce_de_leche.png',
+        'Choco Peanut Banana': '/static/orders_menupics/choco_peanut_banana.png',
+        'Cookie Monster': '/static/orders_menupics/cookie_monster.png',
+        'Cheesy Bacon': '/static/orders_menupics/cheesy_bacon.png',
+        'Chili Con Carne': '/static/orders_menupics/chili_con_carne.png',
+        'Triple Cheese': '/static/orders_menupics/triple_cheese.png',
+        'Lasagna Jacket': '/static/orders_menupics/lasagna_jacket.png',
+        'Garlic Bread': '/static/orders_menupics/garlic_bread.png',
+        'Lasagna': '/static/orders_menupics/lasagna.png',
+        'Chicken Wrap': '/static/orders_menupics/hongar_chicken_wrap.png',
+        'Beef Wrap': '/static/orders_menupics/beef_wrap.png',
+        'Kesodilla': '/static/orders_menupics/kesodilla.png',
+        'Chicken Poppers': '/static/orders_menupics/chicken_poppers.png',
+        'Nachos': '/static/orders_menupics/nachos.png'
+    };
+
+    return productImageMap[itemName] || '/static/orders_menupics/menu.png';
+}
+
+function getOrderHistoryStatus(order) {
+    if (order.status === 'cancelled') {
+        return { text: 'Cancelled', className: 'cancelled' };
+    }
+    if (order.orderType === 'dine-in' && order.status === 'delivered') {
+        return { text: 'Dine In Complete', className: 'completed' };
+    }
+    if (order.status === 'picked_up') {
+        return { text: 'Picked Up', className: 'completed' };
+    }
+    return { text: 'Delivered', className: 'completed' };
+}
+
+function renderOrderHistory() {
+    const container = document.getElementById('orderHistoryContainer');
+    const countElement = document.getElementById('orderHistoryCount');
+    if (!container) return;
+
+    const historyOrders = activeOrders
+        .filter(order => order.status === 'cancelled' || order.status === 'picked_up' || order.status === 'delivered')
+        .sort((a, b) => new Date(`${b.date} ${b.time}`) - new Date(`${a.date} ${a.time}`));
+
+    if (countElement) {
+        countElement.textContent = `${historyOrders.length} Orders`;
+    }
+
+    if (historyOrders.length === 0) {
+        container.innerHTML = '<div class="no-orders">No completed or cancelled orders yet</div>';
+        return;
+    }
+
+    container.innerHTML = historyOrders.map(order => {
+        const status = getOrderHistoryStatus(order);
+        const orderTypeLabel = order.orderType === 'dine-in'
+            ? 'Dine In'
+            : order.orderType === 'pickup'
+                ? 'Pickup'
+                : 'Delivery';
+        const items = Array.isArray(order.items) ? order.items : [];
+        const itemsHtml = items.length
+            ? items.map(item => {
+                const itemName = item.name || item.product_name || 'Unknown Item';
+                const itemSize = item.size ? ` (${item.size})` : '';
+                const itemQuantity = item.quantity || 1;
+                const itemPrice = parseFloat(item.price || item.unit_price || 0);
+                const itemTotal = itemPrice * itemQuantity;
+                const imageSrc = getOrderItemImage(itemName);
+                return `
+                    <div class="history-item">
+                        <div class="history-item-main">
+                            <img src="${imageSrc}" alt="${itemName}" class="history-item-image" onerror="this.src='/static/orders_menupics/menu.png'">
+                            <div class="history-item-name">${itemName}${itemSize} x${itemQuantity}</div>
+                        </div>
+                        <div class="history-item-total">Php ${itemTotal.toFixed(2)}</div>
+                    </div>
+                `;
+            }).join('')
+            : '<div class="no-orders" style="padding: 10px 0;">No items found</div>';
+
+        return `
+            <div class="history-order-card">
+                <div class="detail-row">
+                    <span class="detail-label">Order ID:</span>
+                    <span class="detail-value">${order.id || '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Customer:</span>
+                    <span class="detail-value">${order.customer || '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Placed:</span>
+                    <span class="detail-value">${order.date} at ${order.time}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Type:</span>
+                    <span class="detail-value">${orderTypeLabel}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount:</span>
+                    <span class="detail-value">Php ${parseFloat(order.total || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="history-status ${status.className}">${status.text}</span>
+                </div>
+                <div style="margin-top: 12px;">
+                    <div class="detail-label" style="margin-bottom: 8px;">Order Items:</div>
+                    ${itemsHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function loadUsers() {
+    const usersTable = document.getElementById('usersTable');
+    const usersCount = document.getElementById('usersCount');
+    if (!usersTable) return;
+
+    try {
+        const response = await fetch('/api/users/');
+        if (!response.ok) throw new Error('Failed to fetch users');
+
+        const data = await response.json();
+        usersData = Array.isArray(data) ? data : [];
+
+        if (usersCount) {
+            usersCount.textContent = `${usersData.length} Users`;
+        }
+
+        if (usersData.length === 0) {
+            usersTable.innerHTML = '<tr><td colspan="8" class="no-orders">No users found</td></tr>';
+            return;
+        }
+
+        const getRoleKey = (user) => {
+            if (user.is_superuser) return 'admin';
+            if (user.is_staff) return 'staff';
+            return 'user';
+        };
+
+        const getRoleLabel = (user) => {
+            const roleKey = getRoleKey(user);
+            if (roleKey === 'admin') return 'Admin';
+            if (roleKey === 'staff') return 'Staff';
+            return 'User';
+        };
+
+        const renderRoleCell = (user) => {
+            const roleKey = getRoleKey(user);
+
+            if (!isCurrentUserSuperuser) {
+                return getRoleLabel(user);
+            }
+
+            // Superuser can change roles in-place
+            return `
+                <select class="user-role-select" data-id="${user.id}">
+                    <option value="user" ${roleKey === 'user' ? 'selected' : ''}>User</option>
+                    <option value="staff" ${roleKey === 'staff' ? 'selected' : ''}>Staff</option>
+                    <option value="admin" ${roleKey === 'admin' ? 'selected' : ''}>Admin</option>
+                </select>
+            `;
+        };
+
+        usersTable.innerHTML = usersData.map(user => `
+            <tr>
+                <td>${escapeHtml(user.username)}</td>
+                <td>${escapeHtml(user.email || '-')}</td>
+                <td>${escapeHtml(`${user.first_name || ''} ${user.last_name || ''}`.trim() || '-')}</td>
+                <td>${renderRoleCell(user)}</td>
+                <td>${user.is_active ? 'Active' : 'Disabled'}</td>
+                <td>${escapeHtml(user.date_joined || '-')}</td>
+                <td>${escapeHtml(user.last_login || 'Never')}</td>
+                <td>
+                    ${isCurrentUserSuperuser ? `
+                        <button class="btn-edit user-toggle-btn" data-id="${user.id}" data-active="${user.is_active}">
+                            ${user.is_active ? 'Disable' : 'Enable'}
+                        </button>
+                        <button class="btn-delete user-delete-btn" data-id="${user.id}">Delete</button>
+                    ` : '-'}
+                </td>
+            </tr>
+        `).join('');
+
+        if (isCurrentUserSuperuser) {
+            document.querySelectorAll('.user-role-select').forEach(select => {
+                select.addEventListener('change', async function() {
+                    const userId = parseInt(this.getAttribute('data-id'), 10);
+                    const role = this.value;
+
+                    // Map role -> flags. Admin implies staff.
+                    const payload = role === 'admin'
+                        ? { is_superuser: true, is_staff: true }
+                        : role === 'staff'
+                            ? { is_superuser: false, is_staff: true }
+                            : { is_superuser: false, is_staff: false };
+
+                    await updateUser(userId, payload);
+                });
+            });
+
+            document.querySelectorAll('.user-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const userId = parseInt(this.getAttribute('data-id'), 10);
+                    const isActive = this.getAttribute('data-active') === 'true';
+                    await updateUser(userId, { is_active: !isActive });
+                });
+            });
+
+            document.querySelectorAll('.user-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const userId = parseInt(this.getAttribute('data-id'), 10);
+                    if (confirm('Delete this user account?')) {
+                        await deleteUser(userId);
+                    }
+                });
+            });
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+        usersTable.innerHTML = '<tr><td colspan="8" class="no-orders">Failed to load users</td></tr>';
+        if (usersCount) usersCount.textContent = '0 Users';
+    }
+}
+
+async function updateUser(userId, payload) {
+    try {
+        const response = await fetch(`/api/users/${userId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to update user');
+        showToast('User updated successfully', 'success');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error updating user:', error);
+        showToast(error.message || 'Failed to update user', 'error');
+    }
+}
+
+async function deleteUser(userId) {
+    try {
+        const response = await fetch(`/api/users/${userId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete user');
+        showToast('User deleted successfully', 'success');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showToast(error.message || 'Failed to delete user', 'error');
+    }
+}
+
+async function createUser() {
+    const username = document.getElementById('newUsername')?.value.trim();
+    const email = document.getElementById('newEmail')?.value.trim();
+    const password = document.getElementById('newPassword')?.value.trim();
+    const firstName = document.getElementById('newFirstName')?.value.trim() || '';
+    const lastName = document.getElementById('newLastName')?.value.trim() || '';
+    const role = document.getElementById('newIsStaff')?.value || 'user';
+    const isStaff = role === 'staff' || role === 'admin';
+    const isSuperuser = role === 'admin';
+
+    if (!username || !email || !password) {
+        showToast('Username, email, and password are required', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/users/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email,
+                password: password,
+                first_name: firstName,
+                last_name: lastName,
+                is_staff: isStaff,
+                is_superuser: isSuperuser
+            })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to create user');
+
+        showToast('User created successfully', 'success');
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newEmail').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('newFirstName').value = '';
+        document.getElementById('newLastName').value = '';
+        document.getElementById('newIsStaff').value = 'user';
+        await loadUsers();
+    } catch (error) {
+        console.error('Error creating user:', error);
+        showToast(error.message || 'Failed to create user', 'error');
+    }
 }
 
 // Add a new product
@@ -993,6 +1349,7 @@ async function initializeOrders() {
     }
     
     renderActiveOrders();
+    renderOrderHistory();
     updateOrderCount();
     updateAnalytics();
     
@@ -1289,6 +1646,8 @@ function renderActiveOrders() {
             cancelOrder(orderId);
         });
     });
+
+    renderOrderHistory();
 }
 
 function getTrackingSteps(orderType, currentStatus) {
@@ -1641,6 +2000,9 @@ document.getElementById('statusFilter').addEventListener('change', renderActiveO
 document.getElementById('addProduct').addEventListener('click', addProduct);
 document.getElementById('updateProduct').addEventListener('click', updateProduct);
 document.getElementById('cancelEdit').addEventListener('click', cancelEdit);
+if (document.getElementById('createUserBtn')) {
+    document.getElementById('createUserBtn').addEventListener('click', createUser);
+}
 
 // Show/hide size options when category changes in edit form
 document.getElementById('editProductCategory').addEventListener('change', function() {
@@ -1800,11 +2162,12 @@ async function pollForNewOrders() {
                     lastOrderCount = ordersData.length;
                     lastOrderIds = new Set(ordersData.map(order => order.order_id));
                     
-                    // Reload orders to show new ones (only if on orders page)
+                    // Reload orders to show new ones on orders/history pages
                     const activePage = document.querySelector('.page.active');
-                    if (activePage && activePage.id === 'orders') {
+                    if (activePage && (activePage.id === 'orders' || activePage.id === 'dashboard')) {
                         await loadOrdersFromBackend();
                         renderActiveOrders();
+                        renderOrderHistory();
                         updateOrderCount();
                         updateAnalytics();
                     }
@@ -1859,6 +2222,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Start polling for new orders
     startOrderPolling();
     
+    // Initialize week day filter for weekly reports
+    initializeWeekDayFilter();
+
+    const createUserCard = document.getElementById('createUserCard');
+    if (createUserCard && !isCurrentUserSuperuser) {
+        createUserCard.style.display = 'none';
+    }
+
+    const activePage = document.querySelector('.page.active');
+    if (activePage && activePage.id === 'users') {
+        await loadUsers();
+    }
+    
     // Stop polling when page is hidden
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
@@ -1871,10 +2247,78 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Update badge when page becomes visible again
             updateOutOfStockBadge();
             // Resume report polling if on a report page
-            const activePage = document.querySelector('.page.active');
-            if (activePage && (activePage.id === 'daily' || activePage.id === 'weekly' || activePage.id === 'monthly' || activePage.id === 'yearly')) {
-                startReportPolling(activePage.id);
+            const currentActivePage = document.querySelector('.page.active');
+            if (currentActivePage && (currentActivePage.id === 'daily' || currentActivePage.id === 'weekly' || currentActivePage.id === 'monthly' || currentActivePage.id === 'yearly')) {
+                startReportPolling(currentActivePage.id);
             }
         }
     });
 });
+
+// Week day filter initialization
+function initializeWeekDayFilter() {
+    const now = new Date();
+    // Get Monday of current week (0 = Monday)
+    const currentDay = now.getDay();
+    const daysSinceMonday = currentDay === 0 ? 6 : currentDay - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - daysSinceMonday);
+    
+    // Set Monday as the first selected day
+    let selectedDay = 0;
+    
+    // Initialize day labels
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        const dateString = date.getDate().toString();
+        const label = document.getElementById(`dayLabel${i}`);
+        if (label) {
+            label.textContent = dateString;
+        }
+    }
+    
+    // Set Monday as active by default
+    updateWeekDaySelection(selectedDay);
+    
+    // Add click event listeners with proper delegation
+    const buttons = document.querySelectorAll('.week-day-btn');
+    console.log(`Found ${buttons.length} week day buttons`);
+    
+    buttons.forEach((btn, index) => {
+        btn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log(`Day button ${index} clicked`);
+            updateWeekDaySelection(index);
+        };
+    });
+}
+
+function updateWeekDaySelection(dayIndex) {
+    console.log(`Updating selection to day ${dayIndex}`);
+    
+    // Remove active styles from all buttons
+    document.querySelectorAll('.week-day-btn').forEach(btn => {
+        btn.style.borderColor = '#ddd';
+        btn.style.background = 'white';
+        btn.style.color = '#555';
+        const dayDiv = btn.querySelector('div:last-child');
+        if (dayDiv) {
+            dayDiv.style.color = '#555';
+        }
+    });
+    
+    // Set active style for selected button
+    const selectedBtn = document.querySelector(`.week-day-btn[data-day="${dayIndex}"]`);
+    if (selectedBtn) {
+        selectedBtn.style.borderColor = '#FF5C9D';
+        selectedBtn.style.background = '#fff';
+        selectedBtn.style.color = '#FF5C9D';
+        const dayDiv = selectedBtn.querySelector('div:last-child');
+        if (dayDiv) {
+            dayDiv.style.color = '#FF5C9D';
+        }
+        console.log(`Day ${dayIndex} selected`);
+    }
+}

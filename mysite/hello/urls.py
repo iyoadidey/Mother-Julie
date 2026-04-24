@@ -45,8 +45,8 @@ urlpatterns = [
 
     # Admin Dashboard Backend
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('signin_admindashboard/', views.signin_admindashboard, name='signin_admindashboard'),
     path('admin_logout/', views.admin_logout, name='admin_logout'),
+    path('monthly_reports/', views.monthly_reports_view, name='monthly_reports'),
     
     # Admin Dashboard APIs
     path('api/analytics/', views.api_get_analytics, name='api_get_analytics'),
@@ -58,6 +58,8 @@ urlpatterns = [
     path('api/products/<int:product_id>/update-image/', views.api_update_product_image, name='api_update_product_image'),
     path('api/products/<int:product_id>/delete/', views.api_delete_product, name='api_delete_product'),
     path('api/reports/<str:period>/', views.api_get_reports, name='api_get_reports'),
+    path('api/monthly-reports/', views.api_get_monthly_reports, name='api_get_monthly_reports'),
+    path('api/monthly-reports/<int:year>/<int:month>/', views.api_get_monthly_reports, name='api_get_monthly_reports_specific'),
 
     # Frontend Content Management APIs
     path('api/frontend-content/', views.api_get_frontend_content, name='api_get_frontend_content'),
