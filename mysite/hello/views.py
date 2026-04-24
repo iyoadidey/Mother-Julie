@@ -1960,6 +1960,10 @@ def api_delete_all_orders(request):
 @csrf_exempt
 def api_get_analytics(request):
     """Get analytics data for dashboard"""
+    # Admin-only analytics
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
     try:
         from django.db.models import Sum, Count, Q
         from datetime import datetime, timedelta

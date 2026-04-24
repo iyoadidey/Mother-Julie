@@ -475,7 +475,10 @@ function getStatusClass(status) {
 async function updateAnalytics() {
     try {
         const response = await fetch('/api/analytics/');
-        if (!response.ok) throw new Error('Failed to fetch analytics');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Analytics API failed: ${response.status} - ${errorData.error || response.statusText}`);
+        }
         
         const data = await response.json();
         const orderStats = Array.isArray(data.order_stats) ? data.order_stats : [];
@@ -829,7 +832,10 @@ async function loadUsers() {
 
     try {
         const response = await fetch('/api/users/');
-        if (!response.ok) throw new Error('Failed to fetch users');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Users API failed: ${response.status} - ${errorData.error || response.statusText}`);
+        }
 
         const data = await response.json();
         usersData = Array.isArray(data) ? data : [];
@@ -929,8 +935,9 @@ async function loadUsers() {
         }
     } catch (error) {
         console.error('Error loading users:', error);
-        usersTable.innerHTML = '<tr><td colspan="8" class="no-orders">Failed to load users</td></tr>';
+        usersTable.innerHTML = `<tr><td colspan="8" class="no-orders">Failed to load users: ${error.message}</td></tr>`;
         if (usersCount) usersCount.textContent = '0 Users';
+        showToast(`Failed to load users: ${error.message}`, 'error');
     }
 }
 
@@ -1882,7 +1889,10 @@ function updateOrderCount() {
 async function loadReport(period) {
     try {
         const response = await fetch(`/api/reports/${period}/`);
-        if (!response.ok) throw new Error('Failed to fetch report');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Reports API failed: ${response.status} - ${errorData.error || response.statusText}`);
+        }
         
         const data = await response.json();
         
@@ -1909,7 +1919,7 @@ async function loadReport(period) {
         renderProductsList(period, data.products_list || []);
     } catch (error) {
         console.error(`Error loading ${period} report:`, error);
-        showToast(`Failed to load ${period} report`, 'error');
+        showToast(`Failed to load ${period} report: ${error.message}`, 'error');
     }
 }
 
