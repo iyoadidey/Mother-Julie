@@ -878,32 +878,57 @@ footer {
 }
 
 @media (max-width: 480px) {
-    nav ul {
-        gap: 9px;
+    header nav {
+        height: auto;
+        padding: 8px 12px;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
     }
 
-    nav ul li a {
-        font-size: 0.65rem;
+    .logo {
+        position: static;
+        transform: none;
+        left: auto;
+        flex-shrink: 0;
     }
 
     .logo img {
-        height: 62px;
+        height: 44px;
     }
 
-    .username,
-    .logout-btn {
-        padding: 7px 12px;
-        font-size: 0.72rem;
+    nav ul {
+        gap: 7px;
+        flex-shrink: 1;
     }
 
-    .hero-text h1 {
-        font-size: 1.7rem;
+    nav ul li a {
+        font-size: 0.6rem;
+        letter-spacing: 0.2px;
     }
 
-    .featured .items-grid .item-card {
-        width: 88vw;
-        min-width: 88vw;
-        max-width: 88vw;
-        height: 260px;
+    /* Shrink the sign-in button specifically */
+    .user-section {
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .account-link {
+        padding: 0;
+    }
+
+    .account-link svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* If "Sign In" is a text+icon button, shrink it */
+    .btn-signin,
+    a[href*="signin"],
+    a[href*="login"] {
+        font-size: 0.6rem;
+        padding: 4px 8px;
     }
 }
+

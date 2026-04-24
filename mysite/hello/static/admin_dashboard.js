@@ -474,7 +474,9 @@ function getStatusClass(status) {
 // Update analytics with real data from backend
 async function updateAnalytics() {
     try {
-        const response = await fetch('/api/analytics/');
+        const response = await fetch('/api/analytics/', {
+            credentials: 'include'
+        });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(`Analytics API failed: ${response.status} - ${errorData.error || response.statusText}`);
@@ -586,6 +588,7 @@ async function deleteAllOrders() {
     try {
         const response = await fetch('/api/orders/delete-all/', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken()
@@ -622,6 +625,7 @@ async function deleteOrderFromStats(orderId) {
         try {
             const response = await fetch(`/api/orders/${orderId}/delete/`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCSRFToken()
@@ -831,7 +835,9 @@ async function loadUsers() {
     if (!usersTable) return;
 
     try {
-        const response = await fetch('/api/users/');
+        const response = await fetch('/api/users/', {
+            credentials: 'include'
+        });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(`Users API failed: ${response.status} - ${errorData.error || response.statusText}`);
@@ -945,6 +951,7 @@ async function updateUser(userId, payload) {
     try {
         const response = await fetch(`/api/users/${userId}/update/`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken()
@@ -965,6 +972,7 @@ async function deleteUser(userId) {
     try {
         const response = await fetch(`/api/users/${userId}/delete/`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken()
@@ -998,6 +1006,7 @@ async function createUser() {
     try {
         const response = await fetch('/api/users/create/', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken()
@@ -1062,6 +1071,7 @@ async function saveProduct(name, price, category, stock, imageData) {
         
         const response = await fetch('/api/products/create/', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'X-CSRFToken': getCSRFToken()
             },
@@ -1185,6 +1195,7 @@ async function saveUpdatedProduct(name, price, category, stock, imageData, sizeO
         
         const response = await fetch(`/api/products/${editingProductId}/update/`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'X-CSRFToken': getCSRFToken()
             },
@@ -1212,6 +1223,7 @@ async function deleteProduct(id) {
         try {
             const response = await fetch(`/api/products/${id}/delete/`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCSRFToken()
@@ -1415,7 +1427,9 @@ function convertToPhilippineTime(dateString) {
 
 async function loadOrdersFromBackend() {
     try {
-        const response = await fetch('/api/orders/all/');
+        const response = await fetch('/api/orders/all/', {
+            credentials: 'include'
+        });
         if (response.ok) {
             const ordersData = await response.json();
             
@@ -1764,6 +1778,7 @@ async function updateOrderStatus(orderId, newStatus) {
     try {
         const response = await fetch(`/api/orders/${orderId}/update-status/`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCSRFToken()
@@ -1888,7 +1903,9 @@ function updateOrderCount() {
 // Load report data
 async function loadReport(period) {
     try {
-        const response = await fetch(`/api/reports/${period}/`);
+        const response = await fetch(`/api/reports/${period}/`, {
+            credentials: 'include'
+        });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(`Reports API failed: ${response.status} - ${errorData.error || response.statusText}`);
@@ -2146,7 +2163,9 @@ function stopStockPolling() {
 // Poll for new orders
 async function pollForNewOrders() {
     try {
-        const response = await fetch('/api/orders/all/');
+        const response = await fetch('/api/orders/all/', {
+            credentials: 'include'
+        });
         if (response.ok) {
             const ordersData = await response.json();
             

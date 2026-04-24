@@ -1891,6 +1891,10 @@ def api_update_order_status(request, order_id):
 @csrf_exempt
 def api_get_orders(request):
     """Get all orders for admin dashboard"""
+    # Check authentication
+    if not request.user.is_authenticated or not (request.user.is_superuser or request.user.is_staff):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
     try:
         orders = Order.objects.all().order_by('-created_at')
         orders_data = []
@@ -1960,8 +1964,8 @@ def api_delete_all_orders(request):
 @csrf_exempt
 def api_get_analytics(request):
     """Get analytics data for dashboard"""
-    # Admin-only analytics
-    if not request.user.is_authenticated or not request.user.is_superuser:
+    # Admin-only analytics (staff or superuser)
+    if not request.user.is_authenticated or not (request.user.is_superuser or request.user.is_staff):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
     
     try:
